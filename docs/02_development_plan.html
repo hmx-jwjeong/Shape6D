@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shape6D — 상세 개발 계획 (v0.1)</title>
+<style>
+  :root {
+    --ink: #1a1d23;
+    --sub: #5a6270;
+    --line: #dde2ea;
+    --bg: #ffffff;
+    --panel: #f6f8fb;
+    --accent: #0b5fff;
+    --accent-soft: #e8f0ff;
+    --good: #0a7d43;
+    --good-soft: #e6f5ec;
+    --warn: #a05a00;
+    --warn-soft: #fdf3e3;
+    --bad: #b4232a;
+    --bad-soft: #fdecec;
+    --shape: #6d28d9;
+    --shape-soft: #f1eafd;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", -apple-system, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.65; font-size: 15px; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 28px 80px; }
+  h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: -0.5px; }
+  h2 { font-size: 21px; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--ink); letter-spacing: -0.3px; }
+  h3 { font-size: 16px; margin: 26px 0 8px; }
+  p { margin: 8px 0; }
+  .meta { color: var(--sub); font-size: 13px; margin-bottom: 28px; }
+  .meta b { color: var(--ink); }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 8px; font-size: 13px; }
+  th { background: var(--ink); color: #fff; text-align: left; padding: 8px 10px; font-weight: 600; white-space: nowrap; }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.c, th.c { text-align: center; }
+  td.id { font-weight: 700; color: var(--accent); white-space: nowrap; }
+  tr.crit td { background: var(--warn-soft); }
+
+  /* 마일스톤 헤더 */
+  .ms { border: 1.5px solid var(--ink); border-radius: 12px; padding: 16px 20px; margin: 20px 0 14px; background: var(--panel); }
+  .ms .title { font-size: 17px; font-weight: 800; }
+  .ms .title .no { color: var(--accent); margin-right: 8px; }
+  .ms .goal { font-size: 13.5px; color: var(--sub); margin-top: 4px; }
+  .ms .badges { margin-top: 8px; }
+  .badge { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 2px 10px; border-radius: 20px; margin-right: 6px; }
+  .badge.dur { background: var(--accent-soft); color: var(--accent); }
+  .badge.dep { background: #e8e8ee; color: #555; }
+  .badge.par { background: var(--shape-soft); color: var(--shape); }
+
+  /* 완료 기준 */
+  .exit { border-left: 4px solid var(--good); background: var(--good-soft); border-radius: 6px; padding: 10px 16px; margin: 12px 0 24px; font-size: 13.5px; }
+  .exit::before { content: "게이트 (완료 기준)"; display: block; font-weight: 800; color: var(--good); font-size: 12.5px; margin-bottom: 4px; }
+  .exit ul { margin: 4px 0 2px; padding-left: 18px; }
+  .exit li { margin: 2px 0; }
+
+  .warnbox { border-left: 4px solid var(--warn); background: var(--warn-soft); border-radius: 6px; padding: 10px 16px; margin: 12px 0; font-size: 13.5px; }
+  .warnbox::before { content: "⚠ 주의"; display: block; font-weight: 800; color: var(--warn); font-size: 12.5px; margin-bottom: 4px; }
+
+  .decision { border: 1.5px dashed var(--bad); background: var(--bad-soft); border-radius: 10px; padding: 12px 18px; margin: 14px 0; font-size: 13.5px; }
+  .decision::before { content: "🔒 결정 필요 (블로커)"; display: block; font-weight: 800; color: var(--bad); font-size: 13px; margin-bottom: 5px; }
+  .decision.done { border: 1.5px solid var(--good); background: var(--good-soft); }
+  .decision.done::before { content: "✅ 결정 확정 (2026-07-18)"; color: var(--good); }
+
+  pre { background: #14161b; color: #d6dbe4; border-radius: 10px; padding: 16px 18px; font-size: 12.5px; line-height: 1.55; overflow-x: auto; }
+  pre .cm { color: #7f8a9c; }
+  code { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: 12.5px; }
+
+  /* 간트 */
+  .gantt td { padding: 5px 8px; }
+  .gantt .bar { height: 16px; border-radius: 4px; }
+  .g0 { background: #5a6270; } .g1 { background: var(--accent); } .g2 { background: var(--shape); }
+  .g3 { background: var(--good); } .g4 { background: var(--warn); } .g5 { background: var(--bad); }
+  .gantt th { font-size: 11.5px; text-align: center; }
+
+  .small { font-size: 12.5px; color: var(--sub); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  @media print { .wrap { max-width: 100%; } h2 { break-before: page; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Shape6D — 상세 개발 계획</h1>
+<p class="meta">v0.1 · 2026-07-18 · 전제 문서: <a href="01_stage_design.html">01_stage_design.html</a> (권장 구성 승인됨) · 인력 가정: <b>개발 1~2명</b> · 기간 추정은 그 기준</p>
+
+<!-- ══════════════════ 개요 ══════════════════ -->
+<h2>0. 확정 스택과 목표 지표</h2>
+
+<table>
+  <tr><th>스테이지</th><th>확정 구성 (01 문서 권장안)</th></tr>
+  <tr><td><b>S0</b> 온보딩</td><td>Poisson disk + 노멀 · depth 템플릿 42뷰 · 대칭 자동검출 · 오브젝트 측 텐서 전량 캐시</td></tr>
+  <tr><td><b>S1</b> 제안</td><td>EfficientViT-SAM-L0 (depth 전경 포인트 프롬프트) + depth 클러스터링 병렬 → 합집합 NMS</td></tr>
+  <tr><td><b>S2</b> 판별</td><td>크기 게이팅 → depth 템플릿 정합(주 신호) → DINOv2 ViT-S 의미 점수(약한 prior) · appearance 점수 제거</td></tr>
+  <tr><td><b>S3</b> 포즈</td><td>Shape6D-PEM: SAM-6D 매칭 구조 승계 + 기하 주도 인코더 + RGB 보조 branch(modality dropout) + CAD 직접 온보딩 + top-k 가설</td></tr>
+  <tr><td><b>S4</b> 정련·검증</td><td>depth 렌더 잔차로 가설 선별 → point-to-plane ICP(robust kernel) → 보정 신뢰도 accept/reject (대칭군 등가 평가)</td></tr>
+</table>
+
+<h3>목표 지표 (전 구간 공통 게이트)</h3>
+<table>
+  <tr><th>지표</th><th class="c">목표</th><th>측정</th></tr>
+  <tr><td>정확도 — BOP-Classic-Core unseen AR</td><td class="c"><b>≥ 67</b> (SAM-6D 70.4 − 3pt 이내)</td><td>BOP 공식 툴킷, 특히 T-LESS·ITODD 개별 추적</td></tr>
+  <tr><td>강건성 — 재도장 프로토콜 AR 낙폭</td><td class="c"><b>≤ 3pt</b> (SAM-6D는 대폭 하락 예상 — 실측으로 확인)</td><td>자체 오염·재도장 증강 프로토콜 (M0에서 구축)</td></tr>
+  <tr><td>속도 — Jetson Orin NX end-to-end</td><td class="c"><b>&lt; 1s</b> (내부 목표 600ms)</td><td>스테이지별 프로파일러, MAXN 및 15W 모드 각각</td></tr>
+  <tr><td>신뢰도 — 오수락률 (false accept)</td><td class="c"><b>&lt; 1%</b> @ 리콜 손실 ≤ 5%</td><td>S4 accept/reject ROC (M3에서 구축)</td></tr>
+</table>
+
+<div class="decision done">
+<b>D1. 대상 보드 — 확정:</b> 타깃은 <b>Orin NX</b>, 단 당분간 실기 테스트 없음. 개발·검증은 로컬(Ubuntu·Blackwell GPU PC)에서 수행하고, Jetson 실기 프로파일링은 보드 확보 시점에 M4 전제조건으로 이월. 그 전까지 레이턴시 게이트는 <b>로컬 실측 + 공개 벤치 기반 환산 계수</b>로 운용(M0-2).<br>
+<b>D2. 센서 — 확정:</b> depth는 <b>LiDAR로 리파인하며, LiDAR 포인트가 존재하는 지점만 사용</b> → 유효 기하가 "밀집·노이즈"가 아니라 <b>희소·고정밀</b>로 이동. S1 병렬 경로·S2 정합 방식·M2 증강 설계를 이에 맞게 수정(본문 반영). <span style="color:var(--bad)">잔여 확인 D2-a: LiDAR 기종·작업 거리에서 <b>물체 위 유효 포인트 수</b> — S3 입력 설계(npoint)와 성능 하한을 결정하는 수치.</span><br>
+<b>D3. 학습 GPU — 확정:</b> Blackwell 워크스테이션급 1장 보유(Ubuntu PC). <b>파일럿(M2-B) + 본학습 1회(M2-C) + 압축(M2-D)은 1장으로 실행 가능</b>하나, 전체 스윕(E2·E4)은 서브셋 한정으로 제한. 본학습 1회가 병목이 되면 해당 런만 클라우드 버스트 옵션. <span style="color:var(--bad)">잔여 확인 D3-a: 정확한 GPU 모델·VRAM("H600"은 존재하지 않는 모델명 — RTX PRO 6000 Blackwell 96GB로 추정) 및 PC의 CPU 코어·RAM·NVMe (PBR 데이터 로딩이 실질 병목이 되는 경우가 많음).</span>
+</div>
+
+<h3>개발 전략 3원칙</h3>
+<p><b>① 항상 동작하는 파이프라인 유지</b> — 빅뱅 재작성 금지. SAM-6D를 기준선으로 두고 스테이지 단위로 교체하며, 매 교체마다 BOP 회귀를 돌린다. <b>② 학습 없는 개선을 먼저</b> — M1에서 캐싱·모델 교체·게이팅만으로 얻는 이득을 확정한 뒤, 재학습(M2)은 "남은 갭"에만 투입. <b>③ 측정이 결정한다</b> — 인코더 선정·경량화 폭·가설 수 등 모든 아키텍처 결정은 M0에서 만든 평가 하네스의 수치로 결정.</p>
+
+<!-- ══════════════════ 리포 구조 ══════════════════ -->
+<h2>1. 리포지토리 구조</h2>
+<pre>
+Shape6D/
+├── docs/                      <span class="cm"># 01_stage_design.html, 02_development_plan.html, ADR 기록</span>
+├── shape6d/
+│   ├── onboarding/            <span class="cm"># S0: sampling.py, symmetry.py, depth_templates.py, cache.py</span>
+│   ├── proposal/              <span class="cm"># S1: evit_sam.py, depth_cluster.py, merge_nms.py</span>
+│   ├── identify/              <span class="cm"># S2: size_gate.py, depth_match.py, semantic_prior.py, score_fusion.py</span>
+│   ├── pose/                  <span class="cm"># S3: encoders/{grid_conv,pointnet2_lite,sparse_conv}.py,</span>
+│   │                          <span class="cm">#     matching/{coarse,fine}.py, hypotheses.py  (SAM-6D에서 포팅+개조)</span>
+│   ├── verify/                <span class="cm"># S4: icp.py, render_residual.py, confidence.py, symmetry_eval.py</span>
+│   ├── common/                <span class="cm"># camera.py, pcd_utils.py(voxel down, normal est), trt_runtime.py</span>
+│   └── pipeline.py            <span class="cm"># S1→S4 오케스트레이션, 스테이지별 타이머 내장</span>
+├── train/                     <span class="cm"># 데이터로더(SAM-6D provider 포팅), 증강, distill, 학습 스크립트</span>
+├── eval/
+│   ├── bop/                   <span class="cm"># BOP 툴킷 하네스 (T-LESS/ITODD 우선)</span>
+│   ├── contamination/         <span class="cm"># 오염·재도장 프로토콜 (증강 렌더 + 채점)</span>
+│   └── latency/               <span class="cm"># Jetson 스테이지별 프로파일러, 회귀 게이트</span>
+├── deploy/                    <span class="cm"># ONNX→TRT 변환 스크립트, 엔진 캐시, Jetson 러너(추후 C++)</span>
+└── third_party/               <span class="cm"># SAM-6D(참조용 서브모듈), EfficientViT, BOP toolkit</span>
+</pre>
+<p class="small">원칙: SAM-6D 코드는 third_party 참조로 두고, 재사용 모듈(매칭 transformer·loss·provider)은 <b>포팅해서 소유권을 가져온다</b> — pointnet2 커스텀 op 의존을 끊는 것이 포팅의 1차 목적이므로 복사가 아니라 개조 이식이다.</p>
+
+<!-- ══════════════════ M0 ══════════════════ -->
+<h2>2. 마일스톤 상세</h2>
+
+<div class="ms">
+  <div class="title"><span class="no">M0</span>기반 구축 — 측정 인프라와 기준선</div>
+  <div class="goal">"측정이 결정한다"를 가능하게 만드는 단계. 이후 모든 결정의 근거 데이터가 여기서 나온다.</div>
+  <div class="badges"><span class="badge dur">2~3주</span><span class="badge dep">의존: D1(보드)</span></div>
+</div>
+
+<table>
+  <tr><th>ID</th><th>작업</th><th>상세</th><th>산출물</th></tr>
+  <tr><td class="id">M0-1</td><td>SAM-6D 재현</td><td>데스크톱 GPU에서 BOP eval 재현 (YCB-V·T-LESS·ITODD), 공식 수치와 대조</td><td>기준선 AR 표</td></tr>
+  <tr><td class="id">M0-2</td><td>로컬 프로파일링 + Orin 환산 모델</td><td>SAM-6D(FastSAM 경로)를 로컬 Blackwell PC에서 구동, 스테이지별 ms 실측으로 병목 순위 확정. 공개 벤치(동일 모델의 데스크톱 vs Orin TRT 수치) 기반 <b>환산 계수</b>를 문서화해 Orin NX 예산을 추정 관리. 실기 프로파일링은 보드 확보 시 재실행(M4 전제조건)</td><td>스테이지별 레이턴시 표 + 환산 계수 문서 → 01 문서 예산표 검증/수정</td></tr>
+  <tr class="crit"><td class="id">M0-3</td><td>오염·재도장 프로토콜 구축</td><td>BOP 테스트 이미지에 (a) 전면 색 변경 (b) 녹/분진/기름 텍스처 (c) 국소 기하 범프를 합성하는 증강 렌더 파이프라인. 온보딩은 항상 클린 CAD 유지. <b>SAM-6D의 낙폭을 먼저 실측</b> — Shape6D 우위 주장의 대조군</td><td><code>eval/contamination/</code> + SAM-6D 낙폭 리포트</td></tr>
+  <tr><td class="id">M0-4</td><td>레이턴시 회귀 게이트</td><td>스테이지 타이머를 <code>pipeline.py</code>에 내장, CI성 회귀 스크립트 (모델 바뀔 때마다 자동 기록)</td><td><code>eval/latency/</code></td></tr>
+  <tr><td class="id">M0-5</td><td>리포 부트스트랩</td><td>위 구조 생성, SAM-6D 서브모듈, 매칭부(transformer.py 등) 1차 포팅(동작 동일성 테스트 포함)</td><td>Shape6D 리포 골격</td></tr>
+</table>
+<div class="exit">
+<ul>
+<li>BOP 기준선 재현 오차 ±1pt 이내, Jetson 스테이지별 실측표 완성</li>
+<li>오염·재도장 프로토콜에서 SAM-6D 낙폭 수치 확보 (가설 검증: appearance 신호 붕괴 실증)</li>
+</ul>
+</div>
+
+<!-- ══════════════════ M1 ══════════════════ -->
+<div class="ms">
+  <div class="title"><span class="no">M1</span>무재학습 최적화 — Shape6D v0 (재학습 0으로 어디까지 가는가)</div>
+  <div class="goal">S0·S1·S2를 교체하고 S3는 SAM-6D PEM 가중치를 그대로 사용. 이 시점에 이미 "동작하는 Shape6D"가 존재하게 된다.</div>
+  <div class="badges"><span class="badge dur">3~4주</span><span class="badge dep">의존: M0</span><span class="badge par">M2 데이터 준비와 병행 가능</span></div>
+</div>
+
+<table>
+  <tr><th>ID</th><th>작업</th><th>상세</th><th>산출물</th></tr>
+  <tr><td class="id">M1-1</td><td>S0 캐시 구현</td><td>오브젝트 측 전량 사전계산: <code>dense_po/fo</code>, sparse FPS 인덱스, <code>geo_embedding_o</code>(현재 매 프레임 재계산되는 <code>pose_estimation_model.py:34-37</code> 제거), 메트릭 bbox/직경, depth 템플릿 42뷰. 온보딩 CLI: <code>shape6d onboard model.ply</code></td><td><code>onboarding/</code> + 캐시 포맷(npz/pt) 정의</td></tr>
+  <tr><td class="id">M1-2</td><td>대칭 자동검출</td><td>메시 기반 회전축·반사면 검출 + 수동 오버라이드 JSON. S4에서 소비할 대칭군 표현 확정</td><td><code>onboarding/symmetry.py</code></td></tr>
+  <tr><td class="id">M1-3</td><td>S1 교체</td><td>EfficientViT-SAM-L0 통합(ISM의 <code>segmentor_model</code> 인터페이스 유지), depth 전경(평면 제거 후) 기반 포인트 프롬프트 생성, depth 클러스터링 병렬 경로 + 합집합 NMS</td><td><code>proposal/</code></td></tr>
+  <tr class="crit"><td class="id">M1-4</td><td>S2 재구성</td><td>크기 게이팅(마스크 내 LiDAR 유효 포인트의 3D extent vs CAD 직경, 허용오차 파라미터화) → 형상 정합 점수: <b>유효 depth가 희소하므로 dense 깊이 크롭 상관이 아니라 단방향 point-to-template 거리(관측점 → 42뷰 템플릿 표면, 가시 영역 정규화)</b>로 설계 → DINOv2 <b>ViT-S</b> cls 점수. appearance 항 제거. 융합 가중 w_size/w_depth/w_sem은 M0-3 프로토콜로 튜닝</td><td><code>identify/</code> + 가중 튜닝 리포트</td></tr>
+  <tr><td class="id">M1-5</td><td>1차 TRT 변환</td><td>EfficientViT-SAM·DINOv2-S·PEM ViT-B를 ONNX→TRT FP16. PEM 매칭부는 이 시점엔 PyTorch 유지(커스텀 op 잔존 — M2에서 제거)</td><td><code>deploy/</code> 변환 스크립트 + 엔진</td></tr>
+  <tr><td class="id">M1-6</td><td>v0 평가</td><td>BOP + 오염 프로토콜 + Jetson 레이턴시 전체 측정. <b>"재학습이 정말 필요한 갭"을 수치로 확정</b></td><td>v0 리포트</td></tr>
+</table>
+<div class="exit">
+<ul>
+<li>Shape6D v0가 Jetson에서 end-to-end 동작, 레이턴시 실측 (예상: S3가 최대 잔존 병목)</li>
+<li>BOP AR가 SAM-6D 대비 −2pt 이내 (검출 교체 영향 확인), 재도장 프로토콜에서 <b>S2 낙폭이 SAM-6D 대비 유의미하게 개선</b> — 형상 우선 판별의 1차 실증</li>
+</ul>
+</div>
+<div class="warnbox">
+M1-4의 depth 템플릿 정합은 가림(occlusion)에서 점수가 왜곡될 수 있다. 가시 영역만 비교(마스크 교집합 정규화)하는 설계를 기본으로 하고, 파일 상황은 M0-3 프로토콜에 가림 케이스를 포함해 검증할 것.
+</div>
+
+<!-- ══════════════════ M2 ══════════════════ -->
+<div class="ms">
+  <div class="title"><span class="no">M2</span>Shape6D-PEM — 기하 주도 포즈 네트워크 학습 (프로젝트의 심장)</div>
+  <div class="goal">S3의 특징 추출을 RGB 주도 → 기하 주도로 역전. 유일하게 대규모 학습이 필요한 마일스톤.</div>
+  <div class="badges"><span class="badge dur">7~9주 (파일럿 2주 + 본학습 3~4주 + 압축 2~3주)</span><span class="badge dep">의존: M0 하네스, D3(GPU)</span><span class="badge par">M1과 병행 시작 가능 (데이터 준비부)</span></div>
+</div>
+
+<h3>M2-A. 데이터·증강 파이프라인 (1~2주, M1과 병행)</h3>
+<table>
+  <tr><th>ID</th><th>작업</th><th>상세</th></tr>
+  <tr><td class="id">M2-A1</td><td>학습 데이터 포팅</td><td>MegaPose-GSO/ShapeNet PBR 셋 + SAM-6D <code>provider/training_dataset.py</code> 이식. 템플릿 로딩부를 "RGB 템플릿 2뷰" → "CAD 포인트+노멀" 경로로 교체</td></tr>
+  <tr class="crit"><td class="id">M2-A2</td><td>증강 설계</td><td>① <b>희소 depth 시뮬레이션 (D2 확정 반영)</b>: LiDAR 스캔 패턴(주사선/로제트)·거리 의존 밀도·포인트 드롭아웃·유효포인트 마스크 — 학습 분포를 "밀집·노이즈"에서 <b>"희소·고정밀"</b>로 이동, 물체 위 포인트 수를 D2-a 실측 범위로 랜덤화 ② <b>외형 랜덤화 강화</b>(재질·색·텍스처 무작위화 — 재도장 시나리오의 학습시 등가물) ③ 국소 기하 범프/부착물(오염 등가물) ④ <b>modality dropout</b>: RGB branch 확률적 완전 차단(p≈0.3), depth 밀도 저하 dropout도 대칭으로</td></tr>
+  <tr><td class="id">M2-A3</td><td>대칭 GT 처리 확인</td><td>SAM-6D의 <code>compute_correspondence_loss</code>가 대칭 물체의 모호한 대응 GT를 어떻게 다루는지 분석(미처리로 확인되면 대칭군 최소 오차 loss로 교체) — <b>확인 과제, 가정 금지</b></td></tr>
+</table>
+
+<h3>M2-B. 인코더 파일럿 — 3후보 통제 비교 (2주)</h3>
+<p>동일 조건(학습 데이터 10% 서브셋, 동일 매칭부·loss·스케줄)에서 3후보를 소규모 학습해 <b>수치로 선정</b>한다:</p>
+<table>
+  <tr><th>후보</th><th>구성</th><th class="c">가설</th><th class="c">탈락 조건</th></tr>
+  <tr><td><b>(a) image-grid conv</b> (우선순위 1)</td><td>depth→XYZ+노멀+결측마스크를 2D 격자 그대로 경량 conv 백본에 입력, RGB 보조 branch concat</td><td class="c">TRT 직행·최속. 정확도가 (b)와 동급이면 즉시 채택</td><td class="c">crop 내 심한 깊이 불연속에서 2D 이웃 근사 붕괴 시</td></tr>
+  <tr><td><b>(b) PointNet++ lite</b></td><td>SA 2단, 노멀 포함. FPS→voxel 다운샘플, kNN→radius 해시 그리드로 커스텀 op 제거 버전</td><td class="c">기하 표현력 기준점</td><td class="c">(a) 대비 정확도 이득 &lt; 1pt인데 레이턴시 2배 이상</td></tr>
+  <tr><td><b>(c) sparse conv</b></td><td>spconv 계열</td><td class="c">표현력 상한 확인용</td><td class="c">TRT/Jetson 배포 경로가 기한 내 확보 안 되면 즉시 제외 (배포성이 1급 기준)</td></tr>
+</table>
+<p class="small">공통 설계: 장면 측(2.5D 부분 관측)과 CAD 측(완전 3D 포인트)의 도메인 차이 → 인코더 가중치는 공유하되 도메인 플래그 임베딩을 추가하는 안을 기본으로 하고, 파일럿에서 분리 인코더와 비교. <b>D2 확정 반영:</b> 장면 측 포인트는 희소(수백 pt 가능성)이므로 파일럿 평가 데이터에 희소 패턴을 반드시 포함하고, 가변 포인트 수 내성을 선정 기준에 추가 — (a) grid conv는 유효포인트 마스크 채널로 희소성을 처리하되, 희소율이 높을수록 (b) 포인트 직접 처리 계열이 유리해질 수 있어 D2-a 수치가 사실상 인코더 선정의 캐스팅보트다.</p>
+
+<h3>M2-C. 본학습 (3~4주, GPU 상주)</h3>
+<table>
+  <tr><th>ID</th><th>작업</th><th>상세</th></tr>
+  <tr><td class="id">M2-C1</td><td>Full 모델 학습</td><td>선정 인코더 + 매칭부(우선 SAM-6D 동일 용량: 256d·3블록·2048pt)로 전체 데이터 학습. 목표: RGB 주도 → 기하 주도 전환 자체의 성능 확인 (경량화는 다음 단계에서)</td></tr>
+  <tr><td class="id">M2-C2</td><td>CAD 직접 온보딩 검증</td><td>렌더 템플릿 없이 CAD 포인트 특징만으로 매칭되는지 — 실패 시 폴백: depth 렌더 템플릿에서 기하 인코더 특징 추출(외형 무관성은 유지됨)</td></tr>
+  <tr><td class="id">M2-C3</td><td>top-k 가설 출력</td><td>coarse 가설 6000/300→2000/100 축소 + top-k(k=3) 유지 출력. fine 단계는 최상 가설만 통과(예산), S4가 k개 재평가</td></tr>
+</table>
+
+<h3>M2-D. 압축 (2~3주)</h3>
+<table>
+  <tr><th>ID</th><th>작업</th><th>상세</th></tr>
+  <tr><td class="id">M2-D1</td><td>distillation 경량화</td><td>M2-C1 자체 teacher(및 SAM-6D teacher) → hidden 256→192→128, 블록 3→2, fine 2048→1024pt 순차 축소. feature-level + 유사도행렬-level distill</td></tr>
+  <tr><td class="id">M2-D2</td><td>AR-latency 곡선</td><td>축소 격자마다 BOP AR + Jetson 실측 기록 → 절충점을 데이터로 확정</td></tr>
+  <tr><td class="id">M2-D3</td><td>매칭부 TRT화</td><td>포팅된 매칭부(커스텀 op 제거 완료 상태)를 ONNX→TRT FP16. linear attention 변환 검증</td></tr>
+</table>
+<div class="exit">
+<ul>
+<li>Full 모델: BOP AR ≥ 68 (SAM-6D −2.4pt 이내) <b>이면서</b> 재도장 프로토콜 낙폭 ≤ 3pt (SAM-6D 대비 우위 실증)</li>
+<li>압축 모델: AR ≥ 67, S3 연산량(FLOPs) SAM-6D PEM 대비 ≤ 1/3, Jetson S3 레이턴시 ≤ 250ms</li>
+<li>RGB 차단 테스트(입력 RGB를 회색으로): AR 낙폭 ≤ 5pt — 형상 의존 역전의 정량 증명</li>
+</ul>
+</div>
+
+<!-- ══════════════════ M3 ══════════════════ -->
+<div class="ms">
+  <div class="title"><span class="no">M3</span>S4 검증 모듈 — ICP 정련과 "자기 의심"</div>
+  <div class="goal">최종 정확도 마무리(ICP)와 산업용 신뢰도(accept/reject). M2와 상당 부분 병행 가능 — v0 파이프라인의 SAM-6D 포즈 출력 위에서 먼저 개발.</div>
+  <div class="badges"><span class="badge dur">3주</span><span class="badge dep">의존: M1 (v0 위에서 개발)</span><span class="badge par">M2와 병행</span></div>
+</div>
+
+<table>
+  <tr><th>ID</th><th>작업</th><th>상세</th></tr>
+  <tr><td class="id">M3-1</td><td>GPU p2pl ICP</td><td>point-to-plane + Huber kernel, 5~10 iter, 대응은 투영 기반(projective association — kNN 없이 TRT/CUDA 친화). cupoch/Open3D-CUDA 벤치 후 자체 구현 여부 결정</td></tr>
+  <tr><td class="id">M3-2</td><td>depth 렌더 잔차 스코어</td><td>S0 캐시 포인트를 가설 포즈로 투영 → 관측 depth와 잔차맵 + 가시율. top-k 가설 선별과 최종 검증에 공용</td></tr>
+  <tr class="crit"><td class="id">M3-3</td><td>신뢰도 보정</td><td>inlier ratio·잔차 통계·S2 점수 → 로지스틱 보정(calibration set은 BOP val + 오염 프로토콜). 출력: 보정 확률 + accept/reject. <b>대칭군 등가 평가로 오reject 방지</b> (M1-2 산출물 소비)</td></tr>
+  <tr><td class="id">M3-4</td><td>ROC 리포트</td><td>오수락률 vs 리콜 곡선, 시나리오별(클린/오염/재도장/결측) 분해</td></tr>
+</table>
+<div class="exit">
+<ul>
+<li>ICP 후 AR 상승 확인 (기대 +1~3pt), S4 전체 ≤ 60ms (Jetson)</li>
+<li>오수락률 &lt; 1% @ 리콜 손실 ≤ 5%, 대칭 물체 오reject 사례 0 (T-LESS 대칭군에서 검증)</li>
+</ul>
+</div>
+
+<!-- ══════════════════ M4 ══════════════════ -->
+<div class="ms">
+  <div class="title"><span class="no">M4</span>Jetson 배포 최적화 — 1초 게이트 통과</div>
+  <div class="goal">전 스테이지 TRT화·정밀도 튜닝·메모리 예산 관리. M2-D3까지 끝나면 잔존 PyTorch 구간이 없어야 한다.</div>
+  <div class="badges"><span class="badge dur">3주</span><span class="badge dep">의존: M2-D, M3, Orin NX 실기 확보(D1 이월분)</span></div>
+</div>
+
+<table>
+  <tr><th>ID</th><th>작업</th><th>상세</th></tr>
+  <tr><td class="id">M4-1</td><td>INT8 양자화</td><td>EfficientViT-SAM·DINOv2-S·S3 인코더에 INT8 PTQ(캘리브레이션 셋 = BOP val). 매칭부·ICP는 FP16 유지. AR 회귀 ≤ 0.5pt 게이트</td></tr>
+  <tr><td class="id">M4-2</td><td>파이프라인 통합 러너</td><td>스테이지 간 GPU 상주 텐서 전달(호스트 왕복 제거), 엔진 워밍업, 파워모드(MAXN/25W/15W)별 실측. 1차 Python, 필요 시 C++ 러너</td></tr>
+  <tr><td class="id">M4-3</td><td>메모리 예산</td><td>엔진+캐시 상주 메모리 계측 (Orin NX 8GB 변형 대응 여부 판단), 오브젝트 수 확장(1→5종) 시 캐시 스케일링 확인</td></tr>
+  <tr><td class="id">M4-4</td><td>최종 레이턴시 리포트</td><td>01 문서 예산표 vs 실측 대조, 여유분 재배분 결정(가설 수 k 증액 vs 해상도)</td></tr>
+</table>
+<div class="exit">
+<ul>
+<li>Orin NX MAXN에서 end-to-end p50 &lt; 600ms, p95 &lt; 1s (마스크 수 변동 포함)</li>
+<li>INT8 적용 후 BOP AR 낙폭 ≤ 0.5pt</li>
+</ul>
+</div>
+
+<!-- ══════════════════ M5 ══════════════════ -->
+<div class="ms">
+  <div class="title"><span class="no">M5</span>산업 파일럿 — 실물 검증</div>
+  <div class="goal">합성 벤치가 아닌 실부품·실센서·실오염으로 최종 검증. PPF 베이스라인과의 비교 리포트 생산.</div>
+  <div class="badges"><span class="badge dur">4주</span><span class="badge dep">의존: M4, D2(센서)</span></div>
+</div>
+
+<table>
+  <tr><th>ID</th><th>작업</th><th>상세</th></tr>
+  <tr><td class="id">M5-1</td><td>실물 테스트 리그</td><td>실부품 3~5종(무텍스처 금속 포함) + D2 센서 + 조명 변화. GT는 마커 보드 또는 로봇 반복 정밀도 기반</td></tr>
+  <tr class="crit"><td class="id">M5-2</td><td>실오염 시험</td><td>동일 부품의 도색 변경·방청유 도포·분진 상태 실측 — M0-3 합성 프로토콜의 실물 대응. <b>합성→실물 갭이 크면 M2-A2 증강 파라미터 피드백 루프</b></td></tr>
+  <tr><td class="id">M5-3</td><td>PPF 대조</td><td>Open3D PPF(가능 시 HALCON) 동일 조건 비교 — 산업 고객 언어로 된 우위 근거</td></tr>
+  <tr><td class="id">M5-4</td><td>운영 문서</td><td>온보딩 가이드(CAD 요건·대칭 등록), 센서 사양 가이드, 신뢰도 임계 운용 가이드</td></tr>
+</table>
+<div class="exit">
+<ul>
+<li>실물 리그에서 성공률·정밀도·사이클타임 리포트, PPF 대비 우위 항목 명시</li>
+<li>실오염 상태 성공률이 클린 대비 −10% 이내</li>
+</ul>
+</div>
+
+<!-- ══════════════════ 일정 ══════════════════ -->
+<h2>3. 일정 개요 (주 단위, Orin NX·GPU 자원 확보 가정)</h2>
+<table class="gantt">
+  <tr><th style="text-align:left">마일스톤</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th></tr>
+  <tr><td>M0 기반 구축</td><td colspan="3"><div class="bar g0"></div></td><td colspan="17"></td></tr>
+  <tr><td>M1 무재학습 v0</td><td colspan="3"></td><td colspan="4"><div class="bar g1"></div></td><td colspan="13"></td></tr>
+  <tr><td>M2-A 데이터 (병행)</td><td colspan="3"></td><td colspan="2"><div class="bar g2"></div></td><td colspan="15"></td></tr>
+  <tr><td>M2-B 인코더 파일럿</td><td colspan="5"></td><td colspan="2"><div class="bar g2"></div></td><td colspan="13"></td></tr>
+  <tr><td>M2-C 본학습</td><td colspan="7"></td><td colspan="4"><div class="bar g2"></div></td><td colspan="9"></td></tr>
+  <tr><td>M2-D 압축</td><td colspan="11"></td><td colspan="3"><div class="bar g2"></div></td><td colspan="6"></td></tr>
+  <tr><td>M3 검증 모듈 (병행)</td><td colspan="7"></td><td colspan="3"><div class="bar g3"></div></td><td colspan="10"></td></tr>
+  <tr><td>M4 배포 최적화</td><td colspan="13"></td><td colspan="3"><div class="bar g4"></div></td><td colspan="4"></td></tr>
+  <tr><td>M5 산업 파일럿</td><td colspan="16"></td><td colspan="4"><div class="bar g5"></div></td></tr>
+</table>
+<p class="small">총 <b>약 20주(5개월)</b>, 1.5~2명 기준. 최장 경로는 M2(학습)이며, M1·M3가 병행으로 흡수된다. GPU 자원 지연 시 M2가 그대로 밀린다 — D3가 일정 리스크 1순위.</p>
+
+<!-- ══════════════════ 실험 계획 ══════════════════ -->
+<h2>4. 핵심 실험 매트릭스 (M2~M3 중 수행)</h2>
+<table>
+  <tr><th>실험</th><th>변수</th><th>판정 지표</th><th>결정 대상</th></tr>
+  <tr><td>E1. 인코더 선정</td><td>(a) grid conv / (b) PointNet++ lite / (c) sparse conv</td><td>서브셋 AR + Jetson ms + TRT 변환 성공</td><td>S3 인코더 (M2-B 게이트)</td></tr>
+  <tr><td>E2. RGB branch 용량</td><td>없음 / 소형 CNN / distilled DINOv2-S × dropout p∈{0.2, 0.3, 0.5}</td><td>클린 AR vs RGB차단 AR vs 재도장 AR</td><td>의존도 균형점</td></tr>
+  <tr><td>E3. CAD 직접 vs depth렌더 온보딩</td><td>오브젝트 측 특징 소스</td><td>AR + 온보딩 시간</td><td>M2-C2 폴백 여부</td></tr>
+  <tr><td>E4. 압축 격자</td><td>dim {256,192,128} × 블록 {3,2} × pt {2048,1024}</td><td>AR-latency 파레토</td><td>최종 모델 크기 (M2-D2)</td></tr>
+  <tr><td>E5. 가설 수 k</td><td>k ∈ {1, 2, 3, 5}</td><td>AR(특히 T-LESS 대칭군) vs S4 ms</td><td>다중 가설 예산</td></tr>
+  <tr><td>E6. 게이팅 허용오차</td><td>크기 게이트 ±{10, 20, 30}%</td><td>S2 리콜 vs descriptor 호출 수</td><td>M1-4 파라미터</td></tr>
+</table>
+
+<!-- ══════════════════ 리스크 ══════════════════ -->
+<h2>5. 리스크 레지스터 (계획 반영 완료분)</h2>
+<table>
+  <tr><th>리스크</th><th class="c">확률</th><th class="c">영향</th><th>완화 (계획 내 위치)</th></tr>
+  <tr><td>학습 GPU 자원 미확보/지연</td><td class="c">중</td><td class="c">일정 전체</td><td>D3 선결. M1 v0가 자원 없이도 출시 가능한 중간 산출물</td></tr>
+  <tr><td>기하 주도 전환 후 AR 미달</td><td class="c">중</td><td class="c">핵심 가설 실패</td><td>M2-B 파일럿에서 조기 검출. 폴백: RGB branch 가중 상향(하이브리드 균형점은 E2가 결정)</td></tr>
+  <tr><td>CAD 직접 온보딩 매칭 실패</td><td class="c">중</td><td class="c">S0 설계 변경</td><td>M2-C2 폴백(depth 렌더 템플릿) 사전 정의 — 외형 무관성은 유지</td></tr>
+  <tr><td>depth 결측(반사·흑색 — LiDAR도 경면·흡광 표면에서 리턴 소실)에서 성능 붕괴</td><td class="c">중~높음</td><td class="c">산업 적용성</td><td>M2-A2 결측 증강 + 유효포인트 마스크 입력 + E2의 RGB 폴백 경로, D2 센서 가이드(M5-4)</td></tr>
+  <tr><td>물체 위 LiDAR 포인트 수 부족(소형 부품·원거리·저반사)</td><td class="c">중</td><td class="c">S3 성능 하한</td><td>D2-a 밀도 실측 선행 → M2-A2 증강 범위·인코더 선정(M2-B)·npoint 설계에 반영. 가변 포인트 수 내성 학습, 부족 시 RGB 보조 가중 동적 상향</td></tr>
+  <tr><td>TRT 변환 실패 구간 잔존</td><td class="c">낮~중</td><td class="c">1s 게이트</td><td>인코더 선정 기준에 배포성 1급 반영(M2-B 탈락 조건), 매칭부 조기 포팅(M0-5)</td></tr>
+  <tr><td>합성 오염 프로토콜과 실물 갭</td><td class="c">중</td><td class="c">강건성 주장 신뢰도</td><td>M5-2 실물 대조 + 증강 피드백 루프</td></tr>
+</table>
+
+<h2>6. 부록 — 보류/재평가 조건부 항목</h2>
+<table>
+  <tr><th>항목</th><th>재평가 트리거</th></tr>
+  <tr><td>SAM2 계열 (S1)</td><td>트래킹 기능을 로드맵에 추가하는 시점 — 스트리밍 메모리가 자산으로 반전됨. 그 전까지는 단일 프레임 파레토 열위로 보류</td></tr>
+  <tr><td>OVE6D식 초경량 depth-only coarse</td><td>Xavier NX 등 저사양 타깃 추가 시 S3 대체 후보</td></tr>
+  <tr><td>포인트 글로벌 기술자 (S2 학습형)</td><td>depth 템플릿 정합(M1-4)의 판별력이 유사 형상 혼입 상황에서 부족할 때</td></tr>
+  <tr><td>TEASER++ 가설 솔버</td><td>가중 SVD top-k(M2-C3)의 아웃라이어 내성이 파일 상황에서 부족할 때</td></tr>
+  <tr><td>C++ 통합 러너</td><td>Python 러너의 스테이지 간 오버헤드가 p95 1s 게이트를 위협할 때 (M4-2)</td></tr>
+</table>
+
+</div>
+</body>
+</html>

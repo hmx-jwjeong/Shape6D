@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shape6D — 스테이지 정의 및 후보 알고리즘 선정 (v0.1)</title>
+<style>
+  :root {
+    --ink: #1a1d23;
+    --sub: #5a6270;
+    --line: #dde2ea;
+    --bg: #ffffff;
+    --panel: #f6f8fb;
+    --accent: #0b5fff;
+    --accent-soft: #e8f0ff;
+    --good: #0a7d43;
+    --good-soft: #e6f5ec;
+    --warn: #a05a00;
+    --warn-soft: #fdf3e3;
+    --bad: #b4232a;
+    --bad-soft: #fdecec;
+    --shape: #6d28d9;
+    --shape-soft: #f1eafd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", -apple-system, sans-serif;
+    color: var(--ink); background: var(--bg);
+    line-height: 1.65; font-size: 15px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 28px 80px; }
+  h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: -0.5px; }
+  h2 { font-size: 21px; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--ink); letter-spacing: -0.3px; }
+  h2 .stage-no { color: var(--accent); font-weight: 800; margin-right: 8px; }
+  h3 { font-size: 16px; margin: 26px 0 8px; }
+  p { margin: 8px 0; }
+  .meta { color: var(--sub); font-size: 13px; margin-bottom: 28px; }
+  .meta b { color: var(--ink); }
+
+  /* 전제 배너 */
+  .axioms { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0 8px; }
+  .axiom { border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 14px; background: var(--panel); }
+  .axiom.hot { border-left-color: var(--shape); background: var(--shape-soft); }
+  .axiom b { display: block; font-size: 14px; margin-bottom: 3px; }
+  .axiom span { font-size: 13px; color: var(--sub); }
+  .axiom.hot span { color: #4a3a75; }
+
+  /* 파이프라인 다이어그램 */
+  .pipe { display: flex; align-items: stretch; gap: 0; margin: 24px 0 8px; flex-wrap: wrap; }
+  .pipe .node { flex: 1 1 150px; min-width: 150px; border: 1.5px solid var(--ink); border-radius: 10px; padding: 10px 12px; background: #fff; position: relative; margin-right: 26px; }
+  .pipe .node:last-child { margin-right: 0; }
+  .pipe .node:not(:last-child)::after { content: "▶"; position: absolute; right: -21px; top: 50%; transform: translateY(-50%); color: var(--sub); font-size: 12px; }
+  .pipe .node.offline { border-style: dashed; background: var(--panel); }
+  .pipe .node b { display: block; font-size: 13.5px; }
+  .pipe .node i { display: block; font-style: normal; font-size: 11.5px; color: var(--sub); margin-top: 3px; line-height: 1.45; }
+  .pipe .node .tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 20px; margin-bottom: 5px; }
+  .tag.off { background: #e8e8ee; color: #555; }
+  .tag.on { background: var(--accent-soft); color: var(--accent); }
+
+  /* 정의 카드 */
+  .defcard { display: grid; grid-template-columns: 110px 1fr; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 14px 0 20px; font-size: 13.5px; }
+  .defcard > div { padding: 8px 14px; border-bottom: 1px solid var(--line); }
+  .defcard > div:nth-last-child(-n+2) { border-bottom: none; }
+  .defcard .k { background: var(--panel); font-weight: 700; color: var(--sub); }
+
+  /* 표 */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 8px; font-size: 13px; }
+  th { background: var(--ink); color: #fff; text-align: left; padding: 8px 10px; font-weight: 600; white-space: nowrap; }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr.pick td { background: var(--good-soft); }
+  tr.pick td:first-child { border-left: 3px solid var(--good); font-weight: 700; }
+  tr.ref td { color: #8a8f98; }
+  td.c, th.c { text-align: center; }
+  .r { font-weight: 700; }
+  .r.g { color: var(--good); } .r.w { color: var(--warn); } .r.b { color: var(--bad); }
+  .note { font-size: 12.5px; color: var(--sub); margin-top: 4px; }
+
+  /* 권장 박스 */
+  .rec { border: 1.5px solid var(--good); border-radius: 10px; background: var(--good-soft); padding: 14px 18px; margin: 18px 0; }
+  .rec::before { content: "✔ 권장 구성"; display: block; font-weight: 800; color: var(--good); font-size: 13px; margin-bottom: 6px; }
+  .rec p { margin: 6px 0; font-size: 14px; }
+
+  /* 오염/도장 노트 */
+  .paint { border: 1.5px dashed var(--shape); border-radius: 10px; background: var(--shape-soft); padding: 12px 18px; margin: 14px 0; font-size: 13.5px; }
+  .paint::before { content: "⚠ 오염·재도장 관점"; display: block; font-weight: 800; color: var(--shape); font-size: 13px; margin-bottom: 5px; }
+
+  .chip { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 20px; margin-right: 4px; }
+  .chip.rgb { background: var(--bad-soft); color: var(--bad); }
+  .chip.geo { background: var(--shape-soft); color: var(--shape); }
+  .chip.mix { background: var(--warn-soft); color: var(--warn); }
+  .chip.free { background: var(--accent-soft); color: var(--accent); }
+
+  .small { font-size: 12.5px; color: var(--sub); }
+  code { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: 12.5px; }
+  .refs { font-size: 12.5px; color: var(--sub); }
+  .refs li { margin-bottom: 3px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  @media print { .wrap { max-width: 100%; } h2 { break-before: page; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Shape6D — 스테이지 정의 및 후보 알고리즘 선정</h1>
+<p class="meta">v0.1 초안 · 2026-07-18 · 기반: SAM-6D 코드 분석 + BOP Challenge 2024 공식 결과 · 상태: <b>논의용 (미확정)</b></p>
+
+<!-- ══════════════════ 전제 ══════════════════ -->
+<h2>0. 설계 전제 (모든 스테이지에 공통 적용)</h2>
+<div class="axioms">
+  <div class="axiom hot">
+    <b>A1. 외형은 신뢰할 수 없는 신호다</b>
+    <span>대상 물체는 오염(녹·기름·분진·스크래치)되거나 재도장·도색 변경될 수 있다. CAD/템플릿의 외형과 현장 외형은 다르다고 가정한다. <u>RGB는 보조 신호, 형상이 주 신호.</u> 단, 오염은 형상도 미세하게 바꾼다(퇴적·부착물) — 로컬 기하 기술자는 이에 대한 허용오차를 가져야 한다.</span>
+  </div>
+  <div class="axiom">
+    <b>A2. 제로샷은 절대 조건</b>
+    <span>신규 물체는 CAD 온보딩(오프라인 수 분)만으로 투입. 물체별 재학습·파인튜닝 금지. 따라서 모든 학습 모듈은 object-agnostic(대응 매칭·기술자 학습)이어야 한다.</span>
+  </div>
+  <div class="axiom">
+    <b>A3. 최초 사이클 견고성 &gt; 트래킹</b>
+    <span>단발 프레임에서 성공하는 것이 목표. 반복 렌더-비교(render&amp;compare)식 refinement 루프나 시간축 누적에 의존하는 설계는 배제. 대신 다중 가설 + 검증으로 첫 샷 성공률을 확보.</span>
+  </div>
+  <div class="axiom">
+    <b>A4. Jetson (Orin) NX &lt; 1s / 산업 강건성</b>
+    <span>TensorRT FP16/INT8 변환 가능성이 아키텍처 선정 기준에 포함된다(커스텀 CUDA op 최소화). "틀렸을 때 틀렸다고 아는" 보정된 신뢰도 출력이 필수.</span>
+  </div>
+</div>
+
+<!-- ══════════════════ 파이프라인 ══════════════════ -->
+<h2>1. 파이프라인 정의 (5 스테이지)</h2>
+<p>SAM-6D의 2모델 구조(ISM/PEM)를 5개 스테이지로 재분해한다. 오브젝트에 관한 모든 연산은 Stage 0(오프라인)으로 밀어내고, 온라인 경로는 형상 신호를 축으로 재구성한다.</p>
+
+<div class="pipe">
+  <div class="node offline"><span class="tag off">OFFLINE</span><b>S0. 온보딩</b><i>CAD → 포인트+노멀, 기하 특징, depth 템플릿, 대칭 메타, 전체 캐시</i></div>
+  <div class="node"><span class="tag on">ONLINE</span><b>S1. 제안 생성</b><i>RGB-D → class-agnostic 인스턴스 마스크 (리콜 최우선)</i></div>
+  <div class="node"><span class="tag on">ONLINE</span><b>S2. 후보 판별</b><i>마스크 → 대상 물체 선별 (형상 캐스케이드)</i></div>
+  <div class="node"><span class="tag on">ONLINE</span><b>S3. 포즈 추정</b><i>마스크+depth+CAD → R,t 가설 top-k (기하 주도 매칭)</i></div>
+  <div class="node"><span class="tag on">ONLINE</span><b>S4. 정련·검증</b><i>ICP 폴리싱 + 렌더 잔차 → 최종 포즈 + 신뢰도 accept/reject</i></div>
+</div>
+<p class="small">역할 분리 원칙: <b>S1은 리콜만 책임진다</b>(놓치면 뒤에서 복구 불가). <b>정밀도(오검 제거)는 S2·S4가 책임진다.</b> BOP 2024 공식 결론이 "unseen 파이프라인의 주 병목은 2D 검출"(unseen AP 52.0 vs seen 79.8)이므로, 검출을 얇게 만들되 리콜을 희생하지 않는 구조가 필요하다.</p>
+
+<!-- ══════════════════ S0 ══════════════════ -->
+<h2><span class="stage-no">S0</span>온보딩 — 오프라인, CAD → 추론용 표현</h2>
+<div class="defcard">
+  <div class="k">입력</div><div>CAD 메시(단위 확정된 메트릭 스케일), (선택) 대칭 메타데이터</div>
+  <div class="k">출력</div><div>① 포인트클라우드+노멀(dense 1024~2048 / sparse 128~196) ② 사전계산 기하 특징 <code>dense_fo</code> ③ geo embedding·FPS 인덱스 캐시 ④ depth 템플릿 42뷰 ⑤ (보조) RGB 템플릿 소수 ⑥ 대칭 그룹 ⑦ 메트릭 bbox/직경</div>
+  <div class="k">책임</div><div>온라인 경로에서 오브젝트 측 연산이 <b>0</b>이 되도록 만드는 것. SAM-6D는 추론 중에도 오브젝트 측 FPS·geo embedding을 매 프레임 재계산한다(<code>pose_estimation_model.py:34-37</code>) — 전량 여기로 이동.</div>
+  <div class="k">실패 모드</div><div>CAD 스케일 오류(mm/m 혼동), 대칭 미등록 → S4에서 잘못된 reject</div>
+</div>
+
+<table>
+  <tr><th>항목</th><th>후보</th><th>권장</th><th>근거</th></tr>
+  <tr><td>포인트 샘플링</td><td>uniform / Poisson disk / voxel</td><td class="r g">Poisson disk + 노멀</td><td>균일 커버리지가 매칭 안정성에 직결. voxel은 온라인(장면 측)용</td></tr>
+  <tr><td>뷰 샘플링</td><td>icosphere L2 42뷰 / L3 162뷰</td><td class="r g">42뷰 (SAM-6D 규약 유지)</td><td>S2 depth 템플릿·S3 검증 공용. 규약 유지로 기존 자산 재사용</td></tr>
+  <tr><td>렌더러</td><td>BlenderProc / Pyrender / nvdiffrast</td><td class="r g">BlenderProc(학습) + Pyrender(온보딩)</td><td>온보딩은 depth만 필요하므로 경량 렌더러로 충분</td></tr>
+  <tr><td>대칭 검출</td><td>수동 메타 / 메시 자동 검출(회전축·반사면)</td><td class="r g">자동 검출 + 수동 오버라이드</td><td>산업 CAD는 대칭 빈도가 높음. S3 다중가설·S4 스코어링의 입력</td></tr>
+</table>
+
+<div class="paint">
+온보딩 기준 외형(재질·색)은 <b>버전이 바뀔 수 있는 속성</b>으로 취급한다. RGB 템플릿을 만들더라도 "현재 도장 상태의 스냅샷"일 뿐이며, S2·S3에서 이를 hard 신호로 쓰지 않는다. 반면 depth 템플릿·기하 특징은 도장/오염과 무관하게 유효 — 온보딩 산출물의 1급 시민은 형상 표현이다.
+</div>
+
+<!-- ══════════════════ S1 ══════════════════ -->
+<h2><span class="stage-no">S1</span>제안 생성 — class-agnostic 인스턴스 분할</h2>
+<div class="defcard">
+  <div class="k">입력</div><div>RGB (640×480) + depth</div>
+  <div class="k">출력</div><div>인스턴스 마스크 집합 (수십 개, 미분류)</div>
+  <div class="k">책임</div><div><b>리콜 최우선.</b> 대상 물체가 포함된 마스크를 반드시 생성. 오검(과잉 제안)은 허용 — S2가 제거</div>
+  <div class="k">제로샷 조건</div><div>promptable/class-agnostic 분할 = 무엇이든 분할하므로 자동 충족</div>
+  <div class="k">실패 모드</div><div>과분할(부품이 조각남), 저대비 경계 미검출, 접촉 파일에서 병합</div>
+</div>
+
+<table>
+  <tr><th>후보</th><th class="c">모달리티</th><th>규모/방식</th><th class="c">Jetson 적합성</th><th class="c">외형변화 강건성</th><th>평가</th></tr>
+  <tr class="ref"><td>SAM ViT-H (SAM-6D 기본)</td><td class="c"><span class="chip rgb">RGB</span></td><td>~630M, 그리드 프롬프트</td><td class="c r b">✕</td><td class="c">○</td><td>기준선. Jetson에서 수 초~수십 초 — 탈락</td></tr>
+  <tr class="ref"><td>SAM 2.1 (tiny/small)</td><td class="c"><span class="chip rgb">RGB</span></td><td>Hiera 백본, 스트리밍</td><td class="c r w">△</td><td class="c">○</td><td>트래킹 지향 설계 — A3와 불일치, 여전히 무거움</td></tr>
+  <tr><td>FastSAM-s/x (현 SAM-6D 옵션)</td><td class="c"><span class="chip rgb">RGB</span></td><td>YOLOv8-seg, ~68M(x)</td><td class="c r w">○</td><td class="c">○</td><td>BOP24: CNOS-FastSAM 42.8 AP @0.22s. 마스크 품질이 SAM 대비 거침</td></tr>
+  <tr class="pick"><td>EfficientViT-SAM (L0/L1)</td><td class="c"><span class="chip rgb">RGB</span></td><td>distilled SAM, TRT 최적화 우수</td><td class="c r g">◎</td><td class="c">○</td><td>SAM-H급 마스크 품질을 수십 ms급(TRT)으로. <b>주 경로 1안</b></td></tr>
+  <tr class="pick"><td>NanoSAM</td><td class="c"><span class="chip rgb">RGB</span></td><td>MobileSAM 재증류, Jetson 전용</td><td class="c r g">◎</td><td class="c">○</td><td>Jetson TRT 레퍼런스 존재, 최속. 품질은 EfficientViT-SAM보다 낮음 — <b>예산 부족 시 대체안</b></td></tr>
+  <tr><td>MobileSAM(v2) / EdgeSAM</td><td class="c"><span class="chip rgb">RGB</span></td><td>~10M 인코더 distill</td><td class="c r g">○</td><td class="c">○</td><td>동급 대안. v2의 object-aware 프롬프트(그리드 제거) 아이디어는 차용 가치</td></tr>
+  <tr class="pick"><td>Depth 기하 제안 (평면 제거 + Euclidean 클러스터링 / normal-edge 분할)</td><td class="c"><span class="chip geo">GEO</span></td><td>비학습, CPU/GPU 수 ms</td><td class="c r g">◎</td><td class="c r g">◎ (완전 불변)</td><td>RGB 완전 독립·거의 무료. 단독으로는 접촉 파일에서 병합 실패 — <b>병렬 보조 경로</b></td></tr>
+  <tr><td>UOIS / MSMFormer 계열 (unseen object instance seg)</td><td class="c"><span class="chip mix">RGB-D</span></td><td>합성 학습, 로봇 클러터 특화</td><td class="c r w">○</td><td class="c">○</td><td>빈피킹 상황 특화 학습이 강점. 범용성·유지보수 비용은 SAM계열 열세. 파일럿 비교 대상</td></tr>
+</table>
+
+<div class="rec">
+<p><b>주 경로:</b> EfficientViT-SAM-L0 (TRT FP16/INT8) — 그리드 프롬프트 대신 depth 전경(평면 제거 후) 위 포인트 프롬프트로 프롬프트 수 자체를 절감.</p>
+<p><b>보조 경로(병렬, 수 ms):</b> depth 클러스터링 제안을 항상 함께 생성해 마스크 풀에 합류 — RGB 저대비(무광 흑색 부품 등)로 SAM계열이 놓치는 경계를 형상 쪽에서 회수. 두 경로의 합집합에 NMS.</p>
+<p><b>탈락 근거:</b> SAM-H(속도), SAM2(트래킹 지향·A3 위배), 학습형 검출기(YOLO류 클로즈드셋 — A2 위배).</p>
+</div>
+
+<div class="paint">
+제안 생성 자체는 class-agnostic(경계 기반)이라 오염·재도장의 직격을 받지 않는다. 단, <b>도장 변경으로 배경과의 대비가 사라지는 경우</b>(예: 회색 부품 → 회색 트레이)가 실질 리스크이며, 이것이 depth 병렬 경로를 두는 이유다. 오염·도장에 가장 취약한 것은 다음 스테이지(판별)다.
+</div>
+
+<!-- ══════════════════ S2 ══════════════════ -->
+<h2><span class="stage-no">S2</span>후보 판별 — "어느 마스크가 우리 부품인가"</h2>
+<div class="defcard">
+  <div class="k">입력</div><div>마스크 집합 + depth + S0 산출물(descriptor·depth 템플릿·메트릭 크기)</div>
+  <div class="k">출력</div><div>대상 물체 인스턴스 top-k (+판별 점수)</div>
+  <div class="k">책임</div><div>S1의 과잉 제안에서 대상만 선별. 오염·재도장 상태에서도 판별이 무너지지 않을 것</div>
+  <div class="k">제로샷 조건</div><div>템플릿/CAD 매칭 기반(학습된 분류기 없음)이어야 함</div>
+  <div class="k">실패 모드</div><div>유사 형상 혼입 부품 오선별, 외형 변화로 의미 점수 붕괴</div>
+</div>
+
+<p>SAM-6D ISM의 최종 점수는 <code>(semantic + appearance + geometric·visible) / (2 + visible)</code>인데, semantic·appearance 둘 다 DINOv2 RGB 특징 — 즉 <b>판별의 2/3가 A1 위배</b>다. Shape6D는 이를 형상 우선 캐스케이드로 교체한다.</p>
+
+<table>
+  <tr><th>신호/후보</th><th class="c">타입</th><th>비용</th><th class="c">오염 생존</th><th class="c">재도장 생존</th><th>평가</th></tr>
+  <tr class="pick"><td>① 메트릭 크기 게이팅 — 마스크 depth 역투영 extent vs CAD 직경/bbox</td><td class="c"><span class="chip geo">GEO</span></td><td>~0 (산술)</td><td class="c r g">◎</td><td class="c r g">◎</td><td>RGB가 절대 못 주는 공짜 제로샷 신호. 후보 대부분을 descriptor 계산 전에 제거 → 속도·강건성 동시 확보</td></tr>
+  <tr class="pick"><td>② Depth 템플릿 정합 — 스케일 정규화 깊이 크롭 vs 42뷰 depth 템플릿 (정규화 상관/Chamfer)</td><td class="c"><span class="chip geo">GEO</span></td><td>낮음 (42뷰 × 저해상)</td><td class="c r g">○~◎</td><td class="c r g">◎</td><td><b>판별 주 신호.</b> 외형 완전 무관. 가림·depth 노이즈에 대한 허용오차 설계 필요</td></tr>
+  <tr class="pick"><td>③ DINOv2 ViT-S 의미 점수 (cls token, CNOS식)</td><td class="c"><span class="chip rgb">RGB</span></td><td>중간 (게이팅 후 소수 crop만)</td><td class="c r w">△</td><td class="c r b">✕~△</td><td>약한 사전확률(prior)로 강등해 유지. "부품 같은 것 vs 배경 쓰레기" 구분엔 여전히 유효</td></tr>
+  <tr><td>DINOv2 ViT-L (SAM-6D/CNOS/MUSE 표준)</td><td class="c"><span class="chip rgb">RGB</span></td><td>높음 (~300M)</td><td class="c r w">△</td><td class="c r b">✕~△</td><td>Jetson 예산 초과. ViT-S(21M)로 다운, 필요 시 distill</td></tr>
+  <tr><td>SAM-6D appearance 점수 (패치 유사도)</td><td class="c"><span class="chip rgb">RGB</span></td><td>중간</td><td class="c r b">✕</td><td class="c r b">✕</td><td>패치 단위 외형 비교 = 오염·도장에 가장 먼저 붕괴하는 신호. <b>제거</b></td></tr>
+  <tr><td>MUSE (BOP24 unseen 검출 1위, 52.0 AP @0.56s)</td><td class="c"><span class="chip rgb">RGB</span></td><td>높음</td><td class="c r w">△</td><td class="c r w">△</td><td>유사도 메트릭·집계 방식 개선은 차용 가치. 백본 규모는 부적합</td></tr>
+  <tr><td>포인트 글로벌 기술자 (category-agnostic 학습, PointNet급)</td><td class="c"><span class="chip geo">GEO</span></td><td>낮음</td><td class="c r g">○</td><td class="c r g">◎</td><td>②의 학습형 대체안. 부분 관측→전체 형상 임베딩 학습 필요 — 2단계 과제로 보류</td></tr>
+</table>
+
+<div class="rec">
+<p><b>3단 캐스케이드:</b> ① 크기 게이팅(전 후보, 무료) → ② depth 템플릿 정합(생존 후보, 주 판별) → ③ DINOv2-S 의미 점수(동률 해소용 약한 prior).</p>
+<p><b>점수 융합:</b> <code>score = w_size·S_size + w_depth·S_depth + w_sem·S_sem</code>, w_sem은 낮게 고정하고 depth 결측률에 따라 동적 하향. SAM-6D의 appearance 항은 승계하지 않음.</p>
+<p><b>효과:</b> descriptor forward 횟수(=ISM 레이턴시의 주범)가 게이팅 통과분으로 축소. 판별 주 신호가 GEO로 이동해 A1 충족.</p>
+</div>
+
+<div class="paint">
+시나리오별 신호 생존: <b>클린</b> ①②③ 모두 유효 → 최고 정밀도. <b>오염(녹·분진)</b> ③ 저하, ①② 유지(퇴적 두께는 크기 허용오차 내). <b>전면 재도장</b> ③ 붕괴 가능, ①② 완전 유지 → 판별 성립. <b>유사 형상 타 부품 혼입</b> ①② 무력 — 이때만 ③이 결정적이므로 완전 제거가 아닌 "강등"이 옳다.
+</div>
+
+<!-- ══════════════════ S3 ══════════════════ -->
+<h2><span class="stage-no">S3</span>포즈 추정 — 기하 주도 대응 매칭</h2>
+<div class="defcard">
+  <div class="k">입력</div><div>선별 마스크 + depth 포인트(+노멀) + RGB crop(보조) + S0 캐시</div>
+  <div class="k">출력</div><div>포즈 가설 top-k (R, t, 매칭 점수)</div>
+  <div class="k">책임</div><div>단발 프레임에서 refinement가 수렴 가능한 반경 내의 초기 포즈를 높은 확률로 생성</div>
+  <div class="k">제로샷 조건</div><div>object-agnostic 로컬 기술자 + 대응 매칭 구조 (물체별 학습 금지)</div>
+  <div class="k">실패 모드</div><div>대칭 모호성, depth 결측부 대응 실패, 심한 가림</div>
+</div>
+
+<h3>후보 비교 — BOP-Classic-Core unseen 6D localization 공식 수치 포함</h3>
+<table>
+  <tr><th>후보</th><th class="c">AR</th><th class="c">런타임/img<br>(데스크톱 GPU)</th><th class="c">주 신호</th><th class="c">Jetson<br>&lt;1s 전망</th><th>평가</th></tr>
+  <tr><td>FreeZeV2.1 (BOP24 <b>1위</b>) — GeDi 기하 + DINOv2 융합, training-free, +ICP</td><td class="c r g">82.1</td><td class="c r b">24.9s</td><td class="c"><span class="chip geo">GEO</span>+<span class="chip rgb">RGB</span></td><td class="c r b">✕</td><td>속도 부적합. 단, <b>"기하 특징이 제로샷 정확도의 핵심"이라는 최상급 증거</b> — Shape6D 테제의 근거</td></tr>
+  <tr class="ref"><td>FRTPose.v1 (MUSE 검출 + FoundationPose 정련)</td><td class="c">81.8</td><td class="c r b">27.6s</td><td class="c"><span class="chip rgb">RGB</span>-D</td><td class="c r b">✕</td><td>대형 앙상블 — 부적합</td></tr>
+  <tr><td>Co-op (CVPR'25) — 반밀집 대응 + 확률적 flow 정련</td><td class="c">75.9</td><td class="c r w">0.8s</td><td class="c"><span class="chip rgb">RGB</span>-D</td><td class="c r w">△ (수 초 예상)</td><td>실용파 신흥 강자. 데스크톱 0.8s → Jetson 환산 시 초과 예상, RGB 의존 커서 A1 취약. 대응+가설 구조는 참고</td></tr>
+  <tr class="ref"><td>FoundationPose — render&amp;compare</td><td class="c">73.4</td><td class="c r b">29.3s</td><td class="c"><span class="chip rgb">RGB</span>-D</td><td class="c r b">✕</td><td>렌더 루프 = A3·A4 위배</td></tr>
+  <tr class="pick"><td><b>SAM-6D PEM (베이스)</b> — 2단 포인트 매칭, refinement 없음</td><td class="c r g">70.4</td><td class="c r g">4.4s (전체 파이프라인)</td><td class="c"><span class="chip rgb">RGB</span>-D</td><td class="c r g">○ (개조 시)</td><td>무정련으로 이 수치 = 매칭 구조 자체가 강함. <b>구조는 승계, 특징만 GEO 주도로 교체</b></td></tr>
+  <tr><td>GigaPose — 템플릿 패치 대응, coarse 특화</td><td class="c">~27 (단독)</td><td class="c r g">~0.1s급</td><td class="c"><span class="chip rgb">RGB</span></td><td class="c r g">○</td><td>단독 정확도 부족(정련 전제 설계 = A3 위배). 속도 설계는 참고</td></tr>
+  <tr><td>Geo6DPose ('25) — DINOv2 + 기하 필터링 + RANSAC-Kabsch, training-free</td><td class="c">53.7</td><td class="c r w">0.92s (A4000)</td><td class="c"><span class="chip mix">RGB-D</span></td><td class="c r w">△</td><td>"기하 필터링으로 소형화" 방향성 동지. 특징이 여전히 RGB(DINOv2)라 A1 한계</td></tr>
+  <tr><td>ZeroPose — 계층적 기하 특징 매칭</td><td class="c">–</td><td class="c">–</td><td class="c"><span class="chip geo">GEO</span></td><td class="c r w">○</td><td>기하 특징 제로샷 계열 선행. 정확도는 SAM-6D 대비 열세로 보고됨</td></tr>
+  <tr><td>OVE6D — depth 전용 뷰포인트 인코딩, 초경량</td><td class="c">–</td><td class="c r g">빠름</td><td class="c"><span class="chip geo">GEO</span></td><td class="c r g">◎</td><td>depth-only·경량·제로샷 3박자. 정확도 상한 낮음 — <b>초경량 coarse 대체안으로 킵</b></td></tr>
+  <tr><td>고전 PPF (Drost / HALCON surface matching)</td><td class="c">–</td><td class="c">0.1~0.5s (CPU)</td><td class="c"><span class="chip geo">GEO</span></td><td class="c r g">○</td><td>현 산업 표준. 학습 불요·완전 외형 불변. 클러터·센서 노이즈에 취약 — <b>비학습 폴백 겸 베이스라인</b></td></tr>
+  <tr><td>정합 스택: GeDi/RoITr/GeoTransformer/BUFFER + TEASER++/MAC 솔버</td><td class="c">–</td><td class="c">가변</td><td class="c"><span class="chip geo">GEO</span></td><td class="c r w">○</td><td>기술자·솔버 부품 공급원. 특히 <b>TEASER++(certifiable 강건 정합)</b>는 가설 생성 솔버 후보</td></tr>
+</table>
+
+<h3>Shape6D-PEM 개조 설계 (권장)</h3>
+<table>
+  <tr><th>블록</th><th>SAM-6D</th><th>Shape6D 제안</th><th>근거</th></tr>
+  <tr><td>Feature 추출</td><td>MAE ViT-B가 RGB crop에서 dense 특징 (형상은 위치 편향으로만)</td><td><b>기하 인코더가 주</b>: 포인트+노멀 입력 경량 인코더. 후보 3종 — (a) PointNet++ lite (b) sparse conv (c) <b>image-grid conv 인코더</b>(depth를 격자 구조 그대로 2D conv 처리)</td><td>(c) 권장: kNN/FPS 커스텀 op 없이 표준 conv만으로 TRT 직행. 2D 이웃 ≈ 3D 이웃 근사가 crop 스케일에선 유효</td></tr>
+  <tr><td>RGB 역할</td><td>주 신호 (100%)</td><td>보조 branch (소형 CNN 또는 distilled DINOv2-S, 저차원 concat) + <b>modality dropout</b> — 학습 중 RGB branch를 확률적으로 완전 차단</td><td>의존도 역전을 구조로 강제. 오염·재도장·RGB 무효 상황에서도 성능 유지가 학습 목표에 내장됨</td></tr>
+  <tr><td>오브젝트 측</td><td>RGB 템플릿 2뷰 → 온라인 특징 추출</td><td><b>CAD 포인트+노멀에서 직접</b> 특징 추출, 전량 S0 캐시</td><td>렌더 의존 제거, 온라인 오브젝트 연산 0, 도장 상태와 무관한 온보딩</td></tr>
+  <tr><td>매칭 구조</td><td>coarse(196pt, RPE 3블록) → fine(2048pt, linear attn 3블록)</td><td>구조 승계 + 축소: hidden 256→128~192, 블록 3→2, fine 2048→1024pt</td><td>무정련 AR 70.4를 만든 검증된 구조. 축소분은 SAM-6D teacher로 distillation 보전</td></tr>
+  <tr><td>가설 생성</td><td>유사도 → 6000/300 가중 SVD</td><td>2000/100로 축소 + <b>top-k(2~3) 가설 유지</b>, 대안으로 TEASER++ 검토</td><td>Jetson 배치 SVD 비용 절감. 다중 가설은 대칭·가림 대응(A3)</td></tr>
+</table>
+
+<div class="rec">
+<p><b>결론: "FreeZe의 기하 우선주의 × SAM-6D의 매칭 속도"가 목표 좌표.</b> FreeZe(82.1 AR)는 기하 특징의 제로샷 우월성을 증명했지만 24.9s, SAM-6D(70.4)는 빠른 구조를 증명했지만 특징이 RGB다. Shape6D-PEM = SAM-6D 매칭 구조 + GEO 주도 특징 + modality dropout + CAD 직접 온보딩 + top-k 가설.</p>
+<p><b>병행 트랙:</b> 고전 PPF를 비학습 폴백/베이스라인으로 항상 유지 — 학습 모델이 실패하는 분포 외 상황의 안전망이자, 산업 고객 대상 성능 비교 기준선(HALCON 대비)이 된다.</p>
+</div>
+
+<div class="paint">
+오염이 형상을 바꾸는 경우(용접 스패터, 퇴적물): 로컬 기하 기술자는 국소 오염에 대응이 분산되어 견디지만, ICP·depth 정합은 오염부가 잔차를 만든다 → S4에서 robust kernel(Huber/GM)로 오염부를 아웃라이어 처리. 학습 시 CAD에 국소 기하 노이즈(범프·부착물) 증강을 넣어 기술자 수준에서도 내성을 확보한다.
+</div>
+
+<!-- ══════════════════ S4 ══════════════════ -->
+<h2><span class="stage-no">S4</span>정련·검증 — 폴리싱과 "자기 의심"</h2>
+<div class="defcard">
+  <div class="k">입력</div><div>포즈 가설 top-k + 장면 포인트+노멀 + S0 캐시(포인트·depth 템플릿)</div>
+  <div class="k">출력</div><div>최종 R,t + <b>보정된 신뢰도</b> + accept/reject 판정</div>
+  <div class="k">책임</div><div>가설 선별·미세 정합·오답 검출. 산업 강건성의 절반은 여기서 나온다</div>
+  <div class="k">실패 모드</div><div>대칭 물체를 오답으로 reject, 오염부 잔차로 신뢰도 과소평가</div>
+</div>
+
+<table>
+  <tr><th>후보</th><th>방식</th><th class="c">비용</th><th class="c">A1~A4 정합성</th><th>평가</th></tr>
+  <tr class="pick"><td>Point-to-plane ICP (GPU)</td><td>5~10 iter, robust kernel(Huber), cupoch/Open3D-CUDA 또는 자체 TRT-friendly 구현</td><td class="c r g">~20ms</td><td class="c r g">◎</td><td>완전 외형 불변·경량. FreeZe도 최종 정확도를 ICP로 완성 — 무정련 대비 수 pt AR 상승 기대</td></tr>
+  <tr><td>GICP / robust ICP 변형</td><td>분포-분포 정합</td><td class="c">중</td><td class="c">○</td><td>노이즈 큰 센서에서 대안. 1차는 p2pl로 충분</td></tr>
+  <tr><td>TEASER++</td><td>대응 기반 certifiable 강건 정합</td><td class="c">중</td><td class="c">○</td><td>S3 가설 솔버로의 활용이 더 적합. S4에는 과잉</td></tr>
+  <tr class="ref"><td>학습 refiner (MegaPose/GenFlow/FoundationPose/Co-op flow)</td><td>렌더-비교 반복 or flow</td><td class="c r b">높음</td><td class="c r b">✕ (A3·A4 위배)</td><td>트래킹·다중 반복 지향. 배제</td></tr>
+  <tr class="pick"><td>Depth 렌더 잔차 검증 (VSD식)</td><td>추정 포즈로 CAD depth 렌더(또는 포인트 투영) vs 관측 depth 잔차맵</td><td class="c r g">~10ms</td><td class="c r g">◎</td><td><b>외형 무관 검증의 핵심.</b> 잔차 분포 + 가시율로 accept/reject</td></tr>
+  <tr class="pick"><td>신뢰도 융합·보정</td><td>inlier ratio + 렌더 잔차 + S2 판별 점수 → 보정(calibration)된 단일 score, 대칭 인식(대칭군 내 최소 오차로 평가)</td><td class="c r g">~0</td><td class="c r g">◎</td><td>SAM-6D의 <code>pred_pose_score</code>(매칭 신뢰도)보다 강한, 물리 정합 기반 판정. 임계 미달 시 reject → 재촬영/재시도 신호</td></tr>
+</table>
+
+<div class="rec">
+<p><b>구성:</b> top-k 가설 각각에 저비용 depth 렌더 잔차 스코어 → 최고 가설만 p2pl ICP(robust kernel) → 최종 잔차·inlier 기반 보정 신뢰도 → 임계 기반 accept/reject. 대칭군은 S0 메타로 등가류 처리(오reject 방지).</p>
+<p><b>원칙:</b> 검증 신호는 전부 GEO(잔차·inlier). RGB는 검증에 불참 — 도장이 바뀌어도 "합격 기준"이 흔들리지 않는다.</p>
+</div>
+
+<!-- ══════════════════ 종합 ══════════════════ -->
+<h2>2. 종합 — 권장 스택, 예산, 리스크</h2>
+
+<h3>권장 스택 요약</h3>
+<table>
+  <tr><th>스테이지</th><th>선정</th><th class="c">주 신호</th><th>탈락시킨 주요 대안 (사유)</th></tr>
+  <tr><td>S0 온보딩</td><td>Poisson disk + 노멀, depth 템플릿 42뷰, 대칭 자동검출, 전량 캐시</td><td class="c"><span class="chip geo">GEO</span></td><td>RGB 템플릿 중심 온보딩 (A1)</td></tr>
+  <tr><td>S1 제안</td><td>EfficientViT-SAM-L0 + depth 클러스터링 병렬</td><td class="c"><span class="chip rgb">RGB</span>+<span class="chip geo">GEO</span></td><td>SAM-H(A4), SAM2(A3), 클로즈드셋 검출기(A2)</td></tr>
+  <tr><td>S2 판별</td><td>크기 게이팅 → depth 템플릿 정합 → DINOv2-S(약한 prior)</td><td class="c"><span class="chip geo">GEO</span></td><td>appearance 패치 점수(A1 정면 위배), ViT-L(A4)</td></tr>
+  <tr><td>S3 포즈</td><td>Shape6D-PEM: SAM-6D 매칭 구조 + GEO 주도 특징 + modality dropout + CAD 직접 온보딩 + top-k 가설 (PPF 폴백 병행)</td><td class="c"><span class="chip geo">GEO</span></td><td>FreeZe(A4), FoundationPose·Co-op(A3·A4·A1), GigaPose(단독 정확도)</td></tr>
+  <tr><td>S4 정련·검증</td><td>depth 렌더 잔차 가설 선별 → p2pl ICP(robust) → 보정 신뢰도, 대칭 인식</td><td class="c"><span class="chip geo">GEO</span></td><td>학습 refiner 전계열 (A3·A4)</td></tr>
+</table>
+
+<h3>레이턴시 예산 (Jetson Orin NX, TRT FP16 — 전부 실측 전 추정치)</h3>
+<table>
+  <tr><th>스테이지</th><th class="c">예산</th><th>비고</th></tr>
+  <tr><td>S1 제안 (EfficientViT-SAM-L0 + depth 클러스터)</td><td class="c">80~150ms</td><td>depth 전경 프롬프트로 프롬프트 수 절감</td></tr>
+  <tr><td>S2 판별 (게이팅 + depth 정합 + ViT-S 소수 crop)</td><td class="c">50~100ms</td><td>descriptor forward 횟수가 지배 변수</td></tr>
+  <tr><td>S3 포즈 (인코더 + coarse/fine 매칭, 1024pt·128d·2블록)</td><td class="c">150~250ms</td><td>다중 가설 포함</td></tr>
+  <tr><td>S4 정련·검증 (잔차 스코어 + ICP)</td><td class="c">30~60ms</td><td></td></tr>
+  <tr><td><b>합계</b></td><td class="c"><b>~310~560ms</b></td><td>1s 목표 대비 여유 = 가설 수·해상도 증액분</td></tr>
+</table>
+<p class="small">⚠ Jetson <b>Xavier</b> NX(~21 TOPS)라면 전 항목 3~4배 — S1을 NanoSAM으로, S2 ViT-S를 게이팅 후 극소수 crop으로 조이는 것이 전제 조건이 된다. 대상 보드 확정 필요.</p>
+
+<h3>시나리오 × 신호 생존 매트릭스</h3>
+<table>
+  <tr><th>시나리오</th><th class="c">S1 제안</th><th class="c">S2 판별</th><th class="c">S3 포즈</th><th class="c">S4 검증</th><th>종합</th></tr>
+  <tr><td>클린 (온보딩과 동일 외형)</td><td class="c r g">◎</td><td class="c r g">◎</td><td class="c r g">◎</td><td class="c r g">◎</td><td>전 신호 가용 — 최고 성능</td></tr>
+  <tr><td>오염 (녹·기름·분진)</td><td class="c r g">○</td><td class="c r g">○ (①② 생존)</td><td class="c r g">○ (기하 증강으로 내성)</td><td class="c r g">○ (robust kernel)</td><td>RGB 신호 저하를 GEO가 흡수 — 설계 의도대로 동작해야 하는 핵심 케이스</td></tr>
+  <tr><td>전면 재도장/도색 변경</td><td class="c r g">○</td><td class="c r g">○ (③만 붕괴)</td><td class="c r g">◎ (RGB dropout 학습)</td><td class="c r g">◎</td><td>GEO 신호 무손실 — Shape6D가 SAM-6D 대비 우위를 입증할 시나리오</td></tr>
+  <tr><td>반사/흑색 표면 → depth 결측</td><td class="c r w">△ (RGB 경로 의존)</td><td class="c r w">△</td><td class="c r w">△ (RGB branch 폴백)</td><td class="c r w">△</td><td><b>아킬레스건.</b> 결측 마스크 인식 학습 + RGB branch 유지 + 센서 선정(structured light)이 대응책</td></tr>
+  <tr><td>유사 형상 타 부품 혼입</td><td class="c r g">○</td><td class="c r w">△ (③이 결정적)</td><td class="c r g">○</td><td class="c r g">○ (잔차로 검출)</td><td>RGB를 완전 제거하지 않는 이유</td></tr>
+</table>
+
+<h3>주요 리스크</h3>
+<table>
+  <tr><th>리스크</th><th>영향</th><th>대응</th></tr>
+  <tr><td>depth 결측 (반사·흑색·투명)</td><td>GEO 주 신호 전체 약화</td><td>결측 마스크 입력화, modality dropout의 역방향(depth dropout)도 학습, 센서 사양 가이드 제공</td></tr>
+  <tr><td>대칭·준대칭 모호성</td><td>오포즈 또는 오reject</td><td>S0 대칭 메타 → S3 top-k + S4 대칭군 등가 평가. 텍스처로만 구분되는 방향성은 RGB branch가 담당</td></tr>
+  <tr><td>판재류 등 기하 저변별 형상</td><td>기하 기술자 변별력 저하</td><td>RGB 가중 동적 상향 경로 유지, 해당 형상군 벤치 별도 관리</td></tr>
+  <tr><td>경량화 정확도 낙폭</td><td>BOP AR 수 pt 하락</td><td>SAM-6D teacher distillation, "AR vs latency" 곡선 기반 절충점 결정</td></tr>
+  <tr><td>TRT 변환 (pointnet2 커스텀 op)</td><td>배포 지연</td><td>image-grid 인코더 채택으로 원천 회피, FPS→voxel 다운샘플 대체</td></tr>
+</table>
+
+<h3>평가 계획</h3>
+<p>① <b>BOP-Classic-Core</b>, 특히 산업 무텍스처 벤치인 <b>T-LESS·ITODD</b>를 1급 지표로. ② <b>자체 오염·재도장 프로토콜</b>: 클린 CAD로 온보딩 → 테스트 이미지에만 도색 변경·녹/분진 텍스처·국소 기하 범프를 합성 적용 → 위 매트릭스의 시나리오별 AR/리콜 회귀 추적. ③ Jetson 실기 레이턴시를 스테이지별 계측(예산표 검증).</p>
+
+<h3>다음 단계</h3>
+<p>1) 대상 보드 확정(Orin NX vs Xavier NX) → 예산표 확정 2) 현 SAM-6D의 Jetson 스테이지별 실측 프로파일링 3) 무재학습 최적화(S0 캐싱·EfficientViT-SAM·ViT-S 교체) 선반영 4) Shape6D-PEM 기하 인코더 3후보(a/b/c) 소규모 학습 비교 → 인코더 확정.</p>
+
+<h3>참고 자료</h3>
+<ul class="refs">
+  <li>BOP Challenge 2024 결과 (FreeZeV2.1 82.1 / Co-op 75.9@0.8s / SAM-6D 70.4@4.4s / MUSE 검출 52.0AP) — <a href="https://arxiv.org/abs/2504.02812">arXiv:2504.02812</a></li>
+  <li>Co-op: Correspondence-based Novel Object Pose Estimation (CVPR 2025) — <a href="https://arxiv.org/abs/2503.17731">arXiv:2503.17731</a></li>
+  <li>Geo6DPose: Geometry-Filtered Feature Matching (2025) — <a href="https://arxiv.org/html/2512.10674v1">arXiv:2512.10674</a></li>
+  <li>ZeroPose: CAD-Prompted Zero-shot 6D Pose (TCSVT 2024) — <a href="https://arxiv.org/abs/2305.17934">arXiv:2305.17934</a></li>
+  <li>SAM-6D 로컬 코드 분석: <code>Pose_Estimation_Model/model/*.py</code>, <code>Instance_Segmentation_Model/model/detector.py</code></li>
+  <li>기타: FreeZe(ECCV'24), FoundationPose(CVPR'24), GigaPose(CVPR'24), OVE6D(CVPR'22), GeDi(CVPR'21), TEASER++(T-RO'20), Drost PPF(CVPR'10), EfficientViT-SAM / NanoSAM / FastSAM / MobileSAM</li>
+</ul>
+
+</div>
+</body>
+</html>

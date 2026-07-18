@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shape6D — 구현 상세 설계 (v0.1)</title>
+<style>
+  :root {
+    --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb;
+    --accent:#0b5fff; --accent-soft:#e8f0ff; --good:#0a7d43; --good-soft:#e6f5ec;
+    --warn:#a05a00; --warn-soft:#fdf3e3; --bad:#b4232a; --bad-soft:#fdecec;
+    --shape:#6d28d9; --shape-soft:#f1eafd;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif; color:var(--ink); background:var(--bg); line-height:1.65; font-size:15px; }
+  .wrap { max-width:1100px; margin:0 auto; padding:40px 28px 80px; }
+  h1 { font-size:30px; margin:0 0 4px; letter-spacing:-0.5px; }
+  h2 { font-size:21px; margin:56px 0 12px; padding-top:18px; border-top:2px solid var(--ink); letter-spacing:-0.3px; }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:16px; margin:26px 0 8px; }
+  h4 { font-size:14px; margin:18px 0 6px; }
+  p { margin:8px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:24px; }
+  .meta b { color:var(--ink); }
+  table { width:100%; border-collapse:collapse; margin:12px 0 8px; font-size:12.5px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 9px; font-weight:600; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.c, th.c { text-align:center; }
+  tr.pick td { background:var(--good-soft); }
+  tr.pick td:first-child { border-left:3px solid var(--good); font-weight:700; }
+  tr.dead td { color:#8a8f98; }
+  .r { font-weight:700; } .r.g { color:var(--good); } .r.w { color:var(--warn); } .r.b { color:var(--bad); }
+  .rec { border:1.5px solid var(--good); border-radius:10px; background:var(--good-soft); padding:12px 18px; margin:14px 0; font-size:13.5px; }
+  .rec::before { content:"✔ 확정"; display:block; font-weight:800; color:var(--good); font-size:12.5px; margin-bottom:5px; }
+  .fix { border-left:4px solid var(--bad); background:var(--bad-soft); border-radius:6px; padding:10px 16px; margin:12px 0; font-size:13px; }
+  .fix::before { content:"⚡ 교차 검증 반영"; display:block; font-weight:800; color:var(--bad); font-size:12px; margin-bottom:4px; }
+  .paint { border:1.5px dashed var(--shape); border-radius:10px; background:var(--shape-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .paint::before { content:"⚠ 주의"; display:block; font-weight:800; color:var(--shape); font-size:12px; margin-bottom:4px; }
+  .chip { display:inline-block; font-size:11px; font-weight:700; padding:1px 8px; border-radius:20px; margin-right:4px; }
+  .chip.rgb { background:var(--bad-soft); color:var(--bad); }
+  .chip.geo { background:var(--shape-soft); color:var(--shape); }
+  pre { background:#14161b; color:#d6dbe4; border-radius:10px; padding:14px 16px; font-size:12px; line-height:1.5; overflow-x:auto; }
+  code { background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:12px; }
+  .small { font-size:12.5px; color:var(--sub); }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 20px; font-size:13px; column-count:2; }
+  .toc a { display:block; padding:1px 0; }
+  @media print { .wrap { max-width:100%; } h2 { break-before:page; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Shape6D — 구현 상세 설계</h1>
+<p class="meta">v0.1 · 2026-07-18 · 전제: <a href="01_stage_design.html">01 스테이지 설계</a> + <a href="02_development_plan.html">02 개발 계획</a> ·
+확정 HW: <b>RTX PRO 6000 Blackwell 96GB</b>(학습/로컬), <b>RGB 1280×800</b>, <b>LiDAR 희소 depth</b>, 타깃 Orin NX(실기 미보유) ·
+작성 방법: 5개 영역(센서융합/S0S1/S2S4/S3/학습) 병렬 상세 설계 후 2종 교차 검증(경계 일관성·실현 가능성)을 수행, <b>검증 지적 전건을 §10 대장으로 반영</b>한 통합본</p>
+
+<div class="toc">
+<a href="#s1">1. LiDAR 결정 장단 분석</a>
+<a href="#s2">2. 시스템 공통 규약 (FrameBundle·캐시·하한표)</a>
+<a href="#s3">3. S0 온보딩</a>
+<a href="#s4">4. S1 제안 생성</a>
+<a href="#s5">5. S2 후보 판별</a>
+<a href="#s6">6. S3 Shape6D-PEM</a>
+<a href="#s7">7. S4 정련·검증</a>
+<a href="#s8">8. 레이턴시 통합 예산</a>
+<a href="#s9">9. 학습 파이프라인 (96GB 1장)</a>
+<a href="#s10">10. 교차 검증 반영 대장</a>
+<a href="#s11">11. 미확정 항목 / 02 문서 델타</a>
+</div>
+
+<!-- ═════════════ 1. LiDAR ═════════════ -->
+<h2 id="s1"><span class="no">1</span>LiDAR 결정 — 장단 분석 (요청 사항)</h2>
+
+<h3>1.1 대안 센서 비교</h3>
+<table>
+  <tr><th>항목</th><th>LiDAR (solid-state, Livox급)</th><th>산업 structured light (Photoneo/Zivid급)</th><th>ToF 카메라</th><th>Active stereo (D455급)</th></tr>
+  <tr><td>깊이 정밀도 (1σ/점)</td><td class="r w">5~20mm (추정)</td><td class="r g">0.05~0.3mm@1m — 압도적</td><td>3~10mm</td><td>~2%×거리 (20mm@1m)</td></tr>
+  <tr><td>물체 위 밀도</td><td class="r b">희소 (수백~수천 pt)</td><td class="r g">수만~수십만 pt</td><td>dense</td><td>dense</td></tr>
+  <tr><td>조명 독립성</td><td class="r g">◎ (905nm 능동, 직사광 강건)</td><td>△~○ (실내 설계)</td><td>△</td><td>△</td></tr>
+  <tr><td>흑색/저반사</td><td class="r g">○ (고감도, 드롭은 발생)</td><td>○ (HDR 다중노출, 시간↑)</td><td>△</td><td>△</td></tr>
+  <tr><td>경면 표면</td><td>✕ — 단 <b>"결측"으로 실패</b> (정직)</td><td>✕ 오측정 발생</td><td class="r b">✕ multipath = <b>틀린 값</b> (위험)</td><td>✕ 오매칭</td></tr>
+  <tr><td>다중 셀 간섭</td><td class="r g">◎</td><td class="r b">✕ 시분할 필요</td><td>△</td><td>○</td></tr>
+  <tr><td>모션 왜곡</td><td class="r b">✕ 적분(100~500ms) 중 왜곡</td><td>✕ 다중 패턴 중 취약</td><td class="r g">◎</td><td class="r g">◎</td></tr>
+  <tr><td>엣지 정확도</td><td class="r b">✕ 빔 발산(~5mm@1m) mixed pixel</td><td class="r g">◎</td><td>△ flying pixel</td><td>△ edge fattening</td></tr>
+  <tr><td>근거리 최소거리</td><td class="r w">△ 기종별 0.05~1m — <b>기종 선정 제약</b></td><td>○</td><td>○</td><td>○</td></tr>
+  <tr><td>비용</td><td>○ $0.8~1.5k</td><td class="r b">✕ $10~25k</td><td>○</td><td class="r g">◎ ~$0.5k</td></tr>
+</table>
+
+<h3>1.2 정직한 평가</h3>
+<p><b>이기는 축</b>: 비용, 조명 독립성, 다중 셀 간섭, 그리고 <b>"틀린 값 대신 결측"이라는 실패 양상</b> — 파이프라인은 결측을 셀 수 있지만(포인트 수), 조용히 틀린 depth는 S4 검증까지 오염시킵니다. <b>지는 축(숨기지 않음)</b>:</p>
+<table>
+  <tr><th>약점</th><th>내용</th><th>대응 (본 문서 반영 위치)</th></tr>
+  <tr><td>① 희소성</td><td>물체 위 수백 pt가 정상 동작 범위 — 되돌릴 수 없는 아키텍처 구속</td><td>전 스테이지 희소 전제 설계 (§2.5 하한표, §6.1 복원추출)</td></tr>
+  <tr><td>② 포인트당 정밀도</td><td>structured light 0.1mm급 대비 mm~cm급. ICP 다점 평균(σ/√N)으로 회복하나 N이 작으면 제한. <b>±0.1mm급 정밀 조립 요구에는 미달</b> — 요구 정밀도 스펙 선확정 필요</td><td>§2.6 σ_lidar 단일 파라미터화</td></tr>
+  <tr><td>③ 엣지 부정확</td><td>빔 풋프린트가 실루엣 경계에 걸치면 중간 깊이 오염. 소형 물체일수록 비율↑ (필터로 유효 포인트 추가 20~40% 감소 추정)</td><td>§2.2 EDGE_MIXED 플래그 + 마스크 erosion 표준화</td></tr>
+  <tr><td>④ 캘리브레이션 부담</td><td>외부 캘리브레이션 6DoF가 포즈 정확도 바닥을 결정 (오차 예산 ~3mm@1m), 드리프트 운용 절차 필요</td><td>§2.3 오차 예산·절차</td></tr>
+  <tr><td>⑤ 근거리 제약</td><td>Avia급 최소거리 ~1m 추정 — 작업 거리 0.5m면 기종 제약</td><td>§1.4 기종 선정 기준</td></tr>
+</table>
+<p><b>결정의 본질</b>: 이 선택은 "기하 주도 매칭이 dense·중정밀이 아니라 <b>희소·고신뢰 포인트로 성립한다</b>"는 베팅입니다. 검증 게이트는 D2-a 실측(§1.5)과 M2-B 인코더 파일럿의 희소 패턴 평가입니다.</p>
+
+<h3>1.3 운용 모드 3안 — 판정</h3>
+<table>
+  <tr><th></th><th>(A) LiDAR 희소 포인트만 <span class="chip geo">현 계획</span></th><th>(B) dense depth를 LiDAR로 보정</th><th>(C) depth completion으로 densify</th></tr>
+  <tr><td>정확도</td><td class="r g">전 포인트 실측치</td><td>제2 센서에 종속 — 공간 가변 계통오차는 전역 affine으로 못 잡음</td><td>LiDAR 외 지점은 <b>추론값</b>, 오차 상한 없음</td></tr>
+  <tr><td>강건성</td><td class="r g">결측이 결측으로 나타남 — 실패 감지 가능</td><td>제2 센서의 실패 표면 = 바로 우리 대상(무텍스처·흑색). 센서 2개분 유지보수</td><td class="r b"><b>A1 정면 충돌</b>: RGB 외형에서 기하를 추론 → 재도장되면 hallucinated depth도 바뀜. 실패가 <b>감지 불가</b> — S4 검증조차 통과 가능</td></tr>
+  <tr><td>판정</td><td class="r g"><b>채택 (유일한 메트릭 경로)</b></td><td>기각 (D2 확정과 모순 + 비용)</td><td>기각. 단서: <b>S1 리콜 한정 보조</b>로는 조건부 재평가 가능 (메트릭 정확도 불요, 피해 국소적)</td></tr>
+</table>
+<p class="small">포인트 부족의 완화는 densify가 아니라 <b>적분 시간 T의 파라미터화</b>로 푼다 — 실측치를 더 모으는 것이지 지어내는 것이 아니므로 A1과 무충돌.</p>
+
+<h3>1.4 물체 위 유효 포인트 수 모델</h3>
+<pre>pts_on_object ≈ (rate / Ω_FOV) × T × (A_proj / d²) × η        η ≈ 0.5 (입사각·형상·드롭아웃 보정, 추정)</pre>
+<table>
+  <tr><th>기종 (전부 추정)</th><th class="c">rate</th><th class="c">FOV</th><th class="c">밀도 [pts/sr/s]</th><th class="c">최소거리</th><th>비고</th></tr>
+  <tr class="pick"><td>Livox Avia급</td><td class="c">240k/s</td><td class="c">70.4°×77.2°</td><td class="c">~163k</td><td class="c">~1m</td><td>기본 후보. 0.5m 작업 시 최소거리 확인 필수</td></tr>
+  <tr><td>Livox Mid-70급</td><td class="c">100k/s</td><td class="c">원형 70.4°</td><td class="c">~87k</td><td class="c">~0.05m</td><td>근거리 적합. 단종 여부 확인</td></tr>
+  <tr class="dead"><td>Livox Mid-360급</td><td class="c">200k/s</td><td class="c">360°×59°</td><td class="c">~35k</td><td class="c">~0.1m</td><td><b>부적합</b> — 360° FOV가 밀도를 희석</td></tr>
+</table>
+<table>
+  <tr><th>pts_on_object (Avia급, η=0.5 적용 실전 기대치)</th><th class="c">5cm 물체</th><th class="c">10cm</th><th class="c">20cm</th></tr>
+  <tr><td>거리 1m, T=100ms</td><td class="c r b">~20</td><td class="c r w">~80</td><td class="c">~330</td></tr>
+  <tr class="pick"><td>거리 1m, <b>T=200ms (기본 운용점)</b></td><td class="c r w">~40</td><td class="c">~160</td><td class="c">~650</td></tr>
+  <tr><td>거리 1m, T=400ms (상한)</td><td class="c">~80</td><td class="c">~330</td><td class="c">~1300</td></tr>
+  <tr><td>거리 2m, T=200ms</td><td class="c r b">~10</td><td class="c r w">~40</td><td class="c">~160</td></tr>
+</table>
+<p class="small">시사점: ① T=100ms는 부족 — <b>기본 T=200ms, 상한 400ms</b>, 포인트 수 피드백으로 적응. ② 기종 선정 제1 기준은 rate가 아니라 <b>FOV 집중도</b>(밀도 = rate/Ω). ③ 5cm 이하 소형 부품 + 2m 거리는 현 구성으로 곤란 — 작업 거리를 스펙으로 관리.</p>
+
+<h3>1.4b 기종 검토 — SOS Lab ML 시리즈 vs Livox (2026-07-18 스펙 확인, 요구: 포즈 정밀도 10mm @ 3m)</h3>
+<p><b>구조적 구분이 선정보다 먼저다.</b> SOS Lab ML 시리즈는 <b>고정 각도 격자(fixed-grid) 방식</b>(기계 구동부 없는 완전 고정형, 프레임 20fps): 포인트 밀도가 각도 분해능으로 <b>고정</b>되고, 적분 시간을 늘리면 밀도가 아니라 <b>노이즈만 감소</b>(같은 방향을 재측정 — σ/√프레임). Livox는 비반복 스캔: T↑ → 밀도↑. 따라서 §1.4의 "T 적분으로 밀도 확보" 전략은 <b>SOS Lab 채택 시 "4~8프레임 평균으로 σ 저감" 전략으로 대체</b>된다. 포인트 수 모델도 격자식으로: <code>pts ≈ (θ_obj² / (δh·δv)) × η</code>.</p>
+<table>
+  <tr><th>기종 (공식 스펙)</th><th class="c">FOV</th><th class="c">각도 분해능</th><th class="c">거리 오차</th><th class="c">10cm 물체 @3m 포인트 (η=0.5)</th><th class="c">20cm @3m</th><th class="c">10cm @1.5m</th></tr>
+  <tr class="pick"><td>SOS Lab ML-A (60)</td><td class="c">60°×17.5°</td><td class="c">0.104°×0.313°</td><td class="c">&lt;30mm</td><td class="c r w"><b>~56</b> (경계선)</td><td class="c r g">~224</td><td class="c r g">~224</td></tr>
+  <tr><td>SOS Lab ML-X (80)</td><td class="c">80°×23.3°</td><td class="c">0.14°×0.42°</td><td class="c">&lt;30mm</td><td class="c r b">~31</td><td class="c r w">~124</td><td class="c">~124</td></tr>
+  <tr class="dead"><td>SOS Lab ML-X (120) / ML-A (160)</td><td class="c">120°/160°</td><td class="c">0.21°×0.63° 이상</td><td class="c">&lt;30mm</td><td class="c r b">~14 / 이하</td><td class="c r b">~56</td><td class="c">—</td></tr>
+  <tr><td>Livox Tele-15 (비반복 스캔)</td><td class="c">14.5°×16.2°</td><td class="c">240k pts/s</td><td class="c">~2cm급 추정</td><td class="c r g">~374 (T=200ms)</td><td class="c r g">~1500</td><td class="c">—</td></tr>
+</table>
+<table>
+  <tr><th>관점</th><th>SOS Lab ML-A (60) — 국내 우선 후보</th><th>Livox Tele-15급 — 밀도 우선 대안</th></tr>
+  <tr><td>장점</td><td>국내 벤더 지원·커스텀 협의 가능(격자·FOV 특주 여지), <b>고정 격자 = 균일 샘플링</b>(grid-conv 인코더 (a)와 최적 정합, 시간 적분 모션 왜곡 문제 소멸 — §2.3 정적 씬 가정 완화), 진동·충격 강건(산업 설치 적합)</td><td>3m·10cm에서 유일하게 300pt+ 확보. T로 밀도 가변</td></tr>
+  <tr><td>약점</td><td><b>수직 분해능 0.313° = 3m에서 행 간격 16.4mm</b> — 10cm 물체에 세로 ~6행뿐(수평축 회전 관측성 저하). 3m·10cm은 ~56pt로 §2.5 하한 경계</td><td>FOV 14.5° = 3m에서 폭 0.76m (빈 ~0.6m이면 성립, 여유 없음). <b>최소 감지 거리 미공개 — 3m 사용 가능 여부 벤더 확인 필수</b>. 해외 벤더</td></tr>
+  <tr><td>판정</td><td class="r g"><b>부품 ≥20cm 또는 작업거리 ≤1.5m이면 채택 가능</b> (아래 RFQ 확인 조건부)</td><td class="r w">3m·10cm급 소형 부품이 필수 요건일 때의 대안</td></tr>
+</table>
+<div class="paint"><b>SOS Lab RFQ 확인 항목</b> (설계 확정의 전제): ① "거리 오차 &lt;30mm"가 바이어스(정확도)인지 랜덤(정밀도)인지, 근거리(1~3m) 실측치 ② 최소 감지 거리 ③ 포인트별 intensity·타임스탬프 제공 여부 ④ 다중 프레임 평균 시 σ 저감 실측(고정 패턴 노이즈 존재 여부) ⑤ SDK/ROS2 드라이버·Jetson ARM 지원 ⑥ 근거리 특화 펌웨어/특주 격자 가능성.</div>
+
+<h3>1.4c 정밀도 예산 — 10mm @ 3m 달성 가능성</h3>
+<table>
+  <tr><th>오차원</th><th class="c">기여 (3m 기준)</th><th>조건</th></tr>
+  <tr><td>외부 캘리브레이션 바이어스</td><td class="c">2.6mm(회전 0.05°) + 2mm(병진)</td><td>§2.3 예산을 3m 운용에 맞춰 <b>회전 ≤0.05°로 강화</b> (0.1°면 5.2mm — 예산 절반 소모)</td></tr>
+  <tr><td>LiDAR 거리 바이어스</td><td class="c">~5mm (보정 후)</td><td><b>&lt;30mm 스펙 그대로면 단독으로 예산 초과</b> — 기준 평면 대상 유닛별 거리 보정(1~3m 구간)으로 ~5mm까지 저감이 전제. RFQ ①이 이 항목의 성립 조건</td></tr>
+  <tr><td>ICP 랜덤 오차</td><td class="c">σ_eff/√N ≈ 15mm/√100 ≈ 1.5mm</td><td>σ_eff 15mm = 30mm/√4프레임 평균. N≥100pt 필요 → §1.4b 포인트 표가 물체 크기·거리 하한을 결정</td></tr>
+  <tr class="pick"><td><b>RSS 합계</b></td><td class="c"><b>≈ 6.4mm &lt; 10mm ✓ (조건부)</b></td><td>유닛별 거리 보정 + 강화 캘리브레이션 + N≥100 세 조건이 전부 성립할 때. 마진이 크지 않아 D2-a 실측이 최종 판정</td></tr>
+</table>
+<p class="small"><b>카메라 렌즈 재검토 (3m 반영)</b>: 현 가정(HFOV ~70°, fx≈914)이면 3m에서 1px ≈ 3.3mm — 10cm 물체가 <b>~30px</b>로, EViT-SAM(512 입력에서 ~12px)·DINOv2 crop 모두 품질 저하. 렌즈 HFOV를 LiDAR FOV·작업 영역에 맞춰 <b>30~60°로 축소 권장</b>(HFOV 35° → fx≈2030 → 10cm 물체 ~68px). 렌즈 확정 시 §2.3 fx 갱신.</p>
+
+<h3>1.4d 운용 스펙 확정 반영 — 상시 3m · 커버 2~5m · 회전 ≤1° (2026-07-18 사용자 확인)</h3>
+<p><b>"기종 선택이 중요하지 않은가"에 대한 답</b>: 브랜드는 중요하지 않다. 그러나 <b>각도 분해능은 물체 위 포인트 수 N을 고정하고, N이 위치·회전 정밀도의 물리적 하한(σ/√N, σ/(√N·r))과 S2/S4 임계 전부를 결정</b>한다 — 이 스펙(상시 3m, 회전 1°)에서는 ML-X(80)과 ML-A(60)의 분해능 차이 1.8×가 정확히 성패 경계선 위에 있다. ML-X를 쓴다면 반드시 <b>ML-X(80)</b>이어야 하며(ML-X(120)은 명백 미달), 아래 매트릭스처럼 <b>실질 결정 변수는 기종이 아니라 부품 크기</b>다.</p>
+<table>
+  <tr><th>부품 크기 × 거리</th><th class="c">포인트 N (X80 / A60, η=0.5)</th><th class="c">회전 1σ 추정 (X80 / A60, T=200ms)</th><th class="c">판정 (요구: 위치 10mm·회전 1°)</th></tr>
+  <tr><td>40cm @3m</td><td class="c">~500 / ~900</td><td class="c">0.32° / 0.24°</td><td class="c r g">둘 다 여유 ✓</td></tr>
+  <tr><td>40cm @5m</td><td class="c">~180 / ~320</td><td class="c">0.53° / 0.40°</td><td class="c r g">둘 다 ✓</td></tr>
+  <tr><td>20cm @3m (상시 운용점)</td><td class="c">~124 / ~224</td><td class="c">1.29° / 0.96°</td><td class="c r w">X80 미달 경계, <b>A60 경계(T=400ms 시 0.68° ✓)</b></td></tr>
+  <tr><td>20cm @5m</td><td class="c">~45 / ~81</td><td class="c">2.1° / 1.6°</td><td class="c r b">둘 다 미달 ✗</td></tr>
+  <tr><td>10cm @3m</td><td class="c">~31 / ~56</td><td class="c">5.1° / 3.8°</td><td class="c r b">둘 다 미달 ✗ (2m에서도 A60 경계)</td></tr>
+</table>
+<p class="small">산출 모델: 회전 1σ ≈ σ_eff/(√N·r_rms), σ_eff = 30mm/√4프레임 = 15mm, r_rms ≈ 0.3×부품 크기. <b>±2× 오더 추정</b> — point-to-plane ICP는 입체 형상에서 이보다 유리, 판재류는 불리. 그리고 <b>"거리 오차 &lt;30mm"가 바이어스 포함 정확도이고 실제 랜덤 σ가 ~10mm라면 전 수치가 ~3× 개선되어 판정이 뒤집힌다 — RFQ ①이 이 표 전체의 전제</b>. T=400ms(8프레임 평균)는 회전 수치를 ×0.71 개선.</p>
+<div class="rec">
+<p><b>판정</b>: ① 부품이 <b>40cm급 이상</b> 위주면 ML-X(80)으로 충분 — 이 경우 "기종은 중요하지 않다"가 맞다. ② <b>20cm급이 상시 3m에서 섞이면</b> ML-A(60) + T=400ms가 필요선. ③ <b>20cm@5m 또는 10cm@3m 이하</b>가 요구에 포함되면 현 스펙의 어떤 자동차급 LiDAR로도 회전 1°가 안 나옴 — 대안: (i) RFQ ①에서 랜덤 σ가 10mm급으로 확인되기를 기대 (ii) 원거리 검출 + 근접 재측정의 2사이클 운용 (iii) 해당 크기·거리 조합을 스펙에서 제외.</p>
+</div>
+
+<h3>1.4e 대상 물체 프로파일 확정 — 팔레트급 대칭 물체 (2026-07-18 사용자 확인)</h3>
+<p>대상에 <b>팔레트(표준 T11 1100×1100×150mm / EUR 1200×800×144mm) 등 대칭성 있는 물체 포함</b> → §1.4d의 "부품 크기" 미지수가 해소되고 <b>ML-X(80) 판정 성립</b>:</p>
+<table>
+  <tr><th>팔레트 전면(1100×150mm) 기준, ML-X(80)</th><th class="c">@3m (상시)</th><th class="c">@5m (커버 한계)</th></tr>
+  <tr><td>유효 포인트 N (η=0.5)</td><td class="c r g">~490 (145열 × 6.8행)</td><td class="c r g">~180 (89열 × 4.1행)</td></tr>
+  <tr><td>yaw(수직축 회전) 1σ — 포크 삽입의 결정 DOF</td><td class="c r g"><b>~0.12°</b> (레버암 1.1m)</td><td class="c r g">~0.20°</td></tr>
+  <tr><td>pitch/roll 1σ (전면만 관측 시)</td><td class="c r w">~0.9° (경계)</td><td class="c r w">~1.5° (미달)</td></tr>
+  <tr><td>위치 1σ</td><td class="c r g">~0.7mm + 바이어스 예산(§1.4c)</td><td class="c r g">~1.1mm + 바이어스</td></tr>
+</table>
+<p class="small">pitch/roll은 전면 판형 관측의 구조적 약점(수직 행 4~7개)이나, <b>팔레트는 바닥 위에 놓인다</b> — S4에 바닥 평면 사전(floor prior: S1의 RANSAC 지지 평면을 재사용해 pitch/roll을 구속하거나 검증 항목으로) 옵션을 추가하면 해소. 사면 관측(oblique)으로 상판 데크가 보이면 자체적으로도 개선.</p>
+<table>
+  <tr><th>팔레트 특이 반영 사항</th><th>내용</th></tr>
+  <tr><td>대칭 처리 = 1급 요구로 승격</td><td>T11 4방향 진입형 ≈ C4, 1012·EUR ≈ C2 — S0 자동검출(§3.3)이 등록, sym-aware loss(§9.3)·S4 canonicalize/dedupe(§7)가 소비. <b>운영 결정 필요</b>: 대칭 등가 포즈를 전부 정답 취급(포크 삽입엔 유리)할지, 특정 면 구분이 필요한지 — 후자면 RGB 신호가 필요해 A1과 긴장(라벨·파손면 구분은 형상으로 불가)</td></tr>
+  <tr class="pick"><td>포켓 = 깊이 불연속 덩어리</td><td>팔레트는 grid-conv 인코더 (a)의 탈락 조건("crop 내 심한 깊이 불연속에서 2D≈3D 근사 붕괴")에 해당하는 대표 형상 — <b>M2-B 파일럿 평가 셋에 팔레트형 CAD 필수 포함</b> (E1 게이트에 명시)</td></tr>
+  <tr><td>S2 뷰 프루닝</td><td>3m 수평 관측에서 팔레트를 위/아래에서 보는 뷰는 발생 불가 — 42뷰 중 수평 밴드 뷰만 활성화하는 뷰 마스크 옵션(S2 비용 ~1/3 절감, 물체별 메타)</td></tr>
+  <tr><td>재질</td><td>목재 = 확산 반사 양호 ✓. 흑색 플라스틱 팔레트 = LOW_INTENSITY 드롭 증가 — D2-a 계측의 반사율 축에 흑색 플라스틱 팔레트 실물 포함</td></tr>
+  <tr><td>렌즈 권고 수정</td><td>§1.4c의 HFOV 30~60° 축소 권고는 <b>소형 부품 전제였음 — 팔레트급이면 현 ~70° 유지가 적정</b>(1.1m@2m 시야 확보). 20cm 미만 물체가 대상에 추가되면 재론</td></tr>
+</table>
+
+<h3>1.5 D2-a 실측 프로토콜 (확장판)</h3>
+<p>실기종 확보 시: 기준 물체 × 거리 {0.5, 1, 2m} × 반사율 {백색, 회색, 무광흑} × T {100, 200, 500ms} × <b>FOV 내 위치 {중심, 반경 50%, 가장자리}</b>로 ① 물체 위 유효 포인트 수 ② <b>거리 노이즈 σ_lidar</b>(평면 피팅 잔차)를 계측한다.</p>
+<div class="fix">검증 [중-7]·[상-5] 반영: Livox 비반복 로제트는 FOV 중심 밀도가 주변부의 수 배 — <b>위치 축</b>을 추가했고, σ_lidar 계측 축을 신설했다(§2.6의 전 임계가 σ_lidar에 종속되므로 포인트 수만 재서는 부족).</div>
+
+<!-- ═════════════ 2. 공통 규약 ═════════════ -->
+<h2 id="s2"><span class="no">2</span>시스템 공통 규약 — 전 스테이지가 공유하는 단일 정본</h2>
+
+<h3>2.1 좌표·단위 규약</h3>
+<table>
+  <tr><th>항목</th><th>규약</th></tr>
+  <tr><td>단위</td><td>내부 전체 <b>미터(m)</b>. CAD 입력만 <code>--unit {mm,m}</code> 명시 후 즉시 변환. depth 템플릿 저장만 uint16 mm</td></tr>
+  <tr><td>좌표계</td><td>LiDAR 포인트는 FrameBundle 생성 시점에 <b>카메라 좌표계로 변환 완료</b> — 이후 스테이지에서 좌표 변환 없음. CAD는 모델 좌표계 유지(BOP 관행), S3/S4 출력 = T_cam_obj</td></tr>
+  <tr><td>이미지</td><td>1280×800 (H=800, W=1280). RGB는 사전 undistort. 마스크/텐서는 [800,1280] (H,W 순)</td></tr>
+</table>
+
+<h3>2.2 FrameBundle — 정본 (단일 정의, <code>shape6d/common/frame_bundle.py</code>)</h3>
+<div class="fix">검증 [H1]/[중-9] 반영: 설계 초안 2곳에 있던 이중 정의를 아래 하나로 통합. S1의 프롬프트 생성·S2의 포인트 추출은 반드시 이 필드(<code>pix2pt</code>, <code>point_quality</code>)를 경유한다.</div>
+<pre>EDGE_MIXED=1; LOW_INTENSITY=2; MULTI_RETURN=4; NEAR_MASK_BOUNDARY=8   # 품질 플래그 비트
+
+@dataclass
+class FrameBundle:
+    rgb: np.ndarray            # [800,1280,3] u8, undistorted
+    lidar_points: np.ndarray   # [N,3] f32, 카메라 좌표계 (T_cam_lidar 적용 완료)
+    lidar_intensity: np.ndarray# [N] f32
+    lidar_t_offset: np.ndarray # [N] f32 (deskew 확장용 보존, v1 미사용)
+    lidar_pixels: np.ndarray   # [N,2] f32 서브픽셀 (u,v); 이미지 밖 = NaN
+    sparse_depth: np.ndarray   # [800,1280] f32 z-buffer, 0=무효
+    valid_mask: np.ndarray     # [800,1280] bool
+    pix2pt: np.ndarray         # [800,1280] i32 픽셀→포인트 인덱스, -1=무효
+    point_quality: np.ndarray  # [N] u8 플래그 OR (0=클린)
+    K: CameraIntrinsics        # fx,fy,cx,cy (+dist=0)
+    T_cam_lidar: np.ndarray    # [4,4] f64 (기록용)
+    t_rgb: float; t_lidar: tuple; meta: dict
+
+# 소비 규약
+# S1: valid_mask(전경 프롬프트) + lidar_points/pixels(클러스터 경로, NaN uv 사전 필터)
+# S2: 마스크 2~3px erosion 후 pts = lidar_points[pix2pt[eroded_mask & valid_mask]], quality==0 우선
+# S3: 동일 추출 + quality 비트를 유효마스크 채널에 반영
+# S4: ICP 대응은 EDGE_MIXED 제외 기본, 잔차 검증은 sparse_depth 대비
+</pre>
+<p class="small">품질 플래그 산출: EDGE_MIXED = 반경 3px 내 이웃 유효픽셀과 깊이차 &gt; 3cm(빔 풋프린트 mixed pixel 의심), LOW_INTENSITY = 반사 강도 하위 임계, NEAR_MASK_BOUNDARY = S1 이후 마스크 경계 2~3px 이내(RGB 특징 신뢰도 하향에 사용). <b>마스크 2~3px erosion 후 포인트 선별이 전 스테이지 표준 절차</b> — 캘리브레이션 2px 오차 + 빔 풋프린트 5mm가 겹치는 경계 밴드에서 배경 포인트(cm~수십cm 오차) 혼입을 차단.</p>
+
+<h3>2.3 캘리브레이션 설계와 오차 예산</h3>
+<table>
+  <tr><th>항목</th><th>내용</th></tr>
+  <tr><td>방법</td><td>체커보드/ChArUco 보드(~0.6×0.8m) 20+ 포즈. LiDAR는 포즈당 2~5s 적분(준밀집) → 카메라 PnP 평면 vs LiDAR 피팅 평면의 point-to-plane 잔차 최소화. 공개 도구: <code>direct_visual_lidar_calibration</code>(Koide, 실존 확인), Livox 공식 도구</td></tr>
+  <tr><td><b>오차 예산</b></td><td>회전 ≤0.1°, 병진 ≤2mm → 합성 <b>~3mm@1m 강체 바이어스</b>. 이 바이어스는 ICP로도 회복 불가(LiDAR를 참으로 정합하므로) — <b>최종 포즈 정확도의 하한</b>. M5 정밀도 리포트에서 분리 계상</td></tr>
+  <tr><td>동기화</td><td>카메라 노출을 LiDAR 적분 창 중앙에 배치(HW 트리거/PTP). <b>v1 운용 가정: 취득 창(200~400ms) 동안 정적 씬</b> — A3(정지 후 촬영)와 정합, 운용 제약으로 명문화. 타임스탬프는 보존(동적 씬 deskew는 v2)</td></tr>
+  <tr><td>운용</td><td>calib.yaml에 잔차 통계 기록, 주기 스팟체크로 드리프트 감시</td></tr>
+</table>
+
+<h3>2.4 S0 통합 캐시 스키마 — <code>&lt;obj_id&gt;/onboard_v1.npz</code> (단일 파일)</h3>
+<div class="fix">검증 [H2]/[중-8]/[H3] 반영: 초안 3곳에 분열됐던 캐시(dense 4096/16384/2048, dino_cls 12/42뷰)를 아래 단일 스키마로 통합. <b>마스터 포인트 1개 + 이름 있는 서브셋 인덱스</b> 방식 — 같은 Poisson disk 샘플에서 모든 소비자가 파생된다. dino_cls는 42뷰로 확정(S2의 top5/42 집계 규약 유지).</div>
+<table>
+  <tr><th>필드</th><th class="c">shape / dtype</th><th>소비자</th><th>내용</th></tr>
+  <tr><td><code>pts_master</code> / <code>nrm_master</code></td><td class="c">[16384,3] f16</td><td>S4 ICP target</td><td>Poisson disk 마스터 샘플 + face 노멀 (m, 모델좌표계)</td></tr>
+  <tr><td><code>idx_pem</code></td><td class="c">[2048] i32</td><td>S3</td><td>PEM dense_po 서브셋 (마스터 인덱스)</td></tr>
+  <tr><td><code>idx_sparse</code></td><td class="c">[196] i32</td><td>S3 coarse</td><td>idx_pem의 부분집합 (FPS, 오프라인이므로 허용)</td></tr>
+  <tr><td><code>idx_model</code></td><td class="c">[1024] i32</td><td>S3 Rt 계산</td><td>compute_*_Rt의 model_pts (base.yaml n_sample_model_point 1024 대응)</td></tr>
+  <tr><td><code>idx_verify</code></td><td class="c">[2048] i32</td><td>S4 가설 스코어</td><td>투영 스플랫용 서브셋</td></tr>
+  <tr><td><code>tpl_depth</code> / <code>tpl_pose</code> / <code>tpl_K</code></td><td class="c">[42,224,224] u16 / [42,4,4] / [3,3]</td><td>S2·S4</td><td>depth 템플릿 42뷰(icosphere L2). <b>d_cam=2.7·r_bsphere, fx=fy=270.4</b></td></tr>
+  <tr><td><code>tpl_pts</code> / <code>tpl_center</code></td><td class="c">[42,512,3] / [42,3] f32</td><td>S2 정합</td><td>뷰별 가시면 포인트(모델계) + median 센터</td></tr>
+  <tr><td><code>tdf</code></td><td class="c">[42,48,48,48] f16</td><td>S2 정합</td><td>뷰별 truncated distance field, [−0.6D,+0.6D]³, ~9.3MB</td></tr>
+  <tr><td><code>dino_cls</code></td><td class="c">[42,384] f16</td><td>S2 prior</td><td>DINOv2 ViT-S cls (42뷰 RGB 렌더 — 배경은 ImageNet mean 채움, 관측 crop 규약과 도메인 일치)</td></tr>
+  <tr><td><code>sym_rots</code> / <code>sym_axes</code></td><td class="c">[S,3,3] / [A,3] f32</td><td>S3 NMS·S4·학습</td><td><b>대칭 정본</b>: 이산 회전군(항등 포함) + 연속축 벡터. 학습용 12분할 이산화·S4 swing-twist는 여기서 파생 (검증 [M4] 반영: 포맷 단일화)</td></tr>
+  <tr><td><code>dense_fo</code> / <code>sparse_fo</code></td><td class="c">[2048,256] / [196,256] f16</td><td>S3</td><td>기하 인코더 오브젝트 측 특징 (§6.4 절차 산출)</td></tr>
+  <tr><td><code>geo_embedding_o</code> / <code>pe_fo</code></td><td class="c">[197,197,H] / [2049,H] f16</td><td>S3</td><td>RPE 임베딩(bg 포함)·fine 입력 사전계산. H=192 시 ~15MB</td></tr>
+  <tr><td><code>radius</code> / <code>diameter</code> / <code>bbox</code> / <code>center_offset</code></td><td class="c">스칼라/[2,3]/[3]</td><td>S2·S3</td><td>정규화 스케일·게이팅용 메트릭</td></tr>
+</table>
+<p class="small"><code>manifest.json</code>: schema_version, obj_id, cad_sha256, unit, watertight, sym_summary, <b>encoder_hash</b>(dense_fo·geo_embedding_o가 모델 종속이므로 모델 버전 해시 필수), created_at. 캐시 총량 ~30MB/물체 — 5종 상주 시 ~150MB, Orin 예산 내.</p>
+
+<h3>2.5 포인트 수 하한 — 단일 소유권 표</h3>
+<div class="fix">검증 [H6]/[중-10] 반영: 초안 3곳의 하한(64/30/25)이 상호 모순 — 아래처럼 "누가 어디서 자르는가"를 1곳씩으로 확정. 학습 분포 하한도 32로 낮춰 30~63pt 구간이 학습에 존재하게 정정.</div>
+<table>
+  <tr><th>임계</th><th class="c">값</th><th>소유자</th><th>의미</th></tr>
+  <tr><td>S1 클러스터 최소</td><td class="c">15 pt</td><td>S1 prompt_gen</td><td>이 미만 클러스터는 프롬프트 미생성 (마스크는 SAM 경로로 여전히 가능)</td></tr>
+  <tr><td>S2 하드 게이트 N_min</td><td class="c">30 pt</td><td>S2 size_gate</td><td>미만이면 기하 판별 불가로 탈락. 예외: 유일 후보면 low_geo 플래그로 구제 통과</td></tr>
+  <tr><td>S3 진입</td><td class="c">하한 없음</td><td>—</td><td>S2 통과분은 전부 시도 (N_f=1024 복원추출로 shape 고정, valid_count 기록)</td></tr>
+  <tr><td>S4 ACCEPT 하드 가드</td><td class="c">inlier ≥ 25</td><td>S4 verifier</td><td>미만이면 ACCEPT 불가(최대 UNCERTAIN) — "모르면 모른다고 말한다"</td></tr>
+  <tr><td>재적분 권고 트리거</td><td class="c">물체 위 &lt; 64 pt</td><td>파이프라인 운용층</td><td>reject가 아니라 T 증액 재시도 권고 신호 (예외 경로, §8 SLA 참조)</td></tr>
+  <tr><td>학습 분포</td><td class="c">N_obj ~ U[32, 2000]</td><td>학습 로더</td><td>32 미만 샘플만 재추첨 — S2·S4가 실제로 다루는 30~63 구간을 학습이 커버</td></tr>
+</table>
+
+<h3>2.6 σ_lidar 단일 파라미터화</h3>
+<div class="fix">검증 [상-5] 반영: 거리 노이즈 전제가 문서 3곳에서 4배 불일치(2~5mm vs 10~20mm)했다. <b>σ_lidar를 config 1곳에서 주입</b>하고 전 임계를 그 배수로 정의한다: S4 inlier 게이트 τ_z = 3σ, Huber δ = 1.5σ, 학습 노이즈 σ ~ U[0.7σ, 1.3σ], S2 TDF voxel 하한 = max(0.025D, σ). 초기값 σ_lidar=8mm(스펙시트 중간치, 추정) — D2-a 실측으로 교체.</div>
+
+<!-- ═════════════ 3. S0 ═════════════ -->
+<h2 id="s3"><span class="no">3</span>S0 온보딩 (오프라인)</h2>
+
+<h3>3.1 처리 흐름과 입력 검증</h3>
+<pre>CAD ─▶ 검증 ─▶ Poisson disk 16384 샘플+노멀 ─▶ 서브셋 인덱스 (2048/1024/196)
+                  ├─▶ depth 템플릿 42뷰 (+RGB 42뷰 → dino_cls만 저장)
+                  ├─▶ TDF 42×48³ 계산
+                  ├─▶ 대칭 자동검출 (+수동 오버라이드)
+                  └─▶ onboard_v1.npz + manifest.json    (S3 인코더 확정 후 dense_fo 추가 굽기)</pre>
+<table>
+  <tr><th>검사</th><th>방법 / 실패 시</th></tr>
+  <tr><td>단위</td><td><code>--unit {mm,m}</code> <b>필수</b>. bbox 대각 D ∉ [0.005, 3.0]m면 경고, <code>--force</code> 없으면 종료 (SAM-6D의 mm/1000 암묵 규약이 실패 모드였음)</td></tr>
+  <tr><td>워터타이트</td><td><code>trimesh.repair.fill_holes()</code> 시도 → 실패해도 진행하되 manifest 기록 (대칭검출 신뢰도만 하락)</td></tr>
+  <tr><td>퇴화 면</td><td>trimesh 4.x: <code>mesh.update_faces(mesh.nondegenerate_faces())</code> (검증 [하-2]: <code>remove_degenerate_faces()</code>는 제거된 API)</td></tr>
+  <tr><td>원점</td><td>모델 좌표계 유지(BOP 관행), center_offset만 메타 저장</td></tr>
+</table>
+
+<h3>3.2 템플릿 렌더 스펙</h3>
+<table>
+  <tr><th>항목</th><th class="c">값</th><th>근거</th></tr>
+  <tr><td>뷰</td><td class="c">icosphere L2 42뷰</td><td>SAM-6D <code>cam_poses_level0.npy</code> 회전 재사용 — S2·S4 공용</td></tr>
+  <tr><td>해상도 / FOV</td><td class="c">224², FOV 45°</td><td>fx=fy=<b>270.4</b>(=112/tan22.5°), cx=cy=112</td></tr>
+  <tr class="pick"><td>카메라 거리</td><td class="c"><b>d = 2.7 · r_bsphere</b></td><td>검증 [하-5] 반영: 구면 실루엣 접선 조건 d ≥ r/sin(22.5°)=2.613r — 초안의 2.5r은 바운딩 스피어를 채우는 물체가 잘림. 2.7r로 마진 확보</td></tr>
+  <tr><td>렌더러</td><td class="c">pyrender EGL (depth) + 동일 뷰 RGB</td><td>RGB는 dino_cls 계산 후 파기 가능. 배경 = ImageNet mean (S2 crop 규약과 도메인 일치 — 검증 [L3])</td></tr>
+  <tr><td>템플릿 포인트</td><td class="c">뷰당 512pt</td><td>depth 역투영 유효 픽셀 균일 서브샘플, median 센터 tpl_center 동시 저장</td></tr>
+</table>
+
+<h3>3.3 대칭 자동검출 (수정판)</h3>
+<div class="fix">검증 [상-1] 반영 — 초안의 τ_sym=0.004D는 4096pt point-to-point chamfer의 <b>샘플링 노이즈 바닥(≈0.011D)보다 낮아 대칭이 하나도 검출되지 않는</b> 결함. 수정: ① 거리를 point-to-<b>mesh</b>(<code>trimesh.proximity.closest_point</code> — 오프라인 허용)로 계산 ② τ_sym = max(0.004D, 0.7·√(A/N)) 하한 규칙 병용 ③ 합성 원기둥/큐브/육각너트에서 검출률 100%를 확인하는 <b>단위테스트를 온보딩 CI에 포함</b>. 추가([중-6]): 관성 고유값 3중 축퇴(큐브류)면 평면 내 30° 스캔이 아니라 전구면 축 탐색(icosphere 42방향)으로 전환, 유한 차수는 n ∈ {2..12} 전체 검사.</div>
+<pre>축 후보: PCA 3축 + 관성텐서 고유축 (+축퇴 시 icosphere 42방향)
+회전대칭: θ ∈ [5°,180°] 5° 스캔 → 전각 정합 시 무한대칭(sym_axes 등재)
+          유한 n: chamfer_mesh(R(a,360°/n)·P, mesh) < τ_sym → ±4° 미세 정렬 후 군 폐포 계산
+반사면:   메타만 기록 (포즈 등가 평가는 회전군만 사용)
+출력:     sym_rots [S,3,3] (S≤24 상한) + sym_axes [A,3] — §2.4 정본 포맷
+CLI:      검출 요약 출력 + --sym-override sym.json 수동 정정 (오검출·미검출 대비 필수 경로)</pre>
+
+<h3>3.4 CLI</h3>
+<pre>shape6d-onboard --cad model.ply --unit mm --out cache/ --obj-id wheel_hub_a
+                [--n-master 16384] [--n-views 42] [--sym-override sym.json] [--force]
+# 2-pass: 기하·템플릿·대칭은 즉시, dense_fo/geo_embedding_o는 S3 인코더 체크포인트 지정 시
+#         (shape6d-onboard --refresh-features --ckpt pem.pth) — encoder_hash로 정합성 검증</pre>
+
+<!-- ═════════════ 4. S1 ═════════════ -->
+<h2 id="s4"><span class="no">4</span>S1 제안 생성</h2>
+
+<h3>4.1 EfficientViT-SAM-L0 입력 경로 (1280×800)</h3>
+<table>
+  <tr><th>단계</th><th>내용</th></tr>
+  <tr><td>전처리</td><td>공식 입력 512² (L 시리즈; ※임베딩 grid 크기는 공식 repo 확인 필요). 긴 변 1280→512 (s=0.4) → 512×320 → 하단 zero-pad → 512×512. LiDAR uv는 <code>uv×0.4</code> (pad가 우/하라 offset 불요)</td></tr>
+  <tr><td>마스크 복원</td><td>low-res 마스크 → 512² upsample → [:320,:512] crop → bilinear 800×1280 → &gt;0 threshold</td></tr>
+  <tr><td>실행 규약</td><td><b>인코더는 프레임당 1회</b>, 임베딩 보관 후 decoder만 프롬프트 배치 반복</td></tr>
+</table>
+
+<h3>4.2 LiDAR 프롬프트 생성 + 병렬 hull 경로</h3>
+<pre># 파라미터: ransac_dist 8mm, max_planes 2, plane_min_ratio 0.15, voxel 20mm,
+#           min_cluster_pts 15, K_prompts 3, size_gate [0.2, 2.0]×max(D_cad)  (느슨 — 리콜 우선)
+1. in-image 필터: lidar_pixels가 NaN인 포인트 제외        # 검증 [M3]: LiDAR FOV > 카메라 FOV 대비
+2. 지지 평면 제거: 반복 RANSAC (전체 15% 이상 평면만, 물체 평면 오제거 방지)
+3. voxel-hash 연결성분 클러스터링 (26-conn BFS — kNN 불요, A4 준수)
+4. 클러스터당: centroid(최근접 실측점 스냅) + PCA 제1주축 양끝 실측점 2개 = 프롬프트 3점
+   → decoder 1회, multimask_output=True (3후보 전부 유지 — 접촉 병합 대응)
+5. 병렬 hull 경로: 클러스터 uv 볼록껍질 fillConvexPoly + 9px dilate, score 고정 0.30
+   (SAM 실패 시 리콜 안전망 — NMS에서 SAM 마스크에 항상 후순위)
+6. 합집합 mask NMS (IoU 0.5, SAM-6D의 0.25보다 완화 — 중복 제거는 S2 책임)
+   각 Proposal에 lidar_idx/n_lidar/median_depth/truncated 메타 부여</pre>
+
+<h3>4.3 엣지 케이스</h3>
+<table>
+  <tr><th>상황</th><th>대응</th></tr>
+  <tr><td>프롬프트 0개</td><td>평면 제거 1단계 완화 → 재클러스터 → 그래도 0이면 grid fallback. <b>fallback은 8×5=40 프롬프트로 제한</b>(검증 [중-1]: 256 프롬프트는 +250~480ms로 예산 파괴) + degraded 모드(§8) 선언 → 그래도 0이면 <code>status="no_foreground"</code> 정직 반환</td></tr>
+  <tr><td>접촉 파일 병합</td><td>3중 방어: multimask 3후보 / 크기 상한 위반 클러스터 주축 2-분할(try_split) / 실패 시 원본 통과(S2가 최종 방어)</td></tr>
+  <tr><td>대형 반사면 LiDAR 공백</td><td>커버리지 맵(32×20 타일)에서 저점유 연속 영역에만 타일당 1pt 저밀도 프롬프트. 생성 마스크는 n_lidar≈0 → S2 저신뢰 태그 → S4에서 <code>insufficient_geometry</code>로 종결. hull 경로는 원천 무력 — 한계로 명기</td></tr>
+</table>
+
+<!-- ═════════════ 5. S2 ═════════════ -->
+<h2 id="s5"><span class="no">5</span>S2 후보 판별 — 3단 캐스케이드</h2>
+<p>SAM-6D ISM의 <code>(semantic + appe + geo·vis)/(2+vis)</code>에서 appearance 완전 제거, semantic은 ViT-S로 축소·강등, geometric(bbox IoU)은 메트릭 신호로 교체. 판별의 주 신호가 <span class="chip geo">GEO</span>로 이동한다. 캐스케이드가 무료 신호를 앞에 둬서 descriptor forward 횟수(=구 ISM 레이턴시 주범) 자체를 줄인다.</p>
+
+<h3>5.1 ① 크기 게이팅 (무료)</h3>
+<pre>P_j = pts(eroded mask, quality==0 우선)                    # §2.2 표준 절차
+d_obs = ‖percentile(P_j, 95) − percentile(P_j, 5)‖ (축별 트리밍 bbox 대각)
+통과 ⇔ β_occ·D_cad ≤ d_obs ≤ (1+τ_up)·D_cad  AND  N_j ≥ 30
+  τ_up = 0.15 (관측이 물체보다 커질 물리적 이유 없음 — 타이트)
+  β_occ = 0.35, 가림 정황(경계 절단 or 전방 마스크 겹침) 시 0.25로 완화
+S_size = clamp(d_obs / D_cad, 0, 1)</pre>
+
+<h3>5.2 ② point-to-template 정합 (주 판별 신호) — 수정판</h3>
+<div class="fix">검증 [상-2]·[상-3] 반영 — 초안 결함 2건 수정:
+① <b>시선축 정렬</b>: 관측 포인트를 카메라 z축 기준으로 in-plane 탐색하면 화면 주변부 물체(최대 35° 오프센터)에서 정합이 붕괴 — TDF 조회 전 <b>centroid 시선 → z 정렬 회전(Rodrigues 1회)</b>으로 뷰잉-레이 프레임에 옮긴다(템플릿 렌더 규약과 정합).
+② <b>탐색 격자 강화</b>: 42뷰(커버 반각 17.8°) × in-plane 30°의 합성 최악 오차 ≈ 23° → 주변부 포인트 변위 0.2D = τ_trunc의 2배로 정답 점수 붕괴 위험. pass2를 상위 3뷰 × <b>in-plane 15° 재탐색 + jitter ±2 voxel</b>로 확장. M2 착수 전 정답 포즈 주입 스모크 테스트(S_depth 분포 확인)를 필수 게이트로.</div>
+<pre># 정규화: 스케일 정규화 금지(메트릭이 판별 신호), 병진 = median 센터링 (vs tpl_center)
+# 가속: 뷰별 TDF voxel LUT (48³, voxel 0.025D, τ_trunc 0.1D) — O(1) gather, KD-tree 불가(A4)
+q_i = R_z(θ) · R_align(ray→z) · (p_i − median(P_j))
+s(j,v,θ) = mean_i max(0, 1 − tdf[v][voxel(q_i)] / τ_trunc)
+S_depth(j) = max over (v∈42, θ∈12@30°) → pass2: top3 뷰 × θ∈24@15° × jitter δ∈{−2..2}³ 부분탐색
+# 단방향(관측→템플릿)인 이유: 가림 불변. 부작용(파편 정합)은 ①크기 게이팅이 차단
+# 복잡도: ~25M fp16 gather (M'=8, P=1000) → 데스크톱 ~3ms / Orin ~15ms (추정)</pre>
+
+<h3>5.3 ③ DINOv2 ViT-S 의미 점수 (약한 prior) + ④ 융합</h3>
+<pre>crop: bbox 정사각 1.25× 확장 → 마스크 밖 ImageNet mean 치환 → 224² (템플릿 렌더와 동일 도메인)
+S_sem = mean(top5(cos(cls, dino_cls[42])))            # ②의 S_depth ≥ 0.3 생존 후보만 forward
+S2 = 0.6·S_depth + 0.2·S_size + 0.2·S_sem             # M0-3 프로토콜로 튜닝 (E6)
+동적 가중: N_j &lt; 150이면 w_d를 N_j 비례 하향, 잔여분 w_s로 (상한 0.4 캡) + low_geo 플래그
+판정: S2 ≥ 0.45 → 인스턴스 NMS(IoU 0.5) → top-3 인스턴스를 S3로 (전무 시 "미검출" 조기 종료)</pre>
+<p class="small">시나리오 정합: 재도장 → S_sem 붕괴해도 w=0.2뿐 → 판별 유지. 유사 형상 혼입 → S_depth·S_size 동률 시 S_sem이 캐스팅보트(제거 대신 강등의 이유).</p>
+
+<!-- ═════════════ 6. S3 ═════════════ -->
+<h2 id="s6"><span class="no">6</span>S3 Shape6D-PEM — 네트워크 상세</h2>
+
+<h3>6.0 SAM-6D 대비 개조 지점 총괄 (코드 확인 기준)</h3>
+<table>
+  <tr><th>#</th><th>개조 지점</th><th>위치</th><th>조치</th></tr>
+  <tr><td>1</td><td>ViT-B RGB 특징</td><td>feature_extraction.py:122-181</td><td>기하 인코더 교체(§6.2) + RGB 보조 branch(§6.3)</td></tr>
+  <tr><td>2</td><td>오브젝트 측 온라인 연산 (템플릿 2뷰 + FPS + geo_emb 재계산)</td><td>feature_extraction.py:170-181, pose_estimation_model.py:34-37</td><td>전량 S0 캐시(§2.4)</td></tr>
+  <tr><td>3</td><td>pointnet2 커스텀 CUDA (FPS/gather/QueryAndGroup)</td><td>model_utils.py:53-66, fine_point_matching.py:90-125</td><td>voxel 인덱스 엔진 입력화 + torch.gather + 거리행렬 top-k(§6.5)</td></tr>
+  <tr><td>4</td><td>hidden 256·3블록</td><td>base.yaml</td><td>H=192(→128), 2블록 — RPE·geo embedding 차원 연동 축소</td></tr>
+  <tr><td>5</td><td>compute_coarse_Rt best-1</td><td>model_utils.py:237-246</td><td>2000/100 축소 + pose-NMS top-k=3(§6.5)</td></tr>
+  <tr><td>6</td><td>torch.svd / searchsorted</td><td>model_utils.py:219,344</td><td>TRT 비호환 — 엔진 밖 후처리 분리(§6.7)</td></tr>
+</table>
+
+<h3>6.1 입력 규약 (희소 가변 포인트 처리 확정)</h3>
+<div class="fix">검증 [상-4]/[H4] 반영 — 학습(제로패딩) vs 추론(복원추출) 정면 모순을 <b>복원추출+jitter로 통일</b>. 근거: SAM-6D 검증 경로(run_inference_custom.py:223-226) 그대로, LinearAttention(transformer.py:518-564)에 마스크 경로가 없어 패딩은 개조 필요, TRT 정적 shape 유지. 패딩+마스크는 ablation 항목으로 강등. 학습 로더도 동일 규칙 적용(§9).</div>
+<table>
+  <tr><th>텐서</th><th class="c">shape</th><th>내용</th></tr>
+  <tr><td><code>rgb</code></td><td class="c">(B,3,224,224)</td><td>마스크 bbox 정사각 crop → 224 리사이즈</td></tr>
+  <tr><td><code>geo_maps</code></td><td class="c">(B,<b>10</b>,224,224)</td><td>XYZ(3, centroid 중심화+radius 정규화) + 노멀(3, 투영 이웃 모멘트법) + 유효마스크(1) + 정규화 깊이(1) + <b>flags 브로드캐스트(2: rgb_valid, domain)</b> — 검증 [M1] 반영: 학습 config in_channels=10으로 통일</td></tr>
+  <tr><td><code>pts</code> / <code>pixel_uv</code></td><td class="c">(B,1024,3) / (B,1024,2)</td><td>N_f=1024 고정: P_m≥1024 → voxel 다운샘플, P_m&lt;1024 → <b>복원추출 + σ 0.3mm jitter</b>(중복점 geo-kNN 퇴화 방지). pixel_uv는 [-1,1] 정규화 (grid_sample용, rgb_choose 대체)</td></tr>
+  <tr><td><code>fps_idx_m</code></td><td class="c">(B,196) i32</td><td>coarse 인덱스 — <b>전처리에서 voxel 다운샘플로 계산해 엔진 입력으로 주입</b> (P_m&lt;196도 중복 인덱스로 196 고정 — 검증 [H7]: 가변 길이 문구 폐기)</td></tr>
+  <tr><td><code>valid_count</code></td><td class="c">(B,)</td><td>실제 유효 포인트 수 — S4 신뢰도 특징으로 전달</td></tr>
+</table>
+
+<h3>6.2 기하 인코더 3후보 (M2-B 파일럿 대상)</h3>
+<table>
+  <tr><th>후보</th><th>스펙</th><th class="c">Params / GMACs (추정)</th><th class="c">TRT</th><th>판정 기준</th></tr>
+  <tr class="pick"><td>(a) image-grid conv<br><b>기본안</b></td><td>ResNet18-lite+FPN, stride 4 출력(56²×256): Stem 32ch → 48/96/192 3스테이지 → FPN up ×2 → 1×1 256. <b>초기 2레이어 partial conv</b>(유효 밀도 1~2% 대응, 표준 op 조합: <code>y=conv(x⊙m)·k²C/(conv_ones(m)+ε)</code>), 이후 일반 conv+마스크 채널</td><td class="c">2.0M / 1.6</td><td class="c r g">◎ 표준 op만</td><td>희소 붕괴(깊이 불연속에서 2D≈3D 근사 실패) 시 탈락</td></tr>
+  <tr><td>(b) PointNet++ lite</td><td>SA 512(r0.1,ns16,[64,64,128]) → SA 196(r0.25,ns16,[128,128,256]) → FP ×2. ball query = 1024² 거리행렬 + radius 마스킹 + TopK + Gather (전부 표준 op)</td><td class="c">0.35M / 0.5</td><td class="c">○ gather 다수</td><td>(a) 대비 +1pt 미만인데 레이턴시 2배면 탈락</td></tr>
+  <tr><td>(c) sparse conv</td><td>SubMConv3d 4단 [32,64,128,256], voxel 2~4mm</td><td class="c">3.5M / ~0.3</td><td class="c r b">△ 플러그인 의존</td><td>배포 경로 기한 내 미확보 시 즉시 제외 (상한 확인용)</td></tr>
+</table>
+<p class="small">노멀 추정(전처리, 표준 op): 유효마스크 가중 박스필터로 창 15~21px 내 9개 모멘트 맵 → 픽셀별 3×3 공분산 → Cardano 해석적 고유분해(구현 필요, 난이도 낮음) → 최소 고유벡터, 뷰 방향 부호 통일. 이웃 &lt;5pt 픽셀은 노멀 0 + 유효비트 해제.</p>
+
+<h3>6.3 RGB 보조 branch + modality dropout (통일판)</h3>
+<div class="fix">검증 [H5] 반영 — 0-치환안과 학습 임베딩안의 상충을 다음 단일 규칙으로 통일:
+<code>f_rgb_eff = flag · g·F_rgb + (1−flag) · e_norgb</code> — flag(rgb_valid)∈{0,1}이 학습 dropout(p=0.3으로 flag=0 샘플링)과 추론 시 RGB 결측을 <b>같은 경로</b>로 처리. g(학습형 게이트)는 실 F_rgb에만 적용, e_norgb는 학습되는 "RGB 없음" 임베딩. 학습·추론 그래프 동일(TRT 정적).</div>
+<pre>RGBBranch: MBConv 소형 CNN (0.4M, 56²×64 출력) — E2에서 distilled DINOv2-S와 비교
+융합: dense_fm = Linear(320→256)( concat( grid_sample(geo56, uv),  f_rgb_eff ) )   # (B,1024,256)</pre>
+
+<h3>6.4 CAD 측 인코더 — 42뷰 depth 렌더 경유 (기본 경로로 승격)</h3>
+<p>(a) grid-conv는 CAD 포인트를 직접 못 받으므로: S0에서 42뷰 depth 렌더를 <b>동일 인코더</b>(RGB=e_norgb, domain_flag=0)에 통과 → 뷰별 per-pixel 특징을 3D 역투영 → 마스터 포인트에 뷰 가중 최근접 집계 → <code>dense_fo</code>. 근거: ① cross-attention은 양측 동일 임베딩 공간 필수 — 가중치 공유가 구조적 보장(SAM-6D도 동일 관행) ② depth 렌더는 외형 무관(A1 유지) ③ 오프라인이라 온라인 비용 0 ④ 장면 측(2.5D 부분 관측)과 도메인 정합. 02 문서 M2-C2의 "폴백"이었던 이 경로를 (a) 채택 시 <b>기본 경로로 승격</b> — §11 델타 참조. (b)/(c) 인코더 선정 시엔 CAD 포인트+노멀 직접 추출.</p>
+
+<h3>6.5 매칭 모듈 개조</h3>
+<table>
+  <tr><th>항목</th><th>내용</th></tr>
+  <tr><td>차원 축소</td><td>단일 파라미터 H=192 (E4에서 128 비교): GeoStructEmbedding(d_model=H)·proj_d/a·RPE proj_p 동시 축소 — <b>S0 캐시 geo_embedding_o도 H 종속(encoder_hash 검증)</b>. in_proj 256→H, out_proj H→256 (유사도 공간 256 유지 — teacher 유사도행렬과 distill 정렬용). heads 4 유지(192/4=48)</td></tr>
+  <tr><td>블록 수</td><td>coarse·fine 3→2 (M2-D distill로 보전)</td></tr>
+  <tr><td>fine</td><td>2048→1024pt, linear attention(focusing 3) 유지, bg_token 유지(배경 혼입 배출구 — compute_coarse_Rt의 pred_label&gt;0 필터가 전제). PE의 QueryAndGroup → 거리행렬(1024²)+radius 마스킹+TopK gather, nsample 32/64→16/32 축소</td></tr>
+  <tr><td>가설 생성</td><td>nproposal 6000/300→2000/100 (config만). <b>top-k=3 + pose-NMS</b>(geodesic 30° / Δt 0.05·D_cad — 검증 [L2]: 임계 단위를 D_cad 상대값으로 통일): model_utils.py:242-246의 best-1 선택을 NMS 그리디 선택으로 교체, 부족분은 best 복제 패딩(고정 shape). NMS는 엔진 밖 후처리(n2=100, 3×3 행렬 — CPU µs급)</td></tr>
+  <tr><td>가설 통과 규약</td><td>fine은 hypo[0](best)만 통과 → S4 입력 = <b>{hyp0: fine 정련품 + pose_score, hyp1..2: coarse 원본}</b> — 검증 [M5]: 이 비대칭을 S4 명세에 명시(§7.1)</td></tr>
+</table>
+
+<h3>6.6 forward 요약 (추론, 인스턴스 배치 B=3)</h3>
+<div class="fix">검증 [상-6] 반영 — S2가 top-3 인스턴스를 전달하는데 초안 레이턴시는 전부 B=1 기준이었다. <b>엔진을 B=3 정적 배치로 빌드</b>(부족 시 복제 패딩)해 인스턴스 3개를 1회 실행으로 처리 — 예산표(§8)에 반영.</div>
+<pre>[전처리 CPU/경량CUDA] crop·복원추출·geo_maps·노멀·fps_idx  →  [엔진1] GridGeoEncoder+RGBBranch+융합 (B=3)
+→ [엔진2] coarse 2블록 RPE(197토큰, geo_emb_o는 캐시) → 유사도 → (엔진 밖) 2000/100 SVD + NMS top-3
+→ fine 2블록 s2d(1025/2049토큰, pe_fo 캐시) → 유사도 → (엔진 밖) fine Rt + score
+출력: 인스턴스별 {pred_R/t/score, hypo_R/t/score ×3}   # 텐서 shape 상세는 설계 원문(§11 아카이브) 참조</pre>
+
+<h3>6.7 파라미터/FLOPs 및 TRT 변환표 (핵심만)</h3>
+<table>
+  <tr><th></th><th class="c">SAM-6D PEM</th><th class="c">Shape6D-PEM (H192·2블록·1024pt)</th></tr>
+  <tr><td>온라인 파라미터 / FLOPs</td><td class="c">~104M / ~32 GFLOPs</td><td class="c r g"><b>~8M / ~7 GFLOPs</b> (검증 [하-1]: full-size 기준 재합산 — 매칭부 5.5M + 인코더 2.4M)</td></tr>
+  <tr><td>오브젝트 측 온라인 연산</td><td class="c">템플릿 forward + FPS + geo_emb 재계산</td><td class="c r g">0 (전량 캐시)</td></tr>
+</table>
+<table>
+  <tr><th>TRT 문제 op</th><th>대체</th></tr>
+  <tr><td>FPS/gather(pointnet2)</td><td>voxel 인덱스 엔진 입력화 + ONNX Gather</td></tr>
+  <tr><td>torch.svd (Procrustes)</td><td>1차: 가설 생성·Rt를 엔진 밖 PyTorch CUDA 후처리(전체 ~20% 연산) / 2차: Horn quaternion(4×4 고유벡터 멱승법) 표준 op 구현</td></tr>
+  <tr><td>searchsorted+rand (가설 샘플)</td><td>엔진 밖 유지. Gumbel-top-k 대체는 <b>비복원이라 등가 아님</b> — ablation 강등 (검증 [하-3])</td></tr>
+  <tr><td>einsum 5차원(RPE)</td><td>matmul+reshape 수동 전개</td></tr>
+  <tr><td>masked_fill(−inf)+softmax</td><td>−1e4 상수 + 매칭 softmax FP32 고정 (temp 0.1 로짓 증폭 대비)</td></tr>
+  <tr><td>grid_sample</td><td>ONNX opset16/TRT 8.5+ 네이티브 — Jetson JetPack TRT 버전 확인 필요</td></tr>
+  <tr><td>scatter류 (S4 공용)</td><td><code>Tensor.scatter_reduce_(reduce='amin')</code>(torch≥1.12) + argmin 2-pass — <b>torch_scatter(커스텀 CUDA) 금지</b> (검증 [중-4])</td></tr>
+</table>
+
+<!-- ═════════════ 7. S4 ═════════════ -->
+<h2 id="s7"><span class="no">7</span>S4 정련·검증</h2>
+
+<h3>7.1 가설 선별 — 투영 스플랫 잔차 (렌더링 없음)</h3>
+<p>입력 명세(검증 [M5] 반영): 인스턴스당 가설 3개 — <b>hyp0 = fine 정련품, hyp1..2 = coarse 원본</b>. 대칭 등가 dedupe(canonicalize 후 geodesic 15° & Δt 0.05D 병합) 시 fine품이 항상 생존 우선. UNCERTAIN 재시도로 coarse 가설에서 ICP를 시작할 때는 <b>iter 10→15, τ_assoc 2배</b>로 수렴 반경 보상.</p>
+<pre>S0 idx_verify 2048pt를 가설 포즈로 투영 → stride-2 그리드 scatter-amin z-buffer → 3×3 min-pool(스플랫 구멍 메움)
+→ 관측 LiDAR 유효 픽셀에서만 gather → r = obs_z − z_model
+score = mean(relu(1−|r|/τ_z)) · coverage^γ,  τ_z = 3σ_lidar
+r > +τ_z = free-space 위반(모델이 관측 앞) → 오포즈의 강한 증거 (별도 집계)
+r < −τ_z = 가림/오염 퇴적 가능 → 관대</pre>
+
+<h3>7.2 Projective point-to-plane ICP</h3>
+<div class="fix">검증 [중-5] 반영 — 대응 탐색 창을 상수 3×3으로 두면 측방 도달이 ±3.3mm@1m뿐이라 coarse 오차 1cm에서 대응이 안 잡혀 no-op 수렴한다. <b>win = ceil(τ_assoc·fx/(Z·stride))</b>로 유도(1m·τ_assoc 20mm·stride 2 → win≈9)하거나 stride 8→2 coarse-to-fine 2단으로 구현.</div>
+<pre>방향: source = 관측 LiDAR(희소·EDGE_MIXED 제외), target = 포즈 적용 CAD 마스터 16384pt
+노멀: CAD 측(S0 캐시) — 희소 관측에서 노멀 추정 불가·CAD 노멀은 정확 무료
+대응: projective association (scatter-amin 셀 그리드 + win×win 이웃 3D 최근접) — kNN/KD-tree 없음
+iter 5~10: Huber(δ=1.5σ_lidar) 가중 p2pl 잔차 → J=[(q×n)ᵀ,nᵀ] → 6×6 정규방정식 → SE(3) 좌측 갱신
+수렴: ‖ω‖<1e-4 rad & ‖ν‖<0.05mm, 또는 잔차 감소율 <1e-3
+퇴화: cond(H) = λ_min/λ_max < 1e-6 → degenerate 플래그 (평면 조각 등 6DoF 미구속 → ACCEPT 금지)</pre>
+
+<h3>7.3 신뢰도 보정 + 대칭 등가 + 판정</h3>
+<pre>특징 10-d: [inlier_ratio, rmse_inlier/τ_z, coverage, free_viol, S2_depth, S2_sem,
+            s3_match, log10(N_obs), log10(cond_H), border_flag] → 로지스틱 → p_conf
+캘리브레이션: BOP val(T-LESS·ITODD 우선) + M0-3 오염 프로토콜, 라벨 = 대칭 인식 오차(MSSD/MSPD 준용)
+  — 오염 셋 필수 포함: "오염이지만 정답" 표본이 양성으로 학습되어야 reject 경계가 올바름
+판정: 하드 가드(inlier<25 → ACCEPT 금지 / degenerate → 금지 / free_viol>0.05 → REJECT)
+  → p_conf ≥ 0.7 ACCEPT / 0.3~0.7 UNCERTAIN(차순위 가설 재시도 1회 → 재촬영 신호) / <0.3 REJECT</pre>
+<p class="small"><b>오염 대응 4겹</b>: ① Huber+inlier 한정 통계 — "정답+국소 오염"(inlier_ratio↓, rmse 정상)과 "오포즈"(둘 다 나쁨)가 특징 공간에서 분리 ② MAD 적응 임계(상한 2τ_z 캡) ③ 부호 비대칭 — 퇴적은 r&lt;0 방향이므로 관대, free-space 위반(r&gt;+τ)만 hard ④ 캘리브레이션 셋에 오염 포함. <b>대칭</b>: sym_rots/sym_axes(§2.4 정본)로 canonicalize(연속축은 swing-twist 제거) — 가설 dedupe와 라벨링 양쪽 적용, T-LESS 대칭군 오reject 0이 M3 게이트.</p>
+
+<!-- ═════════════ 8. 레이턴시 ═════════════ -->
+<h2 id="s8"><span class="no">8</span>레이턴시 통합 예산 (Orin NX, 전부 추정 — M0-2/M4 실측 대체 대상)</h2>
+<div class="fix">검증 [중-2]/[상-6]/[중-3] 반영: ① Orin 환산 계수를 3종으로 분리 — <b>컴퓨트 바운드 ×10~25, 메모리 바운드 ×17.5(대역폭비 1790/102GB/s), launch 바운드 ×3~5</b>. M0-2에서 이 3계수를 실측해 전 문서가 공유. ② 인스턴스 ×3을 배치로 흡수. ③ SLA 정의: <b>1s는 정상 경로 SLA. 재적분(T 증액)·UNCERTAIN 재시도·grid fallback은 예외 경로로 1.5s 허용(degraded 모드 명시 로깅)</b>.</div>
+<table>
+  <tr><th>구간</th><th class="c">공칭 (T=200ms)</th><th class="c">설계 내 최악 (T=400ms)</th></tr>
+  <tr><td>LiDAR 적분 T</td><td class="c">200</td><td class="c">400</td></tr>
+  <tr><td>FrameBundle 구축</td><td class="c">5</td><td class="c">5</td></tr>
+  <tr><td>S1 (EViT-SAM enc 1회 + dec 배치 + 클러스터)</td><td class="c">70</td><td class="c">90</td></tr>
+  <tr><td>S2 (게이팅 + TDF 정합 + ViT-S ≤6 crop)</td><td class="c">25</td><td class="c">30</td></tr>
+  <tr><td>S3 (인스턴스 B=3 배치 엔진)</td><td class="c">110~140</td><td class="c">160</td></tr>
+  <tr><td>S4 (가설 스코어 + ICP + 판정, 인스턴스별)</td><td class="c">40~60</td><td class="c">80 (+재시도 25)</td></tr>
+  <tr class="pick"><td><b>합계</b></td><td class="c"><b>≈ 450~500ms</b></td><td class="c"><b>≈ 790ms (+예외 경로 시 ~1s)</b></td></tr>
+</table>
+<p class="small">RTX PRO 6000(로컬 개발) 기준으로는 연산부 합계 ~25-40ms — 로컬에서는 취득 시간 T가 전부다. grid fallback 발동 시 +80~150ms(40 프롬프트 제한 후) — degraded 모드.</p>
+
+<!-- ═════════════ 9. 학습 ═════════════ -->
+<h2 id="s9"><span class="no">9</span>학습 파이프라인 (RTX PRO 6000 96GB × 1)</h2>
+
+<h3>9.1 데이터·로더</h3>
+<table>
+  <tr><th>항목</th><th>내용</th></tr>
+  <tr><td>데이터</td><td>MegaPose-GSO + ShapeNetCore <code>train_pbr_web</code> (~2M 이미지 추정, 다운로드 후 실측 확정). <b>디스크 1.2~1.5TB — NVMe 2TB 이상 필수</b>. 1차는 SAM-6D 풀린 파일 방식 승계(1,200만 파일 — ext4 inode 여유 확인), 병목 실측 시 npz 재패킹</td></tr>
+  <tr><td>오브젝트 캐시</td><td>전 물체(~5만 종) S0 경량판 일괄 실행 → 물체당 ~50KB npz → <b>총 2.5GB RAM 전량 상주</b> (템플릿 이미지 I/O 완전 제거). 비다양체 메시는 bad_objects.json 제외 관리</td></tr>
+  <tr><td>로더</td><td>bs 기준 요구 처리량 ~77샘플/s → 워커 24~32, prefetch 4, persistent. <b>요구 사양: 물리 16코어+ / RAM 64GB+ / NVMe</b> — D3-a에서 PC 사양 대조 필요. imgaug 병목 시 albumentations 포팅(선측정 후)</td></tr>
+</table>
+
+<h3>9.2 증강 스펙 (M2-A2 구현판)</h3>
+<pre>적용 순서: depth 로드 → ③범프(depth 레벨) → ①LiDAR 희소화 → 역투영·복원추출 샘플링(§6.1과 동일 규칙)
+          → ②재도장 증강 → 회전/시프트(SAM-6D 승계) → (④modality dropout은 모델 forward 내)
+① 희소화: 원 이미지 좌표계에서 패턴 생성(각도 단위 파라미터 — 해상도 무관).
+   scanline 0.5 / rosette(리사주 a,b∈{(3,2),(5,4),(7,6)}) 0.3 / 균일 드롭 0.2(패턴 과적합 방지)
+   거리 의존 밀도 p_keep=(z_ref/z)², 물체 위 N_obj ~ U[32, 2000] 강제 (§2.5 정정판)
+   엣지 노이즈: 깊이 불연속 접점 → 드롭 p0.5 / 전경·배경 혼합값 p0.25 (빔 풋프린트 거동)
+   거리 노이즈: σ ~ U[0.7, 1.3]·σ_lidar (§2.6 단일 주입)
+② 재도장: gdrnpp 승계 + 물체 영역 전면 재색상 p0.3 (solid/gradient blend, L채널 음영 보존
+   — "도장은 바뀌어도 음영은 남는다") + HSV 회전 p0.2. 재질 스왑 재렌더 셋은 평가 전용으로 시작
+③ 범프: 1~3개, 반경 3~10%D, 높이 2~8mm 가우시안/Perlin — dis_thres 메커니즘이 자동으로
+   해당 포인트를 배경 라벨화(CAD에 없는 융기 = 대응 없음 학습). 부착물 변형 p0.1 (1~3cm + 마스크 포함)
+④ dropout: 샘플별 Bern(0.3)으로 rgb_valid_flag=0 → e_norgb 경로 (§6.3 통일 규칙)</pre>
+
+<h3>9.3 Loss — 대칭군 최소 대응 (신규, SAM-6D 미처리 확인됨)</h3>
+<p>SAM-6D의 <code>compute_correspondence_loss</code>는 단일 GT 포즈 기준 양방향 최근접 + 배경 빈 CE(층별 deep supervision)이며 <b>대칭 미처리 확정</b>(코드 확인) — 대칭 물체에서 모순 그라디언트 발생. 수정: S0 sym_rots(연속축은 12분할 이산화, G≤16)로 <b>샘플당 단일 g* 선택</b>(포인트별 min은 강체 비일관 라벨을 만들므로 금지) — g*는 coarse 해상도(2048×196)에서 선택해 비용 절감, fine 라벨은 g* 하나로만. <code>g_star</code> 분포(비항등 선택률)를 로깅해 대칭 loss 작동 감시.</p>
+
+<h3>9.4 96GB 학습 계획 (검증 수정 반영)</h3>
+<div class="fix">검증 [상-7] 반영 — 학습 시 오브젝트 측 42뷰 중 2뷰가 <b>동일 인코더를 gradient 포함 통과</b>하므로 활성화가 장면 측 1회분의 ~3배: per-sample ≈ 560~940MB → bs96은 OOM 경계. 수정: <b>기본 bs64 + grad_accum 대비 + 인코더 activation checkpointing 옵션</b>을 정식 예비책으로. 벽시계 ×1.5(본학습 ~4일/런) 각오.</div>
+<table>
+  <tr><th>런</th><th class="c">규모</th><th class="c">소요 (0.8 iter/s 가정, 파일럿 첫 1시간 실측으로 즉시 교정)</th></tr>
+  <tr><td>파일럿 1런 (10% 서브셋, 이미지 해시 기반 — 물체는 전 종 노출)</td><td class="c">1.68M 샘플</td><td class="c">~6h/런 → 인코더 3 + 증강 5스위치 + A/B ≈ 10~12런 = 3~4일</td></tr>
+  <tr><td>본학습 M2-C1 (600k@bs28 등가)</td><td class="c">16.8M 샘플</td><td class="c">~3~4일 + 마진 → 5~7일. <b>재학습 1회전 여유 실존</b></td></tr>
+  <tr><td>distill (192→128, 3→2블록, 2048→1024) 각 1/3 스케줄</td><td class="c">각 5.6M</td><td class="c">각 1~2일, 총 ~5일</td></tr>
+  <tr class="pick"><td><b>M2 GPU 총소요</b></td><td class="c">—</td><td class="c"><b>≈ 15~19 GPU-일 — 96GB 1장으로 성립</b></td></tr>
+</table>
+<p class="small">공통: bf16 autocast + fp32 master(GradScaler 불요), 매칭 softmax/CE·loss는 fp32. AdamW lr 2e-4(파일럿에서 원 세팅 1e-4·betas(0.5,0.999)와 A/B). 체크포인트 5k iter 롤링 + 25k 영구 + rng/img_idx 포함(재개 재현성), <code>--resume auto</code>. 학습 중 평가: 500 iter val(증강 태그별 분해) / 10k BOP 미니(GT 마스크로 S3 절연 평가) / 25k 오염 프로토콜 + RGB 차단 + 희소도 스윕 N∈{32,100,300,1000,2000} — 게이트 미달 시 W&B alert. 학습 config YAML 전문은 설계 아카이브(§11) 참조 — 본문 확정값(in_channels 10, 복원추출, n_obj_range [32,2000], σ_lidar 주입)으로 갱신된 판이 정본.</p>
+
+<!-- ═════════════ 10. 검증 대장 ═════════════ -->
+<h2 id="s10"><span class="no">10</span>교차 검증 반영 대장</h2>
+<p class="small">2종 검증(경계 일관성 / 실현 가능성·수치 재계산)이 낸 지적 전건과 처분. 검증자는 SAM-6D 코드를 라인 단위 재대조했고 산술을 전부 재계산함 — 코드 인용·대부분 산술은 정확 판정, 아래는 발견된 결함.</p>
+<table>
+  <tr><th>ID</th><th>지적</th><th class="c">처분</th><th>반영 위치</th></tr>
+  <tr><td>상-1</td><td>대칭 검출 τ가 샘플링 노이즈 바닥의 1/2.8 — 대칭 전멸</td><td class="c r g">수정</td><td>§3.3 point-to-mesh + τ 하한식 + CI 단위테스트</td></tr>
+  <tr><td>상-2</td><td>S2 정합 시선축 미보정 — 화면 주변부 붕괴 (최대 35°)</td><td class="c r g">수정</td><td>§5.2 ray→z 정렬 회전</td></tr>
+  <tr><td>상-3</td><td>회전 양자화 오차 0.2D = τ_trunc의 2배</td><td class="c r g">수정</td><td>§5.2 pass2 15° + jitter ±2, 스모크 테스트 게이트</td></tr>
+  <tr><td>상-4/H4</td><td>패딩(학습) vs 복원추출(추론) 분포 모순</td><td class="c r g">통일</td><td>§6.1 복원추출+jitter, 학습 로더 동일 규칙</td></tr>
+  <tr><td>상-5</td><td>σ_lidar 전제 3곳 4배 불일치</td><td class="c r g">통일</td><td>§2.6 단일 주입 + D2-a σ 계측 축</td></tr>
+  <tr><td>상-6</td><td>인스턴스 k=3 곱셈이 예산표에 누락</td><td class="c r g">수정</td><td>§6.6 B=3 배치 엔진 + §8 예산표</td></tr>
+  <tr><td>상-7</td><td>학습 오브젝트 측 2뷰 forward 활성화 누락 — bs96 OOM 경계</td><td class="c r g">수정</td><td>§9.4 bs64 기본 + ckpt/accum 예비</td></tr>
+  <tr><td>H1/중-9</td><td>FrameBundle 이중 정의</td><td class="c r g">통합</td><td>§2.2 단일 정본</td></tr>
+  <tr><td>H2/중-8/H3</td><td>S0 캐시 3분열 (dense 4096/16384/2048, dino 12/42뷰)</td><td class="c r g">통합</td><td>§2.4 마스터+인덱스, dino 42뷰</td></tr>
+  <tr><td>H5</td><td>modality dropout 0-치환 vs e_norgb 상충</td><td class="c r g">통일</td><td>§6.3 flag 단일 경로</td></tr>
+  <tr><td>H6/중-10</td><td>포인트 하한 3원화 (64/30/25)</td><td class="c r g">통합</td><td>§2.5 소유권 표 + 학습 하한 32 정정</td></tr>
+  <tr><td>H7/하-6</td><td>coarse 가변 길이 vs 고정 196 모순</td><td class="c r g">정정</td><td>§6.1 중복 인덱스 196 고정</td></tr>
+  <tr><td>M1</td><td>인코더 입력 10ch vs 7ch</td><td class="c r g">통일</td><td>§6.1 10ch</td></tr>
+  <tr><td>M2</td><td>quality 플래그·erosion 하류 미반영 (포인트 20~40% 추가 감소)</td><td class="c r g">반영</td><td>§2.2 소비 규약 표준화</td></tr>
+  <tr><td>M3</td><td>카메라 FOV 밖 NaN uv 미처리</td><td class="c r g">수정</td><td>§4.2 in-image 필터</td></tr>
+  <tr><td>M4</td><td>대칭 표현 4분열</td><td class="c r g">통합</td><td>§2.4 npz 정본 + 파생 규약</td></tr>
+  <tr><td>M5</td><td>S4 가설 품질 비대칭(fine vs coarse) 미인지</td><td class="c r g">반영</td><td>§7.1 입력 명세 + 재시도 보상</td></tr>
+  <tr><td>중-1</td><td>grid fallback 256 프롬프트 = +250~480ms</td><td class="c r g">수정</td><td>§4.3 40개 제한 + degraded 모드</td></tr>
+  <tr><td>중-2/3</td><td>Orin 환산 계수 불일치 / SLA 미정의</td><td class="c r g">확정</td><td>§8 3계수 분리 + 1s/1.5s SLA</td></tr>
+  <tr><td>중-4</td><td>scatter_min은 torch 네이티브에 없음 (torch_scatter는 A4 저촉)</td><td class="c r g">수정</td><td>§6.7 scatter_reduce_(amin) + 2-pass argmin</td></tr>
+  <tr><td>중-5</td><td>ICP 대응 창 3×3 = 측방 ±3.3mm — no-op 수렴 위험</td><td class="c r g">수정</td><td>§7.2 win 유도식</td></tr>
+  <tr><td>중-6</td><td>대칭 축퇴(큐브류) 축 탐색 부족</td><td class="c r g">수정</td><td>§3.3 전구면 42방향</td></tr>
+  <tr><td>중-7</td><td>LiDAR 밀도 모델의 FOV 위치 의존 미표현</td><td class="c r g">반영</td><td>§1.5 위치 축 추가</td></tr>
+  <tr><td>하-2/3/4/5/7/8, L1~L4</td><td>API 표기(trimesh 4.x, torch.linalg.svd)·렌더 거리 2.613r·오참조·명명 등</td><td class="c r g">수정</td><td>각 해당 절</td></tr>
+</table>
+
+<!-- ═════════════ 11. 미확정 ═════════════ -->
+<h2 id="s11"><span class="no">11</span>미확정 항목 / 상위 문서 델타 / 아카이브</h2>
+<table>
+  <tr><th>미확정</th><th>내용 / 처리</th></tr>
+  <tr><td><b>D2-a (갱신 2026-07-18 3차)</b></td><td>운용 스펙: 상시 3m, 커버 2~5m, 위치 10mm·회전 ≤1°. 대상 = <b>팔레트급 대칭 물체 포함 → 크기 미지수 해소, ML-X(80) 판정 성립</b>(§1.4e). 잔여: ① RFQ 회신(특히 랜덤 σ vs 바이어스 분리) ② 실물 계측(§1.5 — 흑색 플라스틱 팔레트 포함) ③ <b>대칭 등가 포즈 운영 결정</b>(아무 면이나 정답 vs 특정 면 구분 — 후자면 RGB 필요로 A1 긴장) ④ 팔레트 외 물체의 최소 크기(20cm 미만 존재 시 §1.4d 제약 재적용)</td></tr>
+  <tr><td>D3-a <span class="r g">확정</span></td><td>16코어 / 64GB / NVMe 2TB — §9.1 최소 사양 충족. 단 <b>디스크 타이트</b>: 데이터 1.2~1.5TB + 체크포인트·캐시 후 여유 ~300GB. 재패킹(사본 필요) 불가 → 풀린 파일 방식 고정, ShapeNet 서브셋 축소 옵션 준비, 외장 백업 권장</td></tr>
+  <tr><td><b>요구 정밀도 <span class="r g">확정</span></b></td><td>위치 10mm @ 상시 3m + <b>회전 ≤1°</b> (사용자 확인). 위치는 §1.4c 예산으로 조건부 달성 가능. <b>회전 1°가 더 빠듯한 축</b> — §1.4d: 40cm급 여유 / 20cm@3m 경계(ML-A(60)+T=400ms 필요선) / 20cm@5m·10cm@3m 미달. 판재류(r_rms 큰 평면 형상)는 회전 관측성이 더 불리 — M2-B 파일럿에서 형상군별 실측 필요</td></tr>
+  <tr><td>확인 필요</td><td>EViT-SAM-L0 임베딩 grid 규약(공식 repo), Jetson JetPack TRT의 grid_sample/ScatterElements 지원 버전, Livox 기종별 최소거리·PTP 지원</td></tr>
+  <tr><td>요구 정밀도 스펙</td><td>최종 포즈 허용 오차(mm/°)가 미정 — 캘리브레이션 예산(~3mm@1m 하한)과 σ_lidar/√N 한계 대비 달성 가능성 판정에 필요</td></tr>
+</table>
+<table>
+  <tr><th>02 문서 반영 필요 델타</th><th>내용</th></tr>
+  <tr><td>M2-C2 재정의</td><td>(a) 인코더 채택 시 "CAD 직접 특징"이 아니라 <b>42뷰 depth 렌더 경유가 기본 경로</b> (§6.4) — 실험 항목을 "직접 vs 렌더 경유 비교"로 변경</td></tr>
+  <tr><td>M2-B 선정 기준 추가</td><td>가변·희소 포인트 내성(N_obj 32~2000 스윕)과 TRT 변환 성공을 공식 게이트에 포함</td></tr>
+  <tr><td>M3 입력 명세</td><td>S4 가설 비대칭(hyp0 fine / hyp1..2 coarse)·재시도 보상 규칙 (§7.1)</td></tr>
+  <tr><td>SLA 명문화</td><td>1s 정상 경로 / 1.5s 예외 경로(재적분·재시도·fallback) — 02 목표 지표 표에 반영</td></tr>
+</table>
+<p class="small"><b>설계 아카이브</b>: 본 문서는 5개 영역 상세 설계(각 13~24k자)와 2종 검증 리포트의 통합 요약판이다. 전체 텐서 shape 흐름·학습 config YAML 전문·의사코드 원문이 필요하면 세션 스크래치( design_sensor / design_s0s1 / design_s2s4 / design_s3pem / design_training / verdict_0,1 .md )를 리포지토리 <code>docs/design_archive/</code>로 이관해 보존할 것 — M0-5 리포 부트스트랩 작업에 포함.</p>
+
+</div>
+</body>
+</html>

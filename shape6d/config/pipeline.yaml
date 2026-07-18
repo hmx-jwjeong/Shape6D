@@ -1,0 +1,79 @@
+# Shape6D 파이프라인 확정 파라미터 (정본: docs/03_implementation_design.html)
+# 모든 임계는 문서 §의 소유권 표를 따른다 — 코드에 하드코딩 금지, 여기서 주입.
+
+sensor:
+  sigma_lidar_m: 0.008        # §2.6 단일 주입 — D2-a 실측으로 교체
+  integration_T_s: 0.2        # 기본 운용점 (고정 격자 기종이면 프레임 평균 수로 해석)
+  integration_T_max_s: 0.4
+  frames_avg: 4               # SOS Lab ML 계열(고정 격자): T·20fps
+  delta_edge_m: 0.03          # EDGE_MIXED 판정
+  r_edge_px: 3
+  mask_erosion_px: 2
+
+calibration:                  # §2.3 / §1.4c — 3m 운용 강화 예산
+  rot_budget_deg: 0.05
+  trans_budget_mm: 2.0
+
+thresholds:                   # §2.5 포인트 하한 소유권 표
+  s1_min_cluster_pts: 15
+  s2_n_min: 30
+  s4_min_inlier: 25
+  reintegrate_below: 64       # 운용층 재적분 권고 (reject 아님, 예외 경로)
+  train_n_obj_range: [32, 2000]
+
+s1:
+  voxel_m: 0.02
+  ransac_dist_m: 0.008
+  max_planes: 2
+  plane_min_ratio: 0.15
+  k_prompts: 3
+  merge_iou: 0.5
+  grid_fallback_prompts: 40   # 검증 [중-1]: 256 금지 — degraded 모드
+  min_mask_ratio: 3.0e-4
+
+s2:
+  weights: {depth: 0.6, size: 0.2, sem: 0.2}
+  theta_depth_min: 0.3
+  theta_s2: 0.45
+  k_inst: 3
+  size_tau_up: 0.15
+  size_beta_occ: 0.35
+  size_beta_occ_relaxed: 0.25
+  inplane_pass1: 12           # 30°
+  inplane_pass2: 24           # 15° (검증 [상-3])
+  jitter_vox: 2
+  n_geo_ok: 150
+  w_sem_cap: 0.4
+
+s3:
+  hidden_dim: 192
+  nblock: 2
+  fine_npoint: 1024
+  coarse_npoint: 196
+  nproposal1: 2000
+  nproposal2: 100
+  topk_hypotheses: 3
+  nms_rot_deg: 30.0
+  nms_trans_rel: 0.05         # ×D_cad (검증 [L2] 단위 통일)
+  instance_batch: 3           # 검증 [상-6]
+
+s4:
+  tau_z_sigma_mult: 3.0       # τ_z = 3σ_lidar
+  huber_sigma_mult: 1.5
+  icp_iters: 10
+  icp_iters_retry: 15         # 검증 [M5]: coarse 가설 재시도 보상
+  tau_assoc_m: 0.02
+  stride: 2
+  theta_accept: 0.7
+  theta_reject: 0.3
+  free_viol_max: 0.05
+  floor_prior: true           # 팔레트 pitch/roll 구속 (§1.4e)
+
+symmetry:
+  policy: all_equivalent      # 대칭 등가 포즈 전부 정답 취급 (기본값, 확정 대기 항목)
+  train_discretize_n: 12
+  train_max_group: 16
+
+sla:                          # §8
+  normal_ms: 1000
+  degraded_ms: 1500
