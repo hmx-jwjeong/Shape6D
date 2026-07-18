@@ -1,0 +1,3715 @@
+[
+ {
+  "key": "000007_000038",
+  "obj_id": 433,
+  "name": "Perricone_MD_The_Cold_Plasma_Face_Eyes_Duo",
+  "visib": 1.0,
+  "diam": 0.28983712819445206,
+  "n_sym": 2,
+  "n_cont": 0,
+  "n_obj_pts": 3085,
+  "A": {
+   "e_pos": 0.0049329298725724734,
+   "e_rot": 3.831579962019514,
+   "add_rel": 0.017019661708982173,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997183109058871,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0005499688674815837,
+    "coverage": 1.0,
+    "free_viol": 0.04028697571743929,
+    "n_inlier": 3085.0
+   },
+   "s_depth": 0.559628427028656
+  },
+  "B": {
+   "e_pos": 1.4304506346719355,
+   "e_rot": 113.5923546982946,
+   "add_rel": 4.935360226562294,
+   "verdict": "REJECT",
+   "p_conf": 0.991989253773101,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.008632408584244348,
+    "coverage": 1.0,
+    "free_viol": 0.21646341463414634,
+    "n_inlier": 198.0
+   }
+  }
+ },
+ {
+  "key": "000035_000026",
+  "obj_id": 587,
+  "name": "Room_Essentials_Kitchen_Towels_16_x_26_2_count",
+  "visib": 0.9873710423336891,
+  "diam": 0.27340110026366715,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 669,
+  "A": {
+   "e_pos": 0.15989263989204167,
+   "e_rot": 176.30479031786373,
+   "add_rel": 0.5848280776406595,
+   "verdict": "ACCEPT",
+   "p_conf": 0.999568037414732,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.004009951920987791,
+    "coverage": 1.0,
+    "free_viol": 0.013054830287206266,
+    "n_inlier": 669.0
+   },
+   "s_depth": 0.6272952556610107
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "000074_000016",
+  "obj_id": 855,
+  "name": "Theanine",
+  "visib": 0.9644739233145557,
+  "diam": 0.25383845758055007,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 2526,
+  "A": {
+   "e_pos": 0.13889126146779793,
+   "e_rot": 178.55721002082743,
+   "add_rel": 0.5471639829190336,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9991327005737305,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.004475685064903073,
+    "coverage": 0.9691211401425178,
+    "free_viol": 0.09134007585335019,
+    "n_inlier": 2448.0
+   },
+   "s_depth": 0.7039129137992859
+  },
+  "B": {
+   "e_pos": 0.6329163099379281,
+   "e_rot": 161.56251098692113,
+   "add_rel": 2.4933822714278273,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9983844334928583,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006380558076170827,
+    "coverage": 0.997134670487106,
+    "free_viol": 0.0,
+    "n_inlier": 348.0
+   }
+  }
+ },
+ {
+  "key": "000077_000023",
+  "obj_id": 337,
+  "name": "Mens_Billfish_Slip_On_in_Tan_Beige_aaVUk0tNTv8",
+  "visib": 0.862493602865916,
+  "diam": 0.22569077203182436,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 171,
+  "A": {
+   "e_pos": 0.10181473449747142,
+   "e_rot": 174.36258143234153,
+   "add_rel": 0.45112493338059323,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9993472214404617,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.004273997424600417,
+    "coverage": 1.0,
+    "free_viol": 0.017094017094017096,
+    "n_inlier": 171.0
+   },
+   "s_depth": 0.7305470705032349
+  },
+  "B": {
+   "e_pos": 0.04429275114609606,
+   "e_rot": 99.9529709837736,
+   "add_rel": 0.19625415229582535,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9994917602770639,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.004249424724751581,
+    "coverage": 1.0,
+    "free_viol": 0.009174311926605505,
+    "n_inlier": 188.0
+   }
+  }
+ },
+ {
+  "key": "000087_000037",
+  "obj_id": 350,
+  "name": "Office_Depot_Canon_CL211XL_Remanufactured_Ink_Cartridge_TriColor",
+  "visib": 0.7940068713369711,
+  "diam": 0.2609645338905092,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 524,
+  "A": {
+   "e_pos": 0.08918603736800117,
+   "e_rot": 89.33690711080978,
+   "add_rel": 0.3417553950278172,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9992950040308726,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0026051768814694797,
+    "coverage": 0.9751908396946565,
+    "free_viol": 0.05542725173210162,
+    "n_inlier": 511.0
+   },
+   "s_depth": 0.6139992475509644
+  },
+  "B": {
+   "e_pos": 0.7097425532909131,
+   "e_rot": 67.87446586040318,
+   "add_rel": 2.7196896938826716,
+   "verdict": "REJECT",
+   "p_conf": 0.9840647269092941,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.009650513899469438,
+    "coverage": 0.8098591549295775,
+    "free_viol": 0.1926605504587156,
+    "n_inlier": 115.0
+   }
+  }
+ },
+ {
+  "key": "000096_000031",
+  "obj_id": 507,
+  "name": "LTyrosine",
+  "visib": 0.9297926091298984,
+  "diam": 0.2547432212742692,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 1881,
+  "A": {
+   "e_pos": 0.002517249861057971,
+   "e_rot": 1.4245454455299107,
+   "add_rel": 0.009881518528604045,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995201831223102,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0002459254590579075,
+    "coverage": 1.0,
+    "free_viol": 0.03867171080285835,
+    "n_inlier": 1881.0
+   },
+   "s_depth": 0.6822134852409363
+  },
+  "B": {
+   "e_pos": 0.37512412672651807,
+   "e_rot": 136.87858105698504,
+   "add_rel": 1.4725578362795406,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9978285827159765,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.007058613248475444,
+    "coverage": 0.9775659001682557,
+    "free_viol": 0.13510872220864892,
+    "n_inlier": 1743.0
+   }
+  }
+ },
+ {
+  "key": "000135_000027",
+  "obj_id": 747,
+  "name": "Digital_Camo_Double_Decker_Lunch_Bag",
+  "visib": 0.9930360660309935,
+  "diam": 0.29590662231847004,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 1394,
+  "A": {
+   "e_pos": 0.11321219402899368,
+   "e_rot": 89.19610826382774,
+   "add_rel": 0.38259432364831925,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995554304511528,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005473239504038504,
+    "coverage": 0.9935437589670014,
+    "free_viol": 0.028334485141672427,
+    "n_inlier": 1385.0
+   },
+   "s_depth": 0.6198751330375671
+  },
+  "B": {
+   "e_pos": 0.1936802617597415,
+   "e_rot": 75.71374973132679,
+   "add_rel": 0.6545316905793773,
+   "verdict": "REJECT",
+   "p_conf": 0.9907866977782334,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.007206533520517328,
+    "coverage": 0.8344370860927153,
+    "free_viol": 0.2188679245283019,
+    "n_inlier": 252.0
+   }
+  }
+ },
+ {
+  "key": "000150_000005",
+  "obj_id": 902,
+  "name": "Full_Circle_Happy_Scraps_Out_Collector_Gray",
+  "visib": 0.9393747848028409,
+  "diam": 0.2814807071760982,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 1250,
+  "A": {
+   "e_pos": 0.0011040257675207974,
+   "e_rot": 0.10725876693284991,
+   "add_rel": 0.003922207594959976,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997515352068713,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0010227843766029384,
+    "coverage": 1.0,
+    "free_viol": 0.005862646566164154,
+    "n_inlier": 1250.0
+   },
+   "s_depth": 0.6291777491569519
+  },
+  "B": {
+   "e_pos": 0.16878900339384167,
+   "e_rot": 179.84168661708802,
+   "add_rel": 0.5996467931574613,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9988456315794243,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.008359872790285992,
+    "coverage": 0.8568935427574171,
+    "free_viol": 0.01293103448275862,
+    "n_inlier": 491.0
+   }
+  }
+ },
+ {
+  "key": "000155_000001",
+  "obj_id": 661,
+  "name": "Folic_Acid",
+  "visib": 0.8981501277704814,
+  "diam": 0.25644507360708124,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 2138,
+  "A": {
+   "e_pos": 0.14188919894945068,
+   "e_rot": 172.8651455879799,
+   "add_rel": 0.5532927459033578,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9987532319476525,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0028818233507656985,
+    "coverage": 1.0,
+    "free_viol": 0.11569826707441386,
+    "n_inlier": 2138.0
+   },
+   "s_depth": 0.5806962847709656
+  },
+  "B": {
+   "e_pos": 0.012294229047482442,
+   "e_rot": 0.4556216203631934,
+   "add_rel": 0.04794098351961073,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996616811644414,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00035320259354091016,
+    "coverage": 1.0,
+    "free_viol": 0.014013452914798207,
+    "n_inlier": 831.0
+   }
+  }
+ },
+ {
+  "key": "000185_000000",
+  "obj_id": 464,
+  "name": "Perricone_MD_Face_Finishing_Moisturizer",
+  "visib": 1.0,
+  "diam": 0.30725379863396096,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 927,
+  "A": {
+   "e_pos": 0.14966261695301025,
+   "e_rot": 119.5328699376887,
+   "add_rel": 0.4870976945391879,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9988586166330857,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0018677234594415544,
+    "coverage": 0.9848975188781014,
+    "free_viol": 0.14375987361769352,
+    "n_inlier": 913.0
+   },
+   "s_depth": 0.6155598759651184
+  },
+  "B": {
+   "e_pos": 0.14967555523160903,
+   "e_rot": 119.6058544453927,
+   "add_rel": 0.4871398039570577,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9987740957268721,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0022435319941377855,
+    "coverage": 0.9765066394279878,
+    "free_viol": 0.14803149606299212,
+    "n_inlier": 956.0
+   }
+  }
+ },
+ {
+  "key": "000212_000006",
+  "obj_id": 423,
+  "name": "Ecoforms_Plant_Container_QP6CORAL",
+  "visib": 0.9037199124726477,
+  "diam": 0.3331553582485752,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 712,
+  "A": {
+   "e_pos": 0.003917194395841658,
+   "e_rot": 0.7860237174104517,
+   "add_rel": 0.011757861006452567,
+   "verdict": "ACCEPT",
+   "p_conf": 0.999563182285587,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0015073747526023775,
+    "coverage": 1.0,
+    "free_viol": 0.051759834368530024,
+    "n_inlier": 712.0
+   },
+   "s_depth": 0.7104310393333435
+  },
+  "B": {
+   "e_pos": 0.7860697084202933,
+   "e_rot": 120.61008462634177,
+   "add_rel": 2.359468905296093,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9991315517656302,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00751352437305435,
+    "coverage": 0.9937106918238994,
+    "free_viol": 0.004846526655896607,
+    "n_inlier": 316.0
+   }
+  }
+ },
+ {
+  "key": "000216_000034",
+  "obj_id": 455,
+  "name": "Just_For_Men_ShampooIn_Haircolor_Light_Brown_25",
+  "visib": 1.0,
+  "diam": 0.23166052693141792,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 2099,
+  "A": {
+   "e_pos": 5.071235725875229e-05,
+   "e_rot": 0.013369041156665243,
+   "add_rel": 0.000218908063149513,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995809154554979,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00013339918463572772,
+    "coverage": 1.0,
+    "free_viol": 0.07974816369359916,
+    "n_inlier": 2099.0
+   },
+   "s_depth": 0.6035386323928833
+  },
+  "B": {
+   "e_pos": 1.1908343844572313,
+   "e_rot": 75.37979828201729,
+   "add_rel": 5.140428540982179,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9985665905256352,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0017204143730822396,
+    "coverage": 0.9777777777777777,
+    "free_viol": 0.14583333333333334,
+    "n_inlier": 352.0
+   }
+  }
+ },
+ {
+  "key": "000249_000017",
+  "obj_id": 444,
+  "name": "Perricone_MD_High_Potency_Evening_Repair",
+  "visib": 0.9383860373603848,
+  "diam": 0.23626450355041004,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 2346,
+  "A": {
+   "e_pos": 0.06316429030571068,
+   "e_rot": 89.28479608276778,
+   "add_rel": 0.2673456628334936,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996873570055894,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0007695032880507355,
+    "coverage": 1.0,
+    "free_viol": 0.008817635270541082,
+    "n_inlier": 2346.0
+   },
+   "s_depth": 0.5681679844856262
+  },
+  "B": {
+   "e_pos": 0.6435960821842551,
+   "e_rot": 99.56334796744441,
+   "add_rel": 2.7240489896398494,
+   "verdict": "REJECT",
+   "p_conf": 0.9974231548193239,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.004087729559389292,
+    "coverage": 0.9913793103448276,
+    "free_viol": 0.19112627986348124,
+    "n_inlier": 230.0
+   }
+  }
+ },
+ {
+  "key": "000268_000010",
+  "obj_id": 921,
+  "name": "BRAILLE_ALPHABET_AZ",
+  "visib": 1.0,
+  "diam": 0.28013920845790613,
+  "n_sym": 4,
+  "n_cont": 1,
+  "n_obj_pts": 654,
+  "A": {
+   "e_pos": 0.010242705214292332,
+   "e_rot": 0.3097145209505226,
+   "add_rel": 0.036562911956079885,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996635995429988,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0014607798623667678,
+    "coverage": 1.0,
+    "free_viol": 0.06726907630522089,
+    "n_inlier": 654.0
+   },
+   "s_depth": 0.785487174987793
+  },
+  "B": {
+   "e_pos": 0.40094717625421117,
+   "e_rot": 93.97886882507827,
+   "add_rel": 1.4312426256264579,
+   "verdict": "REJECT",
+   "p_conf": 0.9965132687025496,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006310604639517679,
+    "coverage": 0.9764705882352941,
+    "free_viol": 0.18197879858657243,
+    "n_inlier": 166.0
+   }
+  }
+ },
+ {
+  "key": "000275_000014",
+  "obj_id": 529,
+  "name": "Nintendo_Wii_Party_U_with_Controller_Wii_U_Game",
+  "visib": 0.8824989074316867,
+  "diam": 0.2567160564672751,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 2410,
+  "A": {
+   "e_pos": 0.0007729415609299796,
+   "e_rot": 0.13061380930726088,
+   "add_rel": 0.003010881249761292,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997324860333309,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0001572121124114451,
+    "coverage": 1.0,
+    "free_viol": 0.004517453798767967,
+    "n_inlier": 2410.0
+   },
+   "s_depth": 0.5702911019325256
+  },
+  "B": {
+   "e_pos": 0.37474389608316283,
+   "e_rot": 77.76797312193918,
+   "add_rel": 1.4597602551242577,
+   "verdict": "UNCERTAIN",
+   "p_conf": 0.9974816214217015,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.008390386548609477,
+    "coverage": 0.9727272727272728,
+    "free_viol": 0.0,
+    "n_inlier": 107.0
+   }
+  }
+ },
+ {
+  "key": "000284_000027",
+  "obj_id": 53,
+  "name": "NattoMax",
+  "visib": 0.9981608581292125,
+  "diam": 0.26093690323714924,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 833,
+  "A": {
+   "e_pos": 0.011449290961497521,
+   "e_rot": 0.25769570576152623,
+   "add_rel": 0.04387762259557429,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995331218304787,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0002995033307270402,
+    "coverage": 1.0,
+    "free_viol": 0.009009009009009009,
+    "n_inlier": 833.0
+   },
+   "s_depth": 0.6846277713775635
+  },
+  "B": {
+   "e_pos": 2.399187825679816,
+   "e_rot": 178.89586293455798,
+   "add_rel": 9.194513293887542,
+   "verdict": "UNCERTAIN",
+   "p_conf": 0.997380561443269,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.008131284244564491,
+    "coverage": 1.0,
+    "free_viol": 0.0,
+    "n_inlier": 58.0
+   }
+  }
+ },
+ {
+  "key": "000314_000018",
+  "obj_id": 659,
+  "name": "Sleep_Optimizer",
+  "visib": 0.9185972777278023,
+  "diam": 0.23606490447355635,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 820,
+  "A": {
+   "e_pos": 8.13475979307739e-05,
+   "e_rot": 0.06182203850941557,
+   "add_rel": 0.0003445984404678262,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997752930497702,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0002179025842522444,
+    "coverage": 1.0,
+    "free_viol": 0.009523809523809525,
+    "n_inlier": 820.0
+   },
+   "s_depth": 0.6922114491462708
+  },
+  "B": {
+   "e_pos": 0.16466651097187646,
+   "e_rot": 70.15646493684595,
+   "add_rel": 0.6975476144541518,
+   "verdict": "REJECT",
+   "p_conf": 0.9965149292901366,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005366522108206857,
+    "coverage": 0.9366197183098591,
+    "free_viol": 0.1532567049808429,
+    "n_inlier": 133.0
+   }
+  }
+ },
+ {
+  "key": "000318_000005",
+  "obj_id": 107,
+  "name": "GEOMETRIC_PEG_BOARD",
+  "visib": 0.9043350726602353,
+  "diam": 0.2987238022831233,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 1942,
+  "A": {
+   "e_pos": 0.0001372911510200464,
+   "e_rot": 0.0,
+   "add_rel": 0.0004595922720946258,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9998479737843451,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0006036660692903024,
+    "coverage": 1.0,
+    "free_viol": 0.0066555740432612314,
+    "n_inlier": 1942.0
+   },
+   "s_depth": 0.7158706784248352
+  },
+  "B": {
+   "e_pos": 2.827697158224307,
+   "e_rot": 154.60275341464867,
+   "add_rel": 9.46592516770486,
+   "verdict": "UNCERTAIN",
+   "p_conf": 0.9972499768764941,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0026693036207855176,
+    "coverage": 1.0,
+    "free_viol": 0.0,
+    "n_inlier": 34.0
+   }
+  }
+ },
+ {
+  "key": "000364_000023",
+  "obj_id": 704,
+  "name": "Tena_Pads_Heavy_Long_42_pads",
+  "visib": 0.8108779228699943,
+  "diam": 0.2617740155074111,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 1502,
+  "A": {
+   "e_pos": 0.11175025604516464,
+   "e_rot": 88.55219471402225,
+   "add_rel": 0.4268959080165116,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9992977799870402,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0028795076504231675,
+    "coverage": 0.9940079893475366,
+    "free_viol": 0.11225658648339061,
+    "n_inlier": 1493.0
+   },
+   "s_depth": 0.6738853454589844
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "000371_000010",
+  "obj_id": 734,
+  "name": "Asus_Z97AR_LGA_1150_Intel_ATX_Motherboard",
+  "visib": 0.9347208842468184,
+  "diam": 0.2599346358428593,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 877,
+  "A": {
+   "e_pos": 0.12389188934659578,
+   "e_rot": 71.32308750262683,
+   "add_rel": 0.476627091056435,
+   "verdict": "REJECT",
+   "p_conf": 0.9919637241770201,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006387224507638418,
+    "coverage": 0.8187001140250855,
+    "free_viol": 0.22455805064500717,
+    "n_inlier": 718.0
+   },
+   "s_depth": 0.5638360977172852
+  },
+  "B": {
+   "e_pos": 0.18516808914998928,
+   "e_rot": 96.62277230494122,
+   "add_rel": 0.7123640470211544,
+   "verdict": "REJECT",
+   "p_conf": 0.9939299970330475,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.004010262266998042,
+    "coverage": 0.9977272727272727,
+    "free_viol": 0.31176470588235294,
+    "n_inlier": 439.0
+   }
+  }
+ },
+ {
+  "key": "000395_000021",
+  "obj_id": 460,
+  "name": "Tetris_Link_Game",
+  "visib": 0.8135610015593953,
+  "diam": 0.2656090145709235,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 2958,
+  "A": {
+   "e_pos": 0.00010873851169702232,
+   "e_rot": 0.018907666321019135,
+   "add_rel": 0.00040939315208364936,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9998168545913333,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00016786419576169976,
+    "coverage": 1.0,
+    "free_viol": 0.0033100404560500183,
+    "n_inlier": 2958.0
+   },
+   "s_depth": 0.6579301953315735
+  },
+  "B": {
+   "e_pos": 0.39112878290413955,
+   "e_rot": 60.35106314921569,
+   "add_rel": 1.4725734498732514,
+   "verdict": "UNCERTAIN",
+   "p_conf": 0.9983332747272768,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0072778999065602375,
+    "coverage": 0.9850746268656716,
+    "free_viol": 0.015492957746478873,
+    "n_inlier": 66.0
+   }
+  }
+ },
+ {
+  "key": "000400_000009",
+  "obj_id": 658,
+  "name": "Curver_Storage_Bin_Black_Small",
+  "visib": 0.8980340542837304,
+  "diam": 0.2589865271132815,
+  "n_sym": 2,
+  "n_cont": 0,
+  "n_obj_pts": 933,
+  "A": {
+   "e_pos": 0.009842189826875477,
+   "e_rot": 5.048969796852884,
+   "add_rel": 0.03800270978022912,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996471995768779,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0017973411893433828,
+    "coverage": 0.9946409431939979,
+    "free_viol": 0.041201716738197426,
+    "n_inlier": 928.0
+   },
+   "s_depth": 0.6714845895767212
+  },
+  "B": {
+   "e_pos": 0.6607967267045783,
+   "e_rot": 139.8009698905707,
+   "add_rel": 2.5514714378000978,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9994091774653442,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.004048000430523025,
+    "coverage": 0.9952830188679245,
+    "free_viol": 0.0,
+    "n_inlier": 211.0
+   }
+  }
+ },
+ {
+  "key": "000417_000010",
+  "obj_id": 155,
+  "name": "TOOL_BELT",
+  "visib": 0.9890456739695507,
+  "diam": 0.2658962199801418,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 991,
+  "A": {
+   "e_pos": 0.084746281388457,
+   "e_rot": 171.40217215967033,
+   "add_rel": 0.31871939132788796,
+   "verdict": "REJECT",
+   "p_conf": 0.9963917300265245,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006874300957677652,
+    "coverage": 0.9959636730575177,
+    "free_viol": 0.2685370741482966,
+    "n_inlier": 987.0
+   },
+   "s_depth": 0.6774987578392029
+  },
+  "B": {
+   "e_pos": 1.0419037745083048,
+   "e_rot": 127.7254134535558,
+   "add_rel": 3.918460272154747,
+   "verdict": "REJECT",
+   "p_conf": 0.9973221081077683,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.003432756290985486,
+    "coverage": 0.9818181818181818,
+    "free_viol": 0.2508250825082508,
+    "n_inlier": 270.0
+   }
+  }
+ },
+ {
+  "key": "000437_000021",
+  "obj_id": 585,
+  "name": "Olive_Kids_Birdie_Pack_n_Snack",
+  "visib": 0.992976573474104,
+  "diam": 0.30727176563798453,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 609,
+  "A": {
+   "e_pos": 0.1425423311096316,
+   "e_rot": 164.3726705868527,
+   "add_rel": 0.46389661221776346,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9988827598002683,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.007430576660660379,
+    "coverage": 0.9277504105090312,
+    "free_viol": 0.044481054365733116,
+    "n_inlier": 565.0
+   },
+   "s_depth": 0.5799997448921204
+  },
+  "B": {
+   "e_pos": 0.3480259620214903,
+   "e_rot": 165.5104842663199,
+   "add_rel": 1.132632415148487,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9962511028461439,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.007346956609384592,
+    "coverage": 0.9267015706806283,
+    "free_viol": 0.11009174311926606,
+    "n_inlier": 177.0
+   }
+  }
+ },
+ {
+  "key": "000439_000025",
+  "obj_id": 281,
+  "name": "UGG_Classic_Tall_Womens_Boots_Grey_7",
+  "visib": 0.9666345260122134,
+  "diam": 0.28587622621509107,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 1458,
+  "A": {
+   "e_pos": 0.07548776327335752,
+   "e_rot": 177.15839551058235,
+   "add_rel": 0.26405750584017124,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9993684010516781,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006824994439775984,
+    "coverage": 0.9458161865569273,
+    "free_viol": 0.07604562737642585,
+    "n_inlier": 1379.0
+   },
+   "s_depth": 0.6961454749107361
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "000448_000034",
+  "obj_id": 919,
+  "name": "Jarrow_Formulas_Glucosamine_Hci_Mega_1000_100_ct",
+  "visib": 0.974746086402963,
+  "diam": 0.25526500819499115,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 1747,
+  "A": {
+   "e_pos": 0.00470313161285607,
+   "e_rot": 1.2513470337579529,
+   "add_rel": 0.018424505756243152,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996689566278284,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00021771799577124576,
+    "coverage": 1.0,
+    "free_viol": 0.009736540664375716,
+    "n_inlier": 1747.0
+   },
+   "s_depth": 0.7139773368835449
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "000449_000002",
+  "obj_id": 681,
+  "name": "Room_Essentials_Dish_Drainer_Collapsible_White",
+  "visib": 0.9547669919163475,
+  "diam": 0.2671284151134724,
+  "n_sym": 2,
+  "n_cont": 0,
+  "n_obj_pts": 1342,
+  "A": {
+   "e_pos": 0.002177269108790235,
+   "e_rot": 0.871099040729176,
+   "add_rel": 0.00815064585272728,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9998157469931361,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0006591197528897268,
+    "coverage": 1.0,
+    "free_viol": 0.005747126436781609,
+    "n_inlier": 1342.0
+   },
+   "s_depth": 0.7443370819091797
+  },
+  "B": {
+   "e_pos": 0.16486341666125084,
+   "e_rot": 123.84152619496824,
+   "add_rel": 0.6171691491196066,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9988946429982116,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005134706843253769,
+    "coverage": 0.8165680473372781,
+    "free_viol": 0.041891891891891894,
+    "n_inlier": 552.0
+   }
+  }
+ },
+ {
+  "key": "000449_000005",
+  "obj_id": 424,
+  "name": "Razer_Kraken_71_Chroma_headset_Full_size_Black",
+  "visib": 0.7939164490861619,
+  "diam": 0.280945900157482,
+  "n_sym": 2,
+  "n_cont": 0,
+  "n_obj_pts": 392,
+  "A": {
+   "e_pos": 0.012880469749959234,
+   "e_rot": 10.561653884174193,
+   "add_rel": 0.04584679734688845,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9993904649872997,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005351023645407405,
+    "coverage": 1.0,
+    "free_viol": 0.00663716814159292,
+    "n_inlier": 392.0
+   },
+   "s_depth": 0.6089496612548828
+  },
+  "B": {
+   "e_pos": 0.48160227890644447,
+   "e_rot": 115.56954283718254,
+   "add_rel": 1.7142171451389259,
+   "verdict": "REJECT",
+   "p_conf": 0.9698632907999744,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.009643297247136038,
+    "coverage": 0.6987951807228916,
+    "free_viol": 0.19877675840978593,
+    "n_inlier": 58.0
+   }
+  }
+ },
+ {
+  "key": "000463_000024",
+  "obj_id": 594,
+  "name": "Ecoforms_Plant_Container_URN_SAN",
+  "visib": 0.852036716186825,
+  "diam": 0.3314756235297287,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 965,
+  "A": {
+   "e_pos": 0.020528348746028588,
+   "e_rot": 6.973990272599471,
+   "add_rel": 0.061930191208125096,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996166675373942,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0014555085155304199,
+    "coverage": 1.0,
+    "free_viol": 0.0037243947858473,
+    "n_inlier": 965.0
+   },
+   "s_depth": 0.7821568250656128
+  },
+  "B": {
+   "e_pos": 0.24501823182405996,
+   "e_rot": 70.74878697919159,
+   "add_rel": 0.7391742089960509,
+   "verdict": "REJECT",
+   "p_conf": 0.977560909411498,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.007838973173963976,
+    "coverage": 0.8837209302325582,
+    "free_viol": 0.3314020857473928,
+    "n_inlier": 190.0
+   }
+  }
+ },
+ {
+  "key": "000484_000035",
+  "obj_id": 970,
+  "name": "Ecoforms_Plant_Saucer_S14MOCHA",
+  "visib": 0.8416015625,
+  "diam": 0.28513506821331386,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 753,
+  "A": {
+   "e_pos": 0.0017307087485500534,
+   "e_rot": 0.20475741426126226,
+   "add_rel": 0.006069785661212615,
+   "verdict": "UNCERTAIN",
+   "p_conf": 0.9996011334517527,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0005858946839447901,
+    "coverage": 1.0,
+    "free_viol": 0.01566265060240964,
+    "n_inlier": 753.0
+   },
+   "s_depth": 0.8223082423210144
+  },
+  "B": {
+   "e_pos": 0.1949473260743368,
+   "e_rot": 90.63685936859666,
+   "add_rel": 0.6837016831913981,
+   "verdict": "UNCERTAIN",
+   "p_conf": 0.9959705708103633,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0075359803566901916,
+    "coverage": 0.9025069637883009,
+    "free_viol": 0.09734513274336283,
+    "n_inlier": 324.0
+   }
+  }
+ },
+ {
+  "key": "000519_000021",
+  "obj_id": 95,
+  "name": "Dell_Series_9_Color_Ink_Cartridge_MK993_High_Yield",
+  "visib": 0.9407545065972868,
+  "diam": 0.23302152950865393,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 326,
+  "A": {
+   "e_pos": 0.12688723595846713,
+   "e_rot": 178.77293786348167,
+   "add_rel": 0.5445300965366584,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996472271889725,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.001476297831131214,
+    "coverage": 1.0,
+    "free_viol": 0.0070921985815602835,
+    "n_inlier": 326.0
+   },
+   "s_depth": 0.6840038895606995
+  },
+  "B": {
+   "e_pos": 0.12675357243895558,
+   "e_rot": 178.78909563822185,
+   "add_rel": 0.5439564863651288,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996248398637372,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0016139957225469216,
+    "coverage": 1.0,
+    "free_viol": 0.011876484560570071,
+    "n_inlier": 315.0
+   }
+  }
+ },
+ {
+  "key": "000520_000039",
+  "obj_id": 454,
+  "name": "Hefty_Waste_Basket_Decorative_Bronze_85_liter",
+  "visib": 0.9431861978281076,
+  "diam": 0.3016913570491531,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 819,
+  "A": {
+   "e_pos": 0.0006428040107306961,
+   "e_rot": 0.4067689006747916,
+   "add_rel": 0.0021306676366799836,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996796441722027,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0008005647158363313,
+    "coverage": 1.0,
+    "free_viol": 0.02186878727634195,
+    "n_inlier": 819.0
+   },
+   "s_depth": 0.7059057950973511
+  },
+  "B": {
+   "e_pos": 0.4801874977539452,
+   "e_rot": 156.14571073496424,
+   "add_rel": 1.5916514892924511,
+   "verdict": "ACCEPT",
+   "p_conf": 0.997455511813012,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006341988364660068,
+    "coverage": 0.9692307692307692,
+    "free_viol": 0.10539845758354756,
+    "n_inlier": 63.0
+   }
+  }
+ },
+ {
+  "key": "000543_000036",
+  "obj_id": 232,
+  "name": "ASICS_GELDirt_Dog_4_SunFlameBlack",
+  "visib": 0.8239110147806978,
+  "diam": 0.2264482752106195,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 344,
+  "A": {
+   "e_pos": 0.1018748372739248,
+   "e_rot": 179.4639734956409,
+   "add_rel": 0.44988126837871045,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995579292942895,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0033991336791760656,
+    "coverage": 1.0,
+    "free_viol": 0.02962962962962963,
+    "n_inlier": 344.0
+   },
+   "s_depth": 0.736049473285675
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "000554_000011",
+  "obj_id": 967,
+  "name": "Office_Depot_Canon_CLI_8CMY_Remanufactured_Ink_Cartridges_Color_Cyan_Magenta_Yellow_3_count",
+  "visib": 0.9850877376445737,
+  "diam": 0.2864271774237424,
+  "n_sym": 8,
+  "n_cont": 0,
+  "n_obj_pts": 944,
+  "A": {
+   "e_pos": 0.04505049695429722,
+   "e_rot": 34.278158745874116,
+   "add_rel": 0.15728429599279678,
+   "verdict": "ACCEPT",
+   "p_conf": 0.996144080863889,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.010345495596231305,
+    "coverage": 0.8463983050847458,
+    "free_viol": 0.10024855012427507,
+    "n_inlier": 799.0
+   },
+   "s_depth": 0.4331924617290497
+  },
+  "B": {
+   "e_pos": 0.27586282454028155,
+   "e_rot": 70.50516680421323,
+   "add_rel": 0.9631167929716673,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9939233718074367,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.009699032204181028,
+    "coverage": 0.8417721518987342,
+    "free_viol": 0.06913996627318718,
+    "n_inlier": 133.0
+   }
+  }
+ },
+ {
+  "key": "000576_000017",
+  "obj_id": 321,
+  "name": "Womens_Hikerfish_Boot_in_Black_Leopard_bVSNY1Le1sm",
+  "visib": 0.8277856828268455,
+  "diam": 0.26083199598343887,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 1198,
+  "A": {
+   "e_pos": 0.0002581706311503038,
+   "e_rot": 0.048939051062396925,
+   "add_rel": 0.0009897966320308953,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997943664169857,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0004915504858172089,
+    "coverage": 1.0,
+    "free_viol": 0.01174496644295302,
+    "n_inlier": 1198.0
+   },
+   "s_depth": 0.7300010323524475
+  },
+  "B": {
+   "e_pos": 0.25380253577584583,
+   "e_rot": 171.88005823114804,
+   "add_rel": 0.9730498546350143,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9993965949364197,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00421619461623478,
+    "coverage": 1.0,
+    "free_viol": 0.0,
+    "n_inlier": 62.0
+   }
+  }
+ },
+ {
+  "key": "000619_000032",
+  "obj_id": 1021,
+  "name": "Central_Garden_Flower_Pot_Goo_425",
+  "visib": 0.9262424817980374,
+  "diam": 0.33076712204003333,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 995,
+  "A": {
+   "e_pos": 0.12059050412811222,
+   "e_rot": 111.17665513525192,
+   "add_rel": 0.3645782669824026,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995522558284408,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0008594118231208114,
+    "coverage": 1.0,
+    "free_viol": 0.04256854256854257,
+    "n_inlier": 995.0
+   },
+   "s_depth": 0.7811463475227356
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "000624_000017",
+  "obj_id": 349,
+  "name": "Tag_Dishtowel_18_x_26",
+  "visib": 0.9237060273358727,
+  "diam": 0.2526269604290913,
+  "n_sym": 2,
+  "n_cont": 0,
+  "n_obj_pts": 1294,
+  "A": {
+   "e_pos": 0.0789254371663851,
+   "e_rot": 177.59056361676784,
+   "add_rel": 0.31241890031186254,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997519042281707,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.002899423393789005,
+    "coverage": 1.0,
+    "free_viol": 0.016260162601626018,
+    "n_inlier": 1294.0
+   },
+   "s_depth": 0.7976343035697937
+  },
+  "B": {
+   "e_pos": 0.3963565053825979,
+   "e_rot": 178.39205211220107,
+   "add_rel": 1.5689398499248834,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997107098989557,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0009419628403787412,
+    "coverage": 0.9951359084406295,
+    "free_viol": 0.03304442036836403,
+    "n_inlier": 3478.0
+   }
+  }
+ },
+ {
+  "key": "000650_000003",
+  "obj_id": 530,
+  "name": "Reebok_DMX_MAX_MANIA_WD_D",
+  "visib": 0.8089526595368715,
+  "diam": 0.23653213482127905,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 1025,
+  "A": {
+   "e_pos": 0.006133587844901584,
+   "e_rot": 6.172463152017825,
+   "add_rel": 0.025931308866493138,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997666146264975,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.002306789123468172,
+    "coverage": 1.0,
+    "free_viol": 0.0202991452991453,
+    "n_inlier": 1025.0
+   },
+   "s_depth": 0.7660596370697021
+  },
+  "B": {
+   "e_pos": 0.15444480435594476,
+   "e_rot": 107.76078307214111,
+   "add_rel": 0.6529548489157361,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996068456724125,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.003514295113198934,
+    "coverage": 0.9883268482490273,
+    "free_viol": 0.0,
+    "n_inlier": 254.0
+   }
+  }
+ },
+ {
+  "key": "000655_000036",
+  "obj_id": 590,
+  "name": "Office_Depot_Dell_Series_5_Remanufactured_Ink_Cartridge_Black",
+  "visib": 0.8879492600422833,
+  "diam": 0.2612110815468799,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 2314,
+  "A": {
+   "e_pos": 0.004584819020373379,
+   "e_rot": 3.619231867111001,
+   "add_rel": 0.017552161237656128,
+   "verdict": "ACCEPT",
+   "p_conf": 0.999713534131836,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0005304358684057467,
+    "coverage": 1.0,
+    "free_viol": 0.03143712574850299,
+    "n_inlier": 2314.0
+   },
+   "s_depth": 0.6056980490684509
+  },
+  "B": {
+   "e_pos": 0.4867485821052555,
+   "e_rot": 79.1499492444572,
+   "add_rel": 1.8634300628547342,
+   "verdict": "REJECT",
+   "p_conf": 0.9964377054789482,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0052842934889118145,
+    "coverage": 0.9975786924939467,
+    "free_viol": 0.20462962962962963,
+    "n_inlier": 412.0
+   }
+  }
+ },
+ {
+  "key": "000658_000010",
+  "obj_id": 990,
+  "name": "Asus_Z97IPLUS_Motherboard_Mini_ITX_LGA1150_Socket",
+  "visib": 0.8086601513810359,
+  "diam": 0.2724756636435541,
+  "n_sym": 2,
+  "n_cont": 0,
+  "n_obj_pts": 538,
+  "A": {
+   "e_pos": 0.11557384087467013,
+   "e_rot": 105.73208714911358,
+   "add_rel": 0.42416206764748343,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9985642010257106,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005955254601259468,
+    "coverage": 0.8438661710037175,
+    "free_viol": 0.048672566371681415,
+    "n_inlier": 454.0
+   },
+   "s_depth": 0.5480772256851196
+  },
+  "B": {
+   "e_pos": 0.38296622119029944,
+   "e_rot": 161.2269492408124,
+   "add_rel": 1.405506150785218,
+   "verdict": "REJECT",
+   "p_conf": 0.9610910303584007,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.008510052113578335,
+    "coverage": 0.8137254901960784,
+    "free_viol": 0.340393343419062,
+    "n_inlier": 166.0
+   }
+  }
+ },
+ {
+  "key": "000666_000026",
+  "obj_id": 48,
+  "name": "BIRD_RATTLE",
+  "visib": 0.9677942873629544,
+  "diam": 0.2815706397366769,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 990,
+  "A": {
+   "e_pos": 8.603726947470664e-05,
+   "e_rot": 0.08629908174121262,
+   "add_rel": 0.00030556193484934424,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9998019692156145,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0002449790924721714,
+    "coverage": 1.0,
+    "free_viol": 0.021120293847566574,
+    "n_inlier": 990.0
+   },
+   "s_depth": 0.7387549877166748
+  },
+  "B": {
+   "e_pos": 0.24925038787974396,
+   "e_rot": 119.62116245086409,
+   "add_rel": 0.8852144105395412,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9991500900533211,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00530511657593789,
+    "coverage": 1.0,
+    "free_viol": 0.05502392344497608,
+    "n_inlier": 132.0
+   }
+  }
+ },
+ {
+  "key": "000692_000003",
+  "obj_id": 771,
+  "name": "Olive_Kids_Game_On_Munch_n_Lunch",
+  "visib": 1.0,
+  "diam": 0.2902518003302524,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 761,
+  "A": {
+   "e_pos": 0.15857262032965153,
+   "e_rot": 179.51843587156333,
+   "add_rel": 0.5463277752255988,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9990866590834275,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005272967779831322,
+    "coverage": 0.9474375821287779,
+    "free_viol": 0.1016548463356974,
+    "n_inlier": 721.0
+   },
+   "s_depth": 0.6781272888183594
+  },
+  "B": {
+   "e_pos": 0.4816281546286889,
+   "e_rot": 88.94918883319434,
+   "add_rel": 1.6593459681582885,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9992235589334472,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006135614669301703,
+    "coverage": 0.9656084656084656,
+    "free_viol": 0.042735042735042736,
+    "n_inlier": 730.0
+   }
+  }
+ },
+ {
+  "key": "000725_000012",
+  "obj_id": 861,
+  "name": "Crunch_Girl_Scouts_Candy_Bars_Peanut_Butter_Creme_78_oz_box",
+  "visib": 0.9600450304337041,
+  "diam": 0.2730003808379295,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 941,
+  "A": {
+   "e_pos": 0.023362025356117852,
+   "e_rot": 12.984107397060809,
+   "add_rel": 0.08557506507651008,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9993107793675159,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.007161378656897749,
+    "coverage": 0.9744952178533475,
+    "free_viol": 0.012711864406779662,
+    "n_inlier": 917.0
+   },
+   "s_depth": 0.578607439994812
+  },
+  "B": {
+   "e_pos": 0.47856239452630933,
+   "e_rot": 90.02767498991469,
+   "add_rel": 1.752973358709029,
+   "verdict": "ACCEPT",
+   "p_conf": 0.998852676100336,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005719430875159542,
+    "coverage": 0.9948453608247423,
+    "free_viol": 0.022988505747126436,
+    "n_inlier": 193.0
+   }
+  }
+ },
+ {
+  "key": "000768_000016",
+  "obj_id": 464,
+  "name": "Perricone_MD_Face_Finishing_Moisturizer",
+  "visib": 0.8249988402838985,
+  "diam": 0.30725379863396096,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 1853,
+  "A": {
+   "e_pos": 0.12881724962025126,
+   "e_rot": 90.95719731303107,
+   "add_rel": 0.419253562341517,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9994239020545136,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.003343594129077864,
+    "coverage": 0.978953049109552,
+    "free_viol": 0.0021141649048625794,
+    "n_inlier": 1814.0
+   },
+   "s_depth": 0.42590153217315674
+  },
+  "B": {
+   "e_pos": 0.28034072577086533,
+   "e_rot": 148.71978191457282,
+   "add_rel": 0.9124076806120863,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9952098808936601,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.007893254539071904,
+    "coverage": 0.7938775510204081,
+    "free_viol": 0.1221449851042701,
+    "n_inlier": 389.0
+   }
+  }
+ },
+ {
+  "key": "000785_000029",
+  "obj_id": 914,
+  "name": "Deskstar_Desk_Top_Hard_Drive_1_TB",
+  "visib": 1.0,
+  "diam": 0.264943339762196,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 1110,
+  "A": {
+   "e_pos": 0.00023124878950794874,
+   "e_rot": 0.08645161027438177,
+   "add_rel": 0.0008728235618812298,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996868615445204,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00016130955829636538,
+    "coverage": 1.0,
+    "free_viol": 0.061155913978494625,
+    "n_inlier": 1110.0
+   },
+   "s_depth": 0.6851375699043274
+  },
+  "B": {
+   "e_pos": 0.3728060869464235,
+   "e_rot": 76.97921416149245,
+   "add_rel": 1.4071162810925588,
+   "verdict": "REJECT",
+   "p_conf": 0.984049947050212,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.008697331697185206,
+    "coverage": 0.8044871794871795,
+    "free_viol": 0.27692307692307694,
+    "n_inlier": 502.0
+   }
+  }
+ },
+ {
+  "key": "000840_000019",
+  "obj_id": 457,
+  "name": "HyperX_Cloud_II_Headset_Gun_Metal",
+  "visib": 0.9972531497216525,
+  "diam": 0.26099331353046856,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 838,
+  "A": {
+   "e_pos": 0.10663514845583277,
+   "e_rot": 89.53248902397713,
+   "add_rel": 0.4085742543108642,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9992411693537394,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0019206832420556941,
+    "coverage": 0.9606205250596659,
+    "free_viol": 0.0759548611111111,
+    "n_inlier": 805.0
+   },
+   "s_depth": 0.6220417618751526
+  },
+  "B": {
+   "e_pos": 0.2771308336246891,
+   "e_rot": 107.70614973575694,
+   "add_rel": 1.0618311629364277,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9988893585525703,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00793040381947115,
+    "coverage": 0.9666136724960255,
+    "free_viol": 0.054027504911591355,
+    "n_inlier": 608.0
+   }
+  }
+ },
+ {
+  "key": "000846_000013",
+  "obj_id": 656,
+  "name": "BlackBlack_Nintendo_3DSXL",
+  "visib": 0.9378058405682715,
+  "diam": 0.29066713423067597,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 543,
+  "A": {
+   "e_pos": 0.1565938816117399,
+   "e_rot": 177.7764897982879,
+   "add_rel": 0.5387395517770015,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995830283635274,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0028112584778490182,
+    "coverage": 1.0,
+    "free_viol": 0.03369434416365824,
+    "n_inlier": 543.0
+   },
+   "s_depth": 0.6767135262489319
+  },
+  "B": {
+   "e_pos": 0.15654238647486568,
+   "e_rot": 177.27556525405257,
+   "add_rel": 0.5385623898938374,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995894706854137,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0030138813269028858,
+    "coverage": 0.98989898989899,
+    "free_viol": 0.023370233702337023,
+    "n_inlier": 588.0
+   }
+  }
+ },
+ {
+  "key": "000847_000008",
+  "obj_id": 907,
+  "name": "Mattel_SKIP_BO_Card_Game",
+  "visib": 0.9789750083802004,
+  "diam": 0.22366749994556784,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 346,
+  "A": {
+   "e_pos": 0.019184615592953952,
+   "e_rot": 8.058058781322744,
+   "add_rel": 0.08577292453138144,
+   "verdict": "ACCEPT",
+   "p_conf": 0.999550342618881,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0028107257375397216,
+    "coverage": 1.0,
+    "free_viol": 0.011396011396011397,
+    "n_inlier": 346.0
+   },
+   "s_depth": 0.6707190275192261
+  },
+  "B": {
+   "e_pos": 0.09827243905377211,
+   "e_rot": 57.76287716023829,
+   "add_rel": 0.4393684334008646,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9987387215668295,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006405485207072497,
+    "coverage": 0.96875,
+    "free_viol": 0.018912529550827423,
+    "n_inlier": 93.0
+   }
+  }
+ },
+ {
+  "key": "000893_000018",
+  "obj_id": 554,
+  "name": "Pass_The_Popcorn_Movie_Guessing_Game",
+  "visib": 0.9568449420318689,
+  "diam": 0.2551427335519366,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 423,
+  "A": {
+   "e_pos": 0.027035989567191946,
+   "e_rot": 16.244204646122533,
+   "add_rel": 0.10596417617234835,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9981643924107896,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006472717168084656,
+    "coverage": 0.9787234042553191,
+    "free_viol": 0.11594202898550725,
+    "n_inlier": 414.0
+   },
+   "s_depth": 0.5997463464736938
+  },
+  "B": {
+   "e_pos": 0.22934482051771973,
+   "e_rot": 99.06099331937477,
+   "add_rel": 0.8988883097900748,
+   "verdict": "UNCERTAIN",
+   "p_conf": 0.9966202820804468,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0077755143277684225,
+    "coverage": 0.9714285714285714,
+    "free_viol": 0.029982363315696647,
+    "n_inlier": 68.0
+   }
+  }
+ },
+ {
+  "key": "000931_000032",
+  "obj_id": 564,
+  "name": "Womens_Sequin_Bahama_in_White_Sequin_yGVsSA4tOwJ",
+  "visib": 0.9870503050710144,
+  "diam": 0.23272641335747216,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 616,
+  "A": {
+   "e_pos": 0.014740995626813625,
+   "e_rot": 26.869300479391452,
+   "add_rel": 0.06334044947520065,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9993972319118467,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.003901060516425813,
+    "coverage": 0.9983766233766234,
+    "free_viol": 0.0700152207001522,
+    "n_inlier": 615.0
+   },
+   "s_depth": 0.7354684472084045
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "001011_000019",
+  "obj_id": 345,
+  "name": "Mastic_Gum",
+  "visib": 0.9806606216056741,
+  "diam": 0.25467071941659225,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 991,
+  "A": {
+   "e_pos": 0.051755769560395445,
+   "e_rot": 35.067223672230824,
+   "add_rel": 0.20322622749470062,
+   "verdict": "REJECT",
+   "p_conf": 0.9929793398018961,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.008801134990473263,
+    "coverage": 0.8577194752774975,
+    "free_viol": 0.1607565011820331,
+    "n_inlier": 850.0
+   },
+   "s_depth": 0.4776129126548767
+  },
+  "B": {
+   "e_pos": 0.26690852124865294,
+   "e_rot": 174.1717197674717,
+   "add_rel": 1.0480534309562382,
+   "verdict": "UNCERTAIN",
+   "p_conf": 0.9936443955925999,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006951577488198485,
+    "coverage": 0.9873417721518988,
+    "free_viol": 0.11475409836065574,
+    "n_inlier": 78.0
+   }
+  }
+ },
+ {
+  "key": "001087_000034",
+  "obj_id": 269,
+  "name": "Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14",
+  "visib": 0.815168668835327,
+  "diam": 0.2664787953016894,
+  "n_sym": 2,
+  "n_cont": 0,
+  "n_obj_pts": 2097,
+  "A": {
+   "e_pos": 0.09237726569477661,
+   "e_rot": 159.242924675697,
+   "add_rel": 0.34665897371005927,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9989743783019416,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.007238211583192234,
+    "coverage": 0.983309489747258,
+    "free_viol": 0.12107756068679693,
+    "n_inlier": 2062.0
+   },
+   "s_depth": 0.6257321834564209
+  },
+  "B": {
+   "e_pos": 0.6462168038277399,
+   "e_rot": 161.976853345137,
+   "add_rel": 2.4250214847156477,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9991992439618995,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005878874954771556,
+    "coverage": 0.9842105263157894,
+    "free_viol": 0.034518828451882845,
+    "n_inlier": 187.0
+   }
+  }
+ },
+ {
+  "key": "001090_000035",
+  "obj_id": 328,
+  "name": "Crayola_Washable_Sidewalk_Chalk_16_pack_wDZECiw7J6s",
+  "visib": 0.9969166666666667,
+  "diam": 0.2663638804425305,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 1602,
+  "A": {
+   "e_pos": 0.09664018229220622,
+   "e_rot": 85.51392815862728,
+   "add_rel": 0.3628126386041927,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9992958437711786,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0034982001225262673,
+    "coverage": 0.9606741573033708,
+    "free_viol": 0.05585106382978723,
+    "n_inlier": 1539.0
+   },
+   "s_depth": 0.5352847576141357
+  },
+  "B": {
+   "e_pos": 0.31249922723134804,
+   "e_rot": 94.84577557959318,
+   "add_rel": 1.1732042148964394,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9968216826230134,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.010468440774820693,
+    "coverage": 0.8165137614678899,
+    "free_viol": 0.0,
+    "n_inlier": 89.0
+   }
+  }
+ },
+ {
+  "key": "001166_000004",
+  "obj_id": 118,
+  "name": "Azure_Snake_Tieks_Leather_Snake_Print_Ballet_Flats",
+  "visib": 0.7918574326282237,
+  "diam": 0.22300775938168907,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 533,
+  "A": {
+   "e_pos": 0.00029497997158245854,
+   "e_rot": 0.24737131040730492,
+   "add_rel": 0.001322734116518275,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996643648061971,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00039516239911547305,
+    "coverage": 1.0,
+    "free_viol": 0.03541076487252125,
+    "n_inlier": 533.0
+   },
+   "s_depth": 0.7361099720001221
+  },
+  "B": {
+   "e_pos": 0.15254640373699663,
+   "e_rot": 57.1186606002952,
+   "add_rel": 0.6840407892530131,
+   "verdict": "REJECT",
+   "p_conf": 0.9907502372276711,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.004314606809915943,
+    "coverage": 0.993103448275862,
+    "free_viol": 0.3715925394548063,
+    "n_inlier": 288.0
+   }
+  }
+ },
+ {
+  "key": "001172_000032",
+  "obj_id": 462,
+  "name": "Predator_LZ_TRX_FG",
+  "visib": 0.997371385655276,
+  "diam": 0.227962941110296,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 440,
+  "A": {
+   "e_pos": 0.05079628892320226,
+   "e_rot": 169.6016431013719,
+   "add_rel": 0.22282695896007648,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9991082022538619,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0036256302815013985,
+    "coverage": 1.0,
+    "free_viol": 0.10438413361169102,
+    "n_inlier": 440.0
+   },
+   "s_depth": 0.713789165019989
+  },
+  "B": {
+   "e_pos": 0.41046186698911,
+   "e_rot": 148.91903347117398,
+   "add_rel": 1.8005640082986778,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9988945993381874,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005131457801431373,
+    "coverage": 1.0,
+    "free_viol": 0.0,
+    "n_inlier": 53.0
+   }
+  }
+ },
+ {
+  "key": "001223_000001",
+  "obj_id": 237,
+  "name": "SANDWICH_MEAL",
+  "visib": 0.8267391047596552,
+  "diam": 0.2815648306946114,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 904,
+  "A": {
+   "e_pos": 0.00015763088076412913,
+   "e_rot": 0.13787761029501783,
+   "add_rel": 0.0005598386715246318,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997660571151349,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0002677476838846759,
+    "coverage": 1.0,
+    "free_viol": 0.015285599356395816,
+    "n_inlier": 904.0
+   },
+   "s_depth": 0.7637418508529663
+  },
+  "B": {
+   "e_pos": 0.38005064579704384,
+   "e_rot": 121.54651691975795,
+   "add_rel": 1.3497802437167705,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9993080008778695,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.003911585741372248,
+    "coverage": 1.0,
+    "free_viol": 0.03314917127071823,
+    "n_inlier": 125.0
+   }
+  }
+ },
+ {
+  "key": "001252_000028",
+  "obj_id": 101,
+  "name": "Nips_Hard_Candy_Rich_Creamy_Butter_Rum_4_oz_1133_g",
+  "visib": 1.0,
+  "diam": 0.23833473851100934,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 818,
+  "A": {
+   "e_pos": 0.006371569103947079,
+   "e_rot": 4.1180064356954516,
+   "add_rel": 0.026733698762309292,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996571781886645,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0018006576042058193,
+    "coverage": 1.0,
+    "free_viol": 0.011578947368421053,
+    "n_inlier": 818.0
+   },
+   "s_depth": 0.6196689605712891
+  },
+  "B": {
+   "e_pos": 0.2890248945427904,
+   "e_rot": 89.368160293908,
+   "add_rel": 1.2126847154068543,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996804047189624,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0008938896026145304,
+    "coverage": 1.0,
+    "free_viol": 0.010683760683760684,
+    "n_inlier": 423.0
+   }
+  }
+ },
+ {
+  "key": "001253_000011",
+  "obj_id": 447,
+  "name": "Ecoforms_Plant_Container_QP6HARVEST",
+  "visib": 0.9496239703951295,
+  "diam": 0.3333330166665684,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 947,
+  "A": {
+   "e_pos": 0.03541624955398296,
+   "e_rot": 23.15983775092381,
+   "add_rel": 0.10624884959838732,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9985398448447848,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.008089618954960702,
+    "coverage": 0.9376979936642027,
+    "free_viol": 0.07736389684813753,
+    "n_inlier": 888.0
+   },
+   "s_depth": 0.5451169013977051
+  },
+  "B": {
+   "e_pos": 1.1359878907204348,
+   "e_rot": 37.495631789515926,
+   "add_rel": 3.4079669097308734,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9977969390845565,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006761203410150739,
+    "coverage": 0.8121212121212121,
+    "free_viol": 0.027005347593582887,
+    "n_inlier": 134.0
+   }
+  }
+ },
+ {
+  "key": "001267_000029",
+  "obj_id": 444,
+  "name": "Perricone_MD_High_Potency_Evening_Repair",
+  "visib": 1.0,
+  "diam": 0.23626450355041004,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 402,
+  "A": {
+   "e_pos": 0.005990904389334189,
+   "e_rot": 7.131676069762247,
+   "add_rel": 0.025356768787978146,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9994030739695704,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.002045097888518856,
+    "coverage": 1.0,
+    "free_viol": 0.04680851063829787,
+    "n_inlier": 402.0
+   },
+   "s_depth": 0.6606530547142029
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "001356_000025",
+  "obj_id": 39,
+  "name": "Ecoforms_Plant_Container_GP16AMOCHA",
+  "visib": 0.9977279182050554,
+  "diam": 0.3445959071814655,
+  "n_sym": 14,
+  "n_cont": 0,
+  "n_obj_pts": 633,
+  "A": {
+   "e_pos": 0.02003349266416796,
+   "e_rot": 14.205684813996102,
+   "add_rel": 0.058136188639113025,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9994292047167754,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0010059944577631376,
+    "coverage": 1.0,
+    "free_viol": 0.07494646680942184,
+    "n_inlier": 633.0
+   },
+   "s_depth": 0.8001508712768555
+  },
+  "B": {
+   "e_pos": 0.6920185616601457,
+   "e_rot": 49.87905823602211,
+   "add_rel": 2.0082030785575355,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9983845339161691,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0071825207584976045,
+    "coverage": 0.9792387543252595,
+    "free_viol": 0.10230179028132992,
+    "n_inlier": 566.0
+   }
+  }
+ },
+ {
+  "key": "001397_000021",
+  "obj_id": 304,
+  "name": "Little_Big_Planet_3_Plush_Edition",
+  "visib": 1.0,
+  "diam": 0.27350328336634194,
+  "n_sym": 2,
+  "n_cont": 0,
+  "n_obj_pts": 1235,
+  "A": {
+   "e_pos": 0.0031252909635146485,
+   "e_rot": 0.11934255842326931,
+   "add_rel": 0.01142688645287121,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997077041930965,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00012220836504517704,
+    "coverage": 1.0,
+    "free_viol": 0.023923444976076555,
+    "n_inlier": 1235.0
+   },
+   "s_depth": 0.6131853461265564
+  },
+  "B": {
+   "e_pos": 0.6181415593778546,
+   "e_rot": 106.12844414220798,
+   "add_rel": 2.260088258428289,
+   "verdict": "REJECT",
+   "p_conf": 0.9014319228194413,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.010247370345759333,
+    "coverage": 0.7107843137254902,
+    "free_viol": 0.3972972972972973,
+    "n_inlier": 145.0
+   }
+  }
+ },
+ {
+  "key": "001422_000030",
+  "obj_id": 75,
+  "name": "Fujifilm_instax_SHARE_SP1_10_photos",
+  "visib": 0.8123275831448834,
+  "diam": 0.269278456034979,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 942,
+  "A": {
+   "e_pos": 0.09208071320794065,
+   "e_rot": 72.16943933224556,
+   "add_rel": 0.3419535099977677,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9992333973123448,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006207474663401637,
+    "coverage": 0.9639065817409767,
+    "free_viol": 0.02304147465437788,
+    "n_inlier": 908.0
+   },
+   "s_depth": 0.5531680583953857
+  },
+  "B": {
+   "e_pos": 0.4745603132229148,
+   "e_rot": 109.45966396917179,
+   "add_rel": 1.7623404419745703,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9989834957808092,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.007651304298169185,
+    "coverage": 0.9797752808988764,
+    "free_viol": 0.042279411764705885,
+    "n_inlier": 436.0
+   }
+  }
+ },
+ {
+  "key": "001424_000020",
+  "obj_id": 859,
+  "name": "Asus_80211ac_DualBand_Gigabit_Wireless_Router_RTAC68R",
+  "visib": 0.9823642664613015,
+  "diam": 0.2575271787619087,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 2337,
+  "A": {
+   "e_pos": 3.704465275843065e-05,
+   "e_rot": 0.0,
+   "add_rel": 0.00014384754625328106,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9998473254108031,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.000175317168106166,
+    "coverage": 1.0,
+    "free_viol": 0.002586652871184687,
+    "n_inlier": 2337.0
+   },
+   "s_depth": 0.6834509968757629
+  },
+  "B": {
+   "e_pos": 0.11178422699166689,
+   "e_rot": 88.59926963137633,
+   "add_rel": 0.4340676876478914,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9987686383730989,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0028477829545661046,
+    "coverage": 0.9497354497354498,
+    "free_viol": 0.1054921152800435,
+    "n_inlier": 718.0
+   }
+  }
+ },
+ {
+  "key": "001431_000013",
+  "obj_id": 1003,
+  "name": "Netgear_N750_Wireless_Dual_Band_Gigabit_Router",
+  "visib": 0.8272507889363282,
+  "diam": 0.2731420203749975,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 1759,
+  "A": {
+   "e_pos": 0.00010915951526867077,
+   "e_rot": 0.060931011275543075,
+   "add_rel": 0.000399643801121502,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997703888149688,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0003215556653055633,
+    "coverage": 1.0,
+    "free_viol": 0.015931372549019607,
+    "n_inlier": 1759.0
+   },
+   "s_depth": 0.6300897598266602
+  },
+  "B": {
+   "e_pos": 1.8104049153875703,
+   "e_rot": 73.73706194669762,
+   "add_rel": 6.628071773438814,
+   "verdict": "REJECT",
+   "p_conf": 0.9634692188464424,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.009266649532044853,
+    "coverage": 0.8484848484848485,
+    "free_viol": 0.2727272727272727,
+    "n_inlier": 28.0
+   }
+  }
+ },
+ {
+  "key": "001449_000006",
+  "obj_id": 283,
+  "name": "Office_Depot_Canon_CLI_8Y_Ink_Cartridge_Yellow_0623B002",
+  "visib": 1.0,
+  "diam": 0.26082401687931295,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 553,
+  "A": {
+   "e_pos": 0.1125340162490314,
+   "e_rot": 86.2748742077692,
+   "add_rel": 0.4314557286382968,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9979141075184735,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005277779211518332,
+    "coverage": 0.9349005424954792,
+    "free_viol": 0.12626262626262627,
+    "n_inlier": 517.0
+   },
+   "s_depth": 0.5171281695365906
+  },
+  "B": {
+   "e_pos": 0.3265504192583879,
+   "e_rot": 67.45035469216779,
+   "add_rel": 1.2519952079776746,
+   "verdict": "ACCEPT",
+   "p_conf": 0.998931810894514,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0024695273247150743,
+    "coverage": 1.0,
+    "free_viol": 0.07063197026022305,
+    "n_inlier": 98.0
+   }
+  }
+ },
+ {
+  "key": "001478_000003",
+  "obj_id": 53,
+  "name": "NattoMax",
+  "visib": 0.9969577760293732,
+  "diam": 0.26093690323714924,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 1086,
+  "A": {
+   "e_pos": 0.013329732006423168,
+   "e_rot": 0.5531510215732386,
+   "add_rel": 0.05108411972801182,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995737031765963,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0004937947135961024,
+    "coverage": 1.0,
+    "free_viol": 0.0196078431372549,
+    "n_inlier": 1086.0
+   },
+   "s_depth": 0.7131162285804749
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "001518_000030",
+  "obj_id": 762,
+  "name": "Blue_Jasmine_Includes_Digital_Copy_UltraViolet_DVD",
+  "visib": 0.9862385321100917,
+  "diam": 0.24630644070368046,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 1379,
+  "A": {
+   "e_pos": 0.001711880626272726,
+   "e_rot": 0.6914909768406513,
+   "add_rel": 0.006950206504474676,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996546878292841,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0003259933646815702,
+    "coverage": 1.0,
+    "free_viol": 0.034502262443438916,
+    "n_inlier": 1379.0
+   },
+   "s_depth": 0.6650773882865906
+  },
+  "B": {
+   "e_pos": 0.5018789895024945,
+   "e_rot": 73.6726579335917,
+   "add_rel": 2.037620242770189,
+   "verdict": "REJECT",
+   "p_conf": 0.9880262205125867,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005939781897835423,
+    "coverage": 0.8818443804034583,
+    "free_viol": 0.3000779423226812,
+    "n_inlier": 612.0
+   }
+  }
+ },
+ {
+  "key": "001598_000015",
+  "obj_id": 0,
+  "name": "ALPHABET_AZ_GRADIENT",
+  "visib": 1.0,
+  "diam": 0.26078060227617267,
+  "n_sym": 24,
+  "n_cont": 0,
+  "n_obj_pts": 489,
+  "A": {
+   "e_pos": 0.013172735547730468,
+   "e_rot": 6.436554564974048,
+   "add_rel": 0.05051271234422658,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995530959112497,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0028692520371094094,
+    "coverage": 0.9979550102249489,
+    "free_viol": 0.04873949579831933,
+    "n_inlier": 488.0
+   },
+   "s_depth": 0.7010394334793091
+  },
+  "B": {
+   "e_pos": 0.4958925796381002,
+   "e_rot": 81.09018652533469,
+   "add_rel": 1.9015700374560012,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9986846118007093,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.008187128598207355,
+    "coverage": 1.0,
+    "free_viol": 0.015748031496062992,
+    "n_inlier": 104.0
+   }
+  }
+ },
+ {
+  "key": "001653_000015",
+  "obj_id": 14,
+  "name": "Perricone_MD_Hypoallergenic_Firming_Eye_Cream_05_oz",
+  "visib": 0.9652123995407578,
+  "diam": 0.33008746089979807,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 1118,
+  "A": {
+   "e_pos": 0.13262111310397082,
+   "e_rot": 91.95772762422726,
+   "add_rel": 0.4017756770961667,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9990680792068093,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005768529761610661,
+    "coverage": 1.0,
+    "free_viol": 0.0463768115942029,
+    "n_inlier": 1118.0
+   },
+   "s_depth": 0.4633079469203949
+  },
+  "B": {
+   "e_pos": 1.0193639756392123,
+   "e_rot": 136.34325378280695,
+   "add_rel": 3.0881632790912112,
+   "verdict": "UNCERTAIN",
+   "p_conf": 0.9740217268467082,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.010022443464301554,
+    "coverage": 0.5,
+    "free_viol": 0.043859649122807015,
+    "n_inlier": 16.0
+   }
+  }
+ },
+ {
+  "key": "001674_000004",
+  "obj_id": 53,
+  "name": "NattoMax",
+  "visib": 0.9116456612590081,
+  "diam": 0.26093690323714924,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 1745,
+  "A": {
+   "e_pos": 0.006173536341226162,
+   "e_rot": 0.22617108726432236,
+   "add_rel": 0.02365911553574092,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995519017537586,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0002644613506600568,
+    "coverage": 1.0,
+    "free_viol": 0.029511369134010642,
+    "n_inlier": 1745.0
+   },
+   "s_depth": 0.6756715774536133
+  },
+  "B": {
+   "e_pos": 0.2756204547295867,
+   "e_rot": 152.83879196492566,
+   "add_rel": 1.056272421839438,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9982094969014669,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00641430143811475,
+    "coverage": 0.9399109792284867,
+    "free_viol": 0.10409638554216867,
+    "n_inlier": 1267.0
+   }
+  }
+ },
+ {
+  "key": "001709_000017",
+  "obj_id": 859,
+  "name": "Asus_80211ac_DualBand_Gigabit_Wireless_Router_RTAC68R",
+  "visib": 0.8922974324774925,
+  "diam": 0.2575271787619087,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 702,
+  "A": {
+   "e_pos": 0.0008835577101673745,
+   "e_rot": 0.319068120307542,
+   "add_rel": 0.003430929948501665,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996679714814769,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00036033958388445234,
+    "coverage": 1.0,
+    "free_viol": 0.03238095238095238,
+    "n_inlier": 702.0
+   },
+   "s_depth": 0.6639043092727661
+  },
+  "B": {
+   "e_pos": 2.5574344852196487,
+   "e_rot": 87.83078978508941,
+   "add_rel": 9.930736233413525,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9987219567206702,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005019280186621471,
+    "coverage": 0.8944099378881988,
+    "free_viol": 0.0,
+    "n_inlier": 144.0
+   }
+  }
+ },
+ {
+  "key": "001712_000005",
+  "obj_id": 817,
+  "name": "Victor_Reversible_Bookend",
+  "visib": 0.9377358653505704,
+  "diam": 0.2966203910648008,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 716,
+  "A": {
+   "e_pos": 9.937597691897867e-05,
+   "e_rot": 0.05581673809783207,
+   "add_rel": 0.0003350274624149781,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997635765309087,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00031999682093872983,
+    "coverage": 1.0,
+    "free_viol": 0.005148005148005148,
+    "n_inlier": 716.0
+   },
+   "s_depth": 0.7069950103759766
+  },
+  "B": {
+   "e_pos": 0.1760285414774074,
+   "e_rot": 163.02060272512932,
+   "add_rel": 0.5934472031592445,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9992426707580203,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005069819304791463,
+    "coverage": 1.0,
+    "free_viol": 0.01676829268292683,
+    "n_inlier": 124.0
+   }
+  }
+ },
+ {
+  "key": "001761_000033",
+  "obj_id": 1019,
+  "name": "Android_Figure_Panda",
+  "visib": 0.815709795553505,
+  "diam": 0.28404234599689837,
+  "n_sym": 24,
+  "n_cont": 0,
+  "n_obj_pts": 312,
+  "A": {
+   "e_pos": 0.11021210686858257,
+   "e_rot": 110.538677096781,
+   "add_rel": 0.3880129439213477,
+   "verdict": "ACCEPT",
+   "p_conf": 0.999244088125849,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006881081682116028,
+    "coverage": 0.9967948717948718,
+    "free_viol": 0.01728395061728395,
+    "n_inlier": 311.0
+   },
+   "s_depth": 0.6429014205932617
+  },
+  "B": {
+   "e_pos": 0.11052349516383475,
+   "e_rot": 110.72088629716157,
+   "add_rel": 0.3891092181200391,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9992253147592737,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006880734365549124,
+    "coverage": 0.9790419161676647,
+    "free_viol": 0.014962593516209476,
+    "n_inlier": 327.0
+   }
+  }
+ },
+ {
+  "key": "001839_000011",
+  "obj_id": 359,
+  "name": "TURBOPROP_AIRPLANE_WITH_PILOT",
+  "visib": 0.9973410425254743,
+  "diam": 0.3155511726950451,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 746,
+  "A": {
+   "e_pos": 7.278398700287994e-05,
+   "e_rot": 0.025146191737926645,
+   "add_rel": 0.00023065668360934858,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997837980487735,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00036978485155349206,
+    "coverage": 1.0,
+    "free_viol": 0.04112554112554113,
+    "n_inlier": 746.0
+   },
+   "s_depth": 0.7662571668624878
+  },
+  "B": {
+   "e_pos": 0.00027082031355307577,
+   "e_rot": 0.08736960434320225,
+   "add_rel": 0.0008582453084869434,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997510461061112,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0017610331624988342,
+    "coverage": 0.9876543209876543,
+    "free_viol": 0.03896103896103896,
+    "n_inlier": 800.0
+   }
+  }
+ },
+ {
+  "key": "001885_000007",
+  "obj_id": 1020,
+  "name": "Olive_Kids_Birdie_Lunch_Box",
+  "visib": 0.9994023089748026,
+  "diam": 0.2677127994748123,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 2529,
+  "A": {
+   "e_pos": 0.009478530358976556,
+   "e_rot": 2.9069327697533045,
+   "add_rel": 0.03540559277543374,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996594626326506,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.002553369533977543,
+    "coverage": 1.0,
+    "free_viol": 0.03496503496503497,
+    "n_inlier": 2529.0
+   },
+   "s_depth": 0.6509526371955872
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "001887_000002",
+  "obj_id": 194,
+  "name": "Markings_Desk_Caddy",
+  "visib": 0.8117791989934997,
+  "diam": 0.2259944545752028,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 394,
+  "A": {
+   "e_pos": 0.014424538872897224,
+   "e_rot": 11.083874168701998,
+   "add_rel": 0.06382695938274564,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995205779308864,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.003140263956576781,
+    "coverage": 1.0,
+    "free_viol": 0.022443890274314215,
+    "n_inlier": 394.0
+   },
+   "s_depth": 0.6609298586845398
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "001888_000035",
+  "obj_id": 523,
+  "name": "Transformers_Age_of_Extinction_Mega_1Step_Bumblebee_Figure",
+  "visib": 0.9860769015206265,
+  "diam": 0.2538012408805978,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 892,
+  "A": {
+   "e_pos": 0.00033226299744186857,
+   "e_rot": 0.2539319972905323,
+   "add_rel": 0.0013091464655138685,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9998016299073446,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0007837358588800945,
+    "coverage": 1.0,
+    "free_viol": 0.019455252918287938,
+    "n_inlier": 892.0
+   },
+   "s_depth": 0.7663067579269409
+  },
+  "B": {
+   "e_pos": 0.3691590384007878,
+   "e_rot": 169.41185519595325,
+   "add_rel": 1.4545202266148916,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9978075858667484,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006975616186126697,
+    "coverage": 0.7564224548049476,
+    "free_viol": 0.06740196078431372,
+    "n_inlier": 795.0
+   }
+  }
+ },
+ {
+  "key": "001924_000039",
+  "obj_id": 364,
+  "name": "Cole_Hardware_Antislip_Surfacing_White_2_x_60",
+  "visib": 0.9972195487113678,
+  "diam": 0.29087545227156003,
+  "n_sym": 4,
+  "n_cont": 1,
+  "n_obj_pts": 1305,
+  "A": {
+   "e_pos": 0.006862244982476389,
+   "e_rot": 42.06693633597311,
+   "add_rel": 0.023591695101413467,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9994508092609737,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0004487717338762947,
+    "coverage": 1.0,
+    "free_viol": 0.022965879265091863,
+    "n_inlier": 1305.0
+   },
+   "s_depth": 0.6191287636756897
+  },
+  "B": {
+   "e_pos": 0.2684067561729253,
+   "e_rot": 47.449750865232765,
+   "add_rel": 0.9227549250953702,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9980686909968473,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006858021414587782,
+    "coverage": 0.9920634920634921,
+    "free_viol": 0.07407407407407407,
+    "n_inlier": 125.0
+   }
+  }
+ },
+ {
+  "key": "001969_000030",
+  "obj_id": 519,
+  "name": "Creatine_Monohydrate",
+  "visib": 0.7660431491989909,
+  "diam": 0.28145764652677946,
+  "n_sym": 2,
+  "n_cont": 1,
+  "n_obj_pts": 1410,
+  "A": {
+   "e_pos": 0.08205543930089639,
+   "e_rot": 142.73087465681783,
+   "add_rel": 0.29153743134524923,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9993201387050842,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0028571894574559637,
+    "coverage": 1.0,
+    "free_viol": 0.01082753286929621,
+    "n_inlier": 1410.0
+   },
+   "s_depth": 0.5847827792167664
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "002025_000034",
+  "obj_id": 475,
+  "name": "US_Army_Stash_Lunch_Bag",
+  "visib": 0.932349323493235,
+  "diam": 0.28413443237568675,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 1266,
+  "A": {
+   "e_pos": 0.1340176551920498,
+   "e_rot": 151.88807096555263,
+   "add_rel": 0.4716698855239399,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9992696286253777,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.004554084427148333,
+    "coverage": 1.0,
+    "free_viol": 0.07197802197802197,
+    "n_inlier": 1266.0
+   },
+   "s_depth": 0.5588110089302063
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "002097_000005",
+  "obj_id": 995,
+  "name": "Threshold_Porcelain_Pitcher_White",
+  "visib": 0.7593494382380088,
+  "diam": 0.290069808646058,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 708,
+  "A": {
+   "e_pos": 0.007436982547365516,
+   "e_rot": 8.754289162066266,
+   "add_rel": 0.025638595695562687,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997108868961538,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.000768595452373655,
+    "coverage": 1.0,
+    "free_viol": 0.04669603524229075,
+    "n_inlier": 708.0
+   },
+   "s_depth": 0.7762563228607178
+  },
+  "B": {
+   "e_pos": 0.006388773637808956,
+   "e_rot": 7.165774348949185,
+   "add_rel": 0.022024952088703968,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996695987561025,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0025392008367795134,
+    "coverage": 0.9937733499377335,
+    "free_viol": 0.03268551236749117,
+    "n_inlier": 798.0
+   }
+  }
+ },
+ {
+  "key": "002110_000035",
+  "obj_id": 349,
+  "name": "Tag_Dishtowel_18_x_26",
+  "visib": 1.0,
+  "diam": 0.2526269604290913,
+  "n_sym": 2,
+  "n_cont": 0,
+  "n_obj_pts": 483,
+  "A": {
+   "e_pos": 0.0001612016701646597,
+   "e_rot": 0.078019306294613,
+   "add_rel": 0.0006381016099424062,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996926782090039,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0001682219409798451,
+    "coverage": 1.0,
+    "free_viol": 0.02292768959435626,
+    "n_inlier": 483.0
+   },
+   "s_depth": 0.7551043629646301
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "002138_000015",
+  "obj_id": 120,
+  "name": "Cole_Hardware_Orchid_Pot_85",
+  "visib": 0.942702766892293,
+  "diam": 0.31486789457028896,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 1428,
+  "A": {
+   "e_pos": 0.037629589373016276,
+   "e_rot": 98.89135949242849,
+   "add_rel": 0.11950913390001439,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9981713056367638,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006504154607103017,
+    "coverage": 0.9544817927170869,
+    "free_viol": 0.14047498736735725,
+    "n_inlier": 1363.0
+   },
+   "s_depth": 0.6039396524429321
+  },
+  "B": {
+   "e_pos": 0.5862502382137614,
+   "e_rot": 115.24189562164689,
+   "add_rel": 1.8618927122240814,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9990838382767859,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.007564145877450126,
+    "coverage": 0.9918256130790191,
+    "free_viol": 0.032703488372093026,
+    "n_inlier": 364.0
+   }
+  }
+ },
+ {
+  "key": "002143_000038",
+  "obj_id": 249,
+  "name": "CoQ10",
+  "visib": 0.9573167218320454,
+  "diam": 0.25551427993745346,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 1946,
+  "A": {
+   "e_pos": 0.10927470255747837,
+   "e_rot": 97.13529034264558,
+   "add_rel": 0.4276657358807006,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9969972917322103,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006870693299213321,
+    "coverage": 0.8319630010277492,
+    "free_viol": 0.13067331670822943,
+    "n_inlier": 1619.0
+   },
+   "s_depth": 0.5561097860336304
+  },
+  "B": {
+   "e_pos": 0.043117287107368646,
+   "e_rot": 29.206236340768776,
+   "add_rel": 0.16874707401059225,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9955762926784648,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.008403076797151018,
+    "coverage": 0.7705627705627706,
+    "free_viol": 0.06484848484848485,
+    "n_inlier": 712.0
+   }
+  }
+ },
+ {
+  "key": "002208_000029",
+  "obj_id": 110,
+  "name": "Cole_Hardware_Saucer_Glazed_6",
+  "visib": 0.9689416894538467,
+  "diam": 0.28511782475047087,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 1014,
+  "A": {
+   "e_pos": 0.009584665824241199,
+   "e_rot": 0.1477219000664361,
+   "add_rel": 0.03361650865788379,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996703534946622,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0002527810959393296,
+    "coverage": 1.0,
+    "free_viol": 0.012809564474807857,
+    "n_inlier": 1014.0
+   },
+   "s_depth": 0.7940541505813599
+  },
+  "B": {
+   "e_pos": 0.25844180163724423,
+   "e_rot": 132.08880667000042,
+   "add_rel": 0.9064385990718997,
+   "verdict": "REJECT",
+   "p_conf": 0.979765028118906,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006922138617869734,
+    "coverage": 0.8580889309366131,
+    "free_viol": 0.32890625,
+    "n_inlier": 907.0
+   }
+  }
+ },
+ {
+  "key": "002237_000025",
+  "obj_id": 879,
+  "name": "Kotex_U_Tween_Pads_16_pads",
+  "visib": 0.9949475691134414,
+  "diam": 0.2657622067999046,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 2313,
+  "A": {
+   "e_pos": 0.0896988367445634,
+   "e_rot": 88.23786680307813,
+   "add_rel": 0.3375153970334792,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9984806880899352,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005981035237761107,
+    "coverage": 0.9770860354517942,
+    "free_viol": 0.10564853556485355,
+    "n_inlier": 2260.0
+   },
+   "s_depth": 0.4214288294315338
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "002238_000007",
+  "obj_id": 338,
+  "name": "Crayola_Washable_Sidewalk_Chalk_16_pack",
+  "visib": 0.8019713410088628,
+  "diam": 0.26610468165641116,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 1514,
+  "A": {
+   "e_pos": 0.08792091529172863,
+   "e_rot": 77.01475337250889,
+   "add_rel": 0.33039973120521904,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9988903184569546,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.007200850900523578,
+    "coverage": 0.9960369881109643,
+    "free_viol": 0.08351893095768374,
+    "n_inlier": 1508.0
+   },
+   "s_depth": 0.5253732800483704
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "002280_000018",
+  "obj_id": 208,
+  "name": "Cole_Hardware_Flower_Pot_1025",
+  "visib": 0.9461201340551688,
+  "diam": 0.3303286579303875,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 982,
+  "A": {
+   "e_pos": 0.040825550857928175,
+   "e_rot": 31.032283677874155,
+   "add_rel": 0.12359070240442666,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9996040398080404,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00045504187062614854,
+    "coverage": 1.0,
+    "free_viol": 0.02631578947368421,
+    "n_inlier": 982.0
+   },
+   "s_depth": 0.7933834195137024
+  },
+  "B": {
+   "e_pos": 0.4858962880228394,
+   "e_rot": 119.93017003839752,
+   "add_rel": 1.4709480281460645,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9983884752512675,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005116241026175108,
+    "coverage": 0.9963503649635036,
+    "free_viol": 0.09362279511533243,
+    "n_inlier": 273.0
+   }
+  }
+ },
+ {
+  "key": "002286_000022",
+  "obj_id": 772,
+  "name": "Great_Jones_Wingtip",
+  "visib": 0.9942191995814805,
+  "diam": 0.22434316597933368,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 242,
+  "A": {
+   "e_pos": 0.00018417186185886675,
+   "e_rot": 0.18879650084401553,
+   "add_rel": 0.0008209381420418776,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997054939241401,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0005375422125269284,
+    "coverage": 1.0,
+    "free_viol": 0.010169491525423728,
+    "n_inlier": 242.0
+   },
+   "s_depth": 0.8145599365234375
+  },
+  "B": {
+   "e_pos": 0.1867517181885049,
+   "e_rot": 92.54847373023527,
+   "add_rel": 0.8324377405180611,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9984556879976559,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0045226355331856585,
+    "coverage": 1.0,
+    "free_viol": 0.13584905660377358,
+    "n_inlier": 219.0
+   }
+  }
+ },
+ {
+  "key": "002348_000030",
+  "obj_id": 380,
+  "name": "BIA_Porcelain_Ramekin_With_Glazed_Rim_35_45_oz_cup",
+  "visib": 0.9369777380876443,
+  "diam": 0.29920959452165125,
+  "n_sym": 1,
+  "n_cont": 1,
+  "n_obj_pts": 364,
+  "A": {
+   "e_pos": 0.017940958325617932,
+   "e_rot": 9.125168463527636,
+   "add_rel": 0.059961173218059015,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9991710578093367,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0031956272711927917,
+    "coverage": 1.0,
+    "free_viol": 0.08791208791208792,
+    "n_inlier": 364.0
+   },
+   "s_depth": 0.7557547688484192
+  },
+  "B": {
+   "e_pos": 0.02665284766416639,
+   "e_rot": 10.312539216471817,
+   "add_rel": 0.0890775167379793,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9992656901401453,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.004614317438742872,
+    "coverage": 0.9623115577889447,
+    "free_viol": 0.027896995708154508,
+    "n_inlier": 383.0
+   }
+  }
+ },
+ {
+  "key": "002384_000013",
+  "obj_id": 323,
+  "name": "Corningware_CW_by_Corningware_3qt_Oblong_Casserole_Dish_Blue",
+  "visib": 0.9449408355469693,
+  "diam": 0.2370250702968642,
+  "n_sym": 2,
+  "n_cont": 0,
+  "n_obj_pts": 564,
+  "A": {
+   "e_pos": 0.00625491104832042,
+   "e_rot": 5.91430898753397,
+   "add_rel": 0.02638923823748433,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997448492656352,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.001036199112530177,
+    "coverage": 1.0,
+    "free_viol": 0.0015748031496062992,
+    "n_inlier": 564.0
+   },
+   "s_depth": 0.7132991552352905
+  },
+  "B": {
+   "e_pos": 0.3106755336434617,
+   "e_rot": 116.44050989099397,
+   "add_rel": 1.3107285792779357,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9978372884966156,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0075806749268031515,
+    "coverage": 0.8324022346368715,
+    "free_viol": 0.022026431718061675,
+    "n_inlier": 149.0
+   }
+  }
+ },
+ {
+  "key": "002384_000027",
+  "obj_id": 234,
+  "name": "Mens_Santa_Cruz_Thong_in_Chocolate_La1fo2mAovE",
+  "visib": 0.8473612901093817,
+  "diam": 0.22336518039510267,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 220,
+  "A": {
+   "e_pos": 0.0073704124657271095,
+   "e_rot": 5.965596761438486,
+   "add_rel": 0.0329971415092086,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9993476058531728,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0012628571184417582,
+    "coverage": 1.0,
+    "free_viol": 0.06927710843373494,
+    "n_inlier": 220.0
+   },
+   "s_depth": 0.7280047535896301
+  },
+  "B": {
+   "e_pos": 0.8170718692377255,
+   "e_rot": 170.08188729333767,
+   "add_rel": 3.6580091301268904,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9989680323670127,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.004753026580634596,
+    "coverage": 1.0,
+    "free_viol": 0.030612244897959183,
+    "n_inlier": 58.0
+   }
+  }
+ },
+ {
+  "key": "002435_000006",
+  "obj_id": 865,
+  "name": "Threshold_Basket_Natural_Finish_Fabric_Liner_Small",
+  "visib": 0.9624302444392046,
+  "diam": 0.2712936499321218,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 1089,
+  "A": {
+   "e_pos": 0.11430309716415268,
+   "e_rot": 172.60220249561587,
+   "add_rel": 0.4213261062054034,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997831360839372,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0017725685825053436,
+    "coverage": 1.0,
+    "free_viol": 0.016415868673050615,
+    "n_inlier": 1089.0
+   },
+   "s_depth": 0.7196230888366699
+  },
+  "B": {
+   "e_pos": 0.3754572106008598,
+   "e_rot": 82.77140553474617,
+   "add_rel": 1.38395134089869,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9926892679223844,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006874991371602742,
+    "coverage": 0.6976744186046512,
+    "free_viol": 0.10628019323671498,
+    "n_inlier": 90.0
+   }
+  }
+ },
+ {
+  "key": "002451_000032",
+  "obj_id": 985,
+  "name": "Threshold_Hand_Towel_Blue_Medallion_16_x_27",
+  "visib": 0.9020862808506815,
+  "diam": 0.2676300545533633,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 480,
+  "A": {
+   "e_pos": 0.15489562480651237,
+   "e_rot": 179.35286231053416,
+   "add_rel": 0.5787676763919929,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995919700529668,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0035814145665694123,
+    "coverage": 1.0,
+    "free_viol": 0.006644518272425249,
+    "n_inlier": 480.0
+   },
+   "s_depth": 0.6888993978500366
+  },
+  "B": {
+   "e_pos": 0.4104803609227454,
+   "e_rot": 110.69413992935782,
+   "add_rel": 1.5337603304971823,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9982154464453986,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.007839462340062293,
+    "coverage": 1.0,
+    "free_viol": 0.052132701421800945,
+    "n_inlier": 113.0
+   }
+  }
+ },
+ {
+  "key": "002487_000010",
+  "obj_id": 252,
+  "name": "Pinwheel_Pencil_Case",
+  "visib": 0.7787475086541488,
+  "diam": 0.23318463433851708,
+  "n_sym": 4,
+  "n_cont": 1,
+  "n_obj_pts": 297,
+  "A": {
+   "e_pos": 0.00023041446302942786,
+   "e_rot": 0.022062716251791015,
+   "add_rel": 0.0009881202665134971,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9995196169771933,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00016838799349971266,
+    "coverage": 1.0,
+    "free_viol": 0.04815864022662889,
+    "n_inlier": 297.0
+   },
+   "s_depth": 0.7452820539474487
+  },
+  "B": {
+   "e_pos": 0.3737682536633488,
+   "e_rot": 35.52336187251398,
+   "add_rel": 1.6028854333546898,
+   "verdict": "ACCEPT",
+   "p_conf": 0.998737195171728,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.006558617927388161,
+    "coverage": 1.0,
+    "free_viol": 0.0,
+    "n_inlier": 44.0
+   }
+  }
+ },
+ {
+  "key": "002489_000011",
+  "obj_id": 571,
+  "name": "Asus_M5A78LMUSB3_Motherboard_Micro_ATX_Socket_AM3",
+  "visib": 0.890658737073374,
+  "diam": 0.28207163261319484,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 1362,
+  "A": {
+   "e_pos": 0.1143057332664358,
+   "e_rot": 179.53611889515423,
+   "add_rel": 0.4052365429570983,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997046661707473,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00044201447761723034,
+    "coverage": 1.0,
+    "free_viol": 0.022700119474313024,
+    "n_inlier": 1362.0
+   },
+   "s_depth": 0.6912153363227844
+  },
+  "B": {
+   "e_pos": 0.1712420772899297,
+   "e_rot": 38.61698600477405,
+   "add_rel": 0.607087198749809,
+   "verdict": "UNCERTAIN",
+   "p_conf": 0.9980376770195898,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.008788144659611266,
+    "coverage": 0.9852941176470589,
+    "free_viol": 0.0,
+    "n_inlier": 134.0
+   }
+  }
+ },
+ {
+  "key": "002492_000012",
+  "obj_id": 1003,
+  "name": "Netgear_N750_Wireless_Dual_Band_Gigabit_Router",
+  "visib": 1.0,
+  "diam": 0.2731420203749975,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 1510,
+  "A": {
+   "e_pos": 0.0010763471263927373,
+   "e_rot": 0.9767678007521771,
+   "add_rel": 0.003940613476150674,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9997764401004517,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.00027539037152685586,
+    "coverage": 1.0,
+    "free_viol": 0.02897787144362487,
+    "n_inlier": 1510.0
+   },
+   "s_depth": 0.7236210703849792
+  },
+  "B": {
+   "reason": "gated_out"
+  }
+ },
+ {
+  "key": "002526_000023",
+  "obj_id": 744,
+  "name": "Phillips_Colon_Health_Probiotic_Capsule",
+  "visib": 0.9829295154185022,
+  "diam": 0.28336697821248436,
+  "n_sym": 2,
+  "n_cont": 0,
+  "n_obj_pts": 1085,
+  "A": {
+   "e_pos": 0.020069062114975757,
+   "e_rot": 12.083200048332627,
+   "add_rel": 0.07082357387432368,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9990310081415504,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.0074717862668615695,
+    "coverage": 0.9705069124423963,
+    "free_viol": 0.05877862595419847,
+    "n_inlier": 1053.0
+   },
+   "s_depth": 0.5425212979316711
+  },
+  "B": {
+   "e_pos": 0.44142410215730005,
+   "e_rot": 133.2030481056487,
+   "add_rel": 1.5577824379603458,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9970603801939444,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.008165477762888191,
+    "coverage": 0.9230769230769231,
+    "free_viol": 0.03969022265246854,
+    "n_inlier": 108.0
+   }
+  }
+ },
+ {
+  "key": "002537_000026",
+  "obj_id": 3,
+  "name": "Perricone_MD_Health_Weight_Management_Supplements",
+  "visib": 0.9998552560159218,
+  "diam": 0.31338532350851467,
+  "n_sym": 1,
+  "n_cont": 0,
+  "n_obj_pts": 1771,
+  "A": {
+   "e_pos": 0.04111945242424039,
+   "e_rot": 24.127996487942042,
+   "add_rel": 0.13121052372168018,
+   "verdict": "REJECT",
+   "p_conf": 0.9924776196003204,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.010810789772374447,
+    "coverage": 0.7515527950310559,
+    "free_viol": 0.1762820512820513,
+    "n_inlier": 1331.0
+   },
+   "s_depth": 0.3948257863521576
+  },
+  "B": {
+   "e_pos": 0.5279347079879638,
+   "e_rot": 72.38288855112613,
+   "add_rel": 1.6846184820573444,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9970544785876075,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.010669591054545022,
+    "coverage": 0.6892523364485982,
+    "free_viol": 0.011850501367365542,
+    "n_inlier": 590.0
+   }
+  }
+ },
+ {
+  "key": "002658_000003",
+  "obj_id": 702,
+  "name": "Frozen_Olafs_In_Trouble_PopOMatic_Game_OEu83W9T8pD",
+  "visib": 0.9267494935194903,
+  "diam": 0.2840028952006613,
+  "n_sym": 4,
+  "n_cont": 0,
+  "n_obj_pts": 826,
+  "A": {
+   "e_pos": 0.001742635887272199,
+   "e_rot": 1.1988391082365304,
+   "add_rel": 0.006135979304157957,
+   "verdict": "ACCEPT",
+   "p_conf": 0.999798102981937,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.001300636220853602,
+    "coverage": 1.0,
+    "free_viol": 0.0,
+    "n_inlier": 826.0
+   },
+   "s_depth": 0.7387584447860718
+  },
+  "B": {
+   "e_pos": 0.11452958250966153,
+   "e_rot": 52.713962176340516,
+   "add_rel": 0.4032690667774391,
+   "verdict": "ACCEPT",
+   "p_conf": 0.9977589247721268,
+   "stats": {
+    "inlier_ratio": 1.0,
+    "rmse_inlier": 0.005698232900177756,
+    "coverage": 0.9574468085106383,
+    "free_viol": 0.11861313868613138,
+    "n_inlier": 45.0
+   }
+  }
+ }
+]
