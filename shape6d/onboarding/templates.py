@@ -40,6 +40,13 @@ def icosphere42() -> np.ndarray:
     return dirs.astype(np.float32)
 
 
+def upright_view_mask(min_dir_z: float = -0.15) -> np.ndarray:
+    """바닥 위 직립 물체용 뷰 마스크 (03 §1.4e 뷰 프루닝): 아래에서 올려다보는
+    뷰(모델 −z 방향)는 물리적으로 발생 불가 — 뒤집힘(flip) 오정합의 원천 차단.
+    다중 시행 검증에서 flip 오정합(회전 ~170°)의 주 원인으로 실증됨."""
+    return icosphere42()[:, 2] > min_dir_z
+
+
 def lookat_poses(dirs: np.ndarray, dist: float) -> np.ndarray:
     """카메라를 dirs·dist 에 놓고 원점을 보는 T_obj2cam [V,4,4] (OpenCV 규약: +z가 전방)."""
     poses = []

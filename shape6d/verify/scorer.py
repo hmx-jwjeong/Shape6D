@@ -51,6 +51,15 @@ def _local_range3(zbuf: np.ndarray) -> np.ndarray:
     return np.clip(rng, 0.0, None)
 
 
+def _erode1(m: np.ndarray) -> np.ndarray:
+    """1셀 침식 (4-이웃)."""
+    out = m.copy()
+    out[1:, :] &= m[:-1, :]; out[:-1, :] &= m[1:, :]
+    out[:, 1:] &= m[:, :-1]; out[:, :-1] &= m[:, 1:]
+    out[0, :] = False; out[-1, :] = False; out[:, 0] = False; out[:, -1] = False
+    return out
+
+
 def _fill_holes3(zbuf: np.ndarray) -> np.ndarray:
     """빈 셀만 이웃 min으로 채움 — 점유 셀을 덮으면 실루엣 1셀 팽창으로
     경사면에서 가짜 free-space 위반이 생긴다 (교차 검증 [중-5] 부기 반영)."""
@@ -84,6 +93,11 @@ class HypothesisScorer:
         Xc = X_verify @ R.T + t
         zbuf, _ = splat_zbuffer(Xc, self.K, self.stride)
         zbuf = _fill_holes3(zbuf)   # 스플랫 구멍 메움 (2048pt는 성김) — 빈 셀만
+        # free-space 판정은 모델 점유의 1셀 침식 내부로 한정 (실루엣 스플랫 과점유 배제).
+        # 주의: 다공성 물체(팔레트 포켓)는 틈새 너머 정당한 배경 관측이 수 %의 잔여
+        # free_viol을 만든다 — 그래서 free_viol은 하드 REJECT가 아니라 소프트 특징이며
+        # (임계는 M3-3 캘리브레이션 대상), 오포즈 판별의 주 무기는 가설 간 증거 비교다.
+        interior = _erode1(np.isfinite(zbuf))
 
         # 셀별 적응 임계: 이웃 점유 셀의 깊이 범위(grazing 표면 = 큰 범위)를 관용에 반영.
         # z-차이 잔차는 grazing에서 픽셀당 수십 mm가 정상이므로 고정 τ_z만으로는
@@ -100,7 +114,8 @@ class HypothesisScorer:
         tau_eff = self.tau_z + rng_map[gv[covered], gu[covered]]
         cov = float(covered.mean())
         s_res = float(np.mean(np.maximum(0.0, 1.0 - np.abs(r) / np.maximum(tau_eff, 1e-9))))
-        free_viol = float(np.mean(r > tau_eff))   # 모델이 관측 앞 = 오포즈 강증거
+        inner = interior[gv[covered], gu[covered]]
+        free_viol = float(np.mean((r > tau_eff) & inner)) if inner.any() else 0.0
         return s_res * cov ** self.gamma, {
             "coverage": cov, "free_viol": free_viol, "score": s_res * cov ** self.gamma,
         }

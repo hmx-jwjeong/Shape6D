@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shape6D — v0-geo 합성 검증 보고서 (v1.0)</title>
+<style>
+  :root {
+    --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb;
+    --accent:#0b5fff; --accent-soft:#e8f0ff; --good:#0a7d43; --good-soft:#e6f5ec;
+    --warn:#a05a00; --warn-soft:#fdf3e3; --bad:#b4232a; --bad-soft:#fdecec;
+    --shape:#6d28d9; --shape-soft:#f1eafd;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif; color:var(--ink); background:var(--bg); line-height:1.65; font-size:15px; }
+  .wrap { max-width:1080px; margin:0 auto; padding:40px 28px 80px; }
+  h1 { font-size:29px; margin:0 0 4px; letter-spacing:-0.5px; }
+  h2 { font-size:20px; margin:52px 0 12px; padding-top:18px; border-top:2px solid var(--ink); letter-spacing:-0.3px; }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:24px 0 8px; }
+  p { margin:8px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:24px; }
+  table { width:100%; border-collapse:collapse; margin:12px 0 8px; font-size:12.8px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 10px; font-weight:600; }
+  td { padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.c, th.c { text-align:center; }
+  tr.pick td { background:var(--good-soft); }
+  tr.pick td:first-child { border-left:3px solid var(--good); font-weight:700; }
+  tr.bad td { background:var(--bad-soft); }
+  .r { font-weight:700; } .r.g { color:var(--good); } .r.w { color:var(--warn); } .r.b { color:var(--bad); }
+  figure { margin:18px 0; }
+  figure img { width:100%; border:1px solid var(--line); border-radius:10px; }
+  figcaption { font-size:12.5px; color:var(--sub); margin-top:6px; line-height:1.55; }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:18px 0; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:12px 14px; background:var(--panel); }
+  .stat b { display:block; font-size:24px; letter-spacing:-0.5px; color:var(--ink); }
+  .stat span { font-size:12px; color:var(--sub); }
+  .stat.good { border-left:4px solid var(--good); }
+  .fix { border-left:4px solid var(--bad); background:var(--bad-soft); border-radius:6px; padding:10px 16px; margin:12px 0; font-size:13px; }
+  .fix::before { content:"⚡ 검증이 발견한 결함"; display:block; font-weight:800; color:var(--bad); font-size:12px; margin-bottom:4px; }
+  .note { border:1.5px dashed var(--shape); border-radius:10px; background:var(--shape-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  pre { background:#14161b; color:#d6dbe4; border-radius:10px; padding:13px 16px; font-size:12px; line-height:1.5; overflow-x:auto; }
+  code { background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:12px; }
+  .small { font-size:12.5px; color:var(--sub); }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  @media print { .wrap { max-width:100%; } h2 { break-before:page; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>v0-geo 합성 검증 보고서 — 무학습 기하 파이프라인</h1>
+<p class="meta">v1.0 · 2026-07-18 · 대상: <b>v0-geo</b> (S0 온보딩 → S1 클러스터 → S2 정합 → 무학습 coarse 포즈 → S4 ICP·검증) ·
+관련: <a href="03_implementation_design.html">03 구현 설계</a> · 재현: <code>uv run python eval/synthetic_report/make_report.py</code> / <code>uv run pytest tests/test_e2e_geo.py</code></p>
+
+<div class="hero">
+  <div class="stat good"><b>9 / 10</b><span>스펙 통과 (위치 &lt;10mm ∧ 회전 &lt;1°)</span></div>
+  <div class="stat good"><b>1.9mm / 0.23°</b><span>ACCEPT 9건 평균 오차 (최대 4.9mm / 0.71°)</span></div>
+  <div class="stat good"><b>0 / 0</b><span>오수락 / 오거부 — verdict가 정오와 완전 일치</span></div>
+  <div class="stat"><b>1건 REJECT</b><span>coarse 실패(플립)를 정직하게 거부 → 재촬영 신호</span></div>
+</div>
+
+<!-- ═════ 1 ═════ -->
+<h2><span class="no">1</span>목적과 범위</h2>
+<p><b>검증 질문</b>: 학습 없이 형상 신호만으로(A1 원칙의 극한형) 확정 운용 조건 — 팔레트급 물체 · 상시 3m(2.5~3.5m) · 희소 LiDAR(물체 위 ~800pt) · σ 5mm — 에서 요구 스펙 <b>위치 10mm · 회전 1°</b>가 달성되는가, 그리고 검증기(S4)는 성공과 실패를 스스로 구분하는가.</p>
+<table>
+  <tr><th>검증하는 것</th><th>검증하지 않는 것 (한계 — §7)</th></tr>
+  <tr><td>기하 파이프라인 전체 사슬의 알고리즘 정합성 · 스펙 달성 가능성 · verdict 신뢰성 · 대칭 처리</td><td>실세계 센서 특성(σ/바이어스 실측, 재질별 드롭), 캘리브레이션 오차, RGB 경로(EViT-SAM/DINOv2 — M1), 학습 모델(M2), 실기 레이턴시</td></tr>
+</table>
+
+<!-- ═════ 2 ═════ -->
+<h2><span class="no">2</span>합성 환경 구성</h2>
+<table>
+  <tr><th>요소</th><th>구성</th></tr>
+  <tr><td>대상 물체</td><td>T11형 팔레트 근사 CAD: 데크 1100×1100×30mm + 런너 3열 (1100×140×120mm) — 포켓 2개의 다공성 구조 포함</td></tr>
+  <tr><td>카메라</td><td>1280×800, fx=fy=914 (HFOV ~70°), 확정 해상도 규약</td></tr>
+  <tr><td>LiDAR 시뮬레이션</td><td>표면 6만 샘플 → <b>장면 전체 z-buffer 가시성</b>(팔레트·바닥·방해물 상호 가림) → 주사선 희소화(행 1/5) → 물체 위 1200pt 캡 → 거리 노이즈 σ=5mm. 유효 관측 평균 ~763pt/물체</td></tr>
+  <tr><td>장면</td><td>바닥 평면(물체 지지) + 방해물 클러스터(크기 게이팅 검증용)</td></tr>
+  <tr><td>포즈 시행</td><td>대표 1회(yaw 20°·3.0m) + 다중 10회: yaw 0~324°(36° 간격) × 거리 U[2.5, 3.5]m × 횡오프셋 U[−0.3, 0.3]m</td></tr>
+  <tr><td>평가 지표</td><td><b>sym-aware 오차</b> (S0 자동검출 대칭군 C2 기준 최소 오차 — ADD-S/MSSD 계열): 위치 = 모델 포인트 평균 변위, 회전 = 대칭 인식 geodesic</td></tr>
+</table>
+<figure>
+  <img src="assets_04/fig2_scene.png" alt="합성 장면">
+  <figcaption><b>그림 2 — 합성 LiDAR 프레임.</b> (좌) 상면도: 팔레트(파랑)·바닥(회색)·방해물(주황). 팔레트 뒤 바닥이 가림 처리되어 비어 있음 — 장면 z-buffer 가시성의 효과. (우) 카메라 투영: 주사선 패턴(행 1/5)의 희소 관측이 확정 운용 조건을 재현.</figcaption>
+</figure>
+
+<!-- ═════ 3 ═════ -->
+<h2><span class="no">3</span>S0 온보딩 — CAD → 추론용 표현</h2>
+<p>온보딩 CLI(<code>shape6d-onboard</code>)와 동일 경로: Poisson disk 마스터 샘플 → 대칭 자동검출 → icosphere 42뷰 depth 템플릿(point-splat 렌더, GL 무의존) → 뷰별 TDF LUT. 팔레트의 <b>C2 대칭(수직축 180°)이 자동 검출</b>되어 이후 모든 평가·가설 중복 제거가 대칭 인식으로 동작한다.</p>
+<figure>
+  <img src="assets_04/fig1_onboarding.png" alt="온보딩">
+  <figcaption><b>그림 1 — S0 산출물.</b> (상) 마스터 포인트 2투영 + 대칭 검출 로그(C2, 노이즈 바닥 반영 임계 τ=24.2mm — 교차검증 [상-1] 수정판). (하) 42뷰 중 3개 depth 템플릿과 TDF 중앙 슬라이스 — S2 정합의 O(1) 조회 테이블.</figcaption>
+</figure>
+
+<!-- ═════ 4 ═════ -->
+<h2><span class="no">4</span>파이프라인 단계별 결과 (대표 시행: yaw 20° · 3.0m)</h2>
+<figure>
+  <img src="assets_04/fig3_s1s2.png" alt="S1 S2">
+  <figcaption><b>그림 3 — S1·S2.</b> (좌) RANSAC 바닥 제거 후 voxel 클러스터 3개: 팔레트(대각 1.48m)·방해물(0.25m)·클러스터2(0.44m) — 크기 게이팅(β_occ·D ≤ d ≤ 1.15·D)이 팔레트만 통과시킴. (우) 활성 25/42뷰(직립 프루닝 — 바닥 위 물체는 아래에서 본 뷰가 불가능) TDF 정합 점수. 정합의 argmax(뷰, in-plane θ, jitter δ)가 그대로 무학습 coarse 포즈가 된다.</figcaption>
+</figure>
+<figure>
+  <img src="assets_04/fig4_pose.png" alt="포즈">
+  <figcaption><b>그림 4 — coarse → ICP.</b> (좌) 템플릿 argmax coarse 포즈(노랑): 뷰 양자화(≤17.8°) 오차 상태. (중) projective p2pl ICP(coarse-to-fine τ 스케줄 0.25D→0.02D, trust region) 정련 후(초록): 0.9mm/0.08°. (우) 최종 p2pl 잔차 분포 — 법선 투영 잔차라 grazing 표면(데크 상판)에 불변인 것이 검증 주 신호의 채택 근거.</figcaption>
+</figure>
+
+<!-- ═════ 5 ═════ -->
+<h2><span class="no">5</span>다중 시행 결과 (10회)</h2>
+<figure>
+  <img src="assets_04/fig5_trials.png" alt="다중 시행">
+  <figcaption><b>그림 5 — 시행별 sym-aware 오차 (로그 스케일).</b> ACCEPT 9건(파랑)은 전부 스펙 여유 통과. yaw 252° 1건(회색)은 top-5 coarse 가설이 모두 플립(179°)이었던 케이스 — 검증기가 REJECT로 정직하게 거부(운용상 재촬영/재적분 신호). <b>오수락 0이 핵심</b>: 틀린 포즈가 ACCEPT로 나간 사례가 없다.</figcaption>
+</figure>
+<table>
+  <tr><th class="c">지표</th><th class="c">coarse (템플릿 argmax)</th><th class="c">최종 (ICP 후, ACCEPT 9건)</th><th class="c">요구 스펙</th></tr>
+  <tr><td class="c">위치 오차</td><td class="c">평균 235mm</td><td class="c r g"><b>평균 1.9mm · 최대 4.9mm</b></td><td class="c">&lt; 10mm ✓</td></tr>
+  <tr><td class="c">회전 오차</td><td class="c">평균 39.8°</td><td class="c r g"><b>평균 0.23° · 최대 0.71°</b></td><td class="c">&lt; 1° ✓</td></tr>
+  <tr><td class="c">verdict</td><td class="c">—</td><td class="c r g">정오 완전 일치 (오수락 0 · 오거부 0)</td><td class="c">오수락 &lt;1% 목표</td></tr>
+</table>
+<p class="small">시사점: ① coarse는 거칠어도 된다(평균 40°) — 광역 τ 스케줄 ICP + 가설 5개 비교가 회복한다. ② 03 문서 §1.4e의 예측(팔레트 yaw 1σ ~0.12°)과 실측(0.04~0.71°)이 정합. ③ 레이턴시는 numpy CPU 레퍼런스 기준 프레임당 ~1.1s(가설 5개 전체 ICP 포함)로 <b>목표 예산과 무관</b> — TRT/CUDA 이식(M1·M4) 대상이며 연산 구조는 배치 gather 중심으로 설계됨.</p>
+
+<!-- ═════ 6 ═════ -->
+<h2><span class="no">6</span>이 검증이 발견하고 수정한 결함 — 다중 시행의 가치</h2>
+<p>대표 1회 시행은 처음부터 통과였다(4.9mm/0.71°). <b>그 상태로 보고서를 썼다면 아래 6건은 전부 잠복했을 것</b> — yaw·거리를 흔든 10회 시행이 이들을 노출했고, 전부 수정 후의 결과가 §5다.</p>
+<table>
+  <tr><th>#</th><th>결함 (발견 시점 증상)</th><th>수정</th></tr>
+  <tr><td>1</td><td><b>뷰 프루닝 미적용</b> — 아래에서 올려다본 템플릿 뷰가 매칭되어 뒤집힌(flip, ~170°) coarse 포즈 다발 (10회 중 8회 실패)</td><td>직립 물체 뷰 마스크(<code>upright_view_mask</code>) 적용 — 03 §1.4e가 처방했던 옵션의 의무화</td></tr>
+  <tr><td>2</td><td><b>그리디 가설 수락</b> — 먼저 평가된 near-대칭 오포즈(90°/플립)가 ACCEPT되면 정답 가설이 평가 기회를 잃음</td><td>가설 전부(k≤5) ICP 평가 후 <b>증거 비교 선택</b>(inlier×coverage−free_viol) — 플립은 커버리지 0.42 vs 정답 0.99로 확실히 짐</td></tr>
+  <tr><td>3</td><td><b>합성 가림 누락</b> — 팔레트 뒤/밑 바닥 포인트(물리적으로 관측 불가)가 프레임에 잔존 → 정답 포즈의 free-space 위반 22%. <b>frame-wide free-space 검증기가 데이터 버그를 정확히 검출한 사례</b></td><td>장면 전체 z-buffer 가시성 적용</td></tr>
+  <tr><td>4</td><td><b>가시성 판정 해상도 부족</b> — 표면 샘플(2.4만)이 풀해상 픽셀(8.5만)보다 성겨서 스플랫 구멍으로 뒤쪽 표면이 새어 들어옴 (위반 18% 잔존)</td><td>가시성 판정을 stride-2 격자에서 수행 (샘플 밀도 &gt; 셀 수 보장)</td></tr>
+  <tr><td>5</td><td><b>다공성 물체의 free-space 원리 한계</b> — 팔레트 포켓 틈새로 정당하게 보이는 바닥이 "모델 뒤 관측 = 위반"으로 집계 (셀 단위 불투명 가정의 근본 한계)</td><td>free_viol을 하드 REJECT → <b>소프트 특징</b>으로 강등(임계 0.15, M3-3 캘리브레이션 대상). 오포즈 판별의 주 무기는 결함 2의 가설 간 증거 비교로 이전</td></tr>
+  <tr><td>6</td><td><b>검증 포인트 밀도 규약 위반</b> — X_verify 1024pt는 스플랫 홀필이 포켓 개구를 오폐색</td><td>03 §2.4 규약(idx_verify 2048) 준수 의무화</td></tr>
+</table>
+<div class="note"><b>패턴 하나</b>: 결함 3·4는 파이프라인이 아니라 <b>합성 데이터의 물리 오류</b>였고, 파이프라인의 free-space 검증이 그것을 잡아냈다 — 검증기가 의도대로 "물리적으로 불가능한 관측"에 반응한다는 부수 증거. 실물 데이터에서도 같은 메커니즘이 캘리브레이션 오차·센서 아티팩트를 드러낼 것으로 기대할 수 있다.</div>
+
+<!-- ═════ 7 ═════ -->
+<h2><span class="no">7</span>한계 — 이 결과가 말하지 않는 것</h2>
+<table>
+  <tr><th>항목</th><th>내용</th></tr>
+  <tr><td>클린 합성</td><td>σ=5mm 가우시안만 반영. 실 LiDAR의 바이어스·엣지 mixed pixel·재질별 드롭아웃·고정 패턴 노이즈는 미반영 → D2-a 실측(RFQ ①)이 대체해야 함. 03 §1.4c 예산상 유닛별 거리 보정이 전제</td></tr>
+  <tr><td>캘리브레이션 오차 0</td><td>합성은 LiDAR-카메라 정합이 완벽. 실물에서는 ~3mm@3m 강체 바이어스가 하한으로 추가됨 (§2.3 예산)</td></tr>
+  <tr><td>S1 축약</td><td>클러스터 → Candidate 직결 (EViT-SAM 마스크 경로 미사용 — M1). 접촉·적재 병합 시나리오 미검증</td></tr>
+  <tr><td>신뢰도 미보정</td><td>p_conf는 휴리스틱 초기 가중치 — verdict 일치는 하드가드+증거 비교의 결과이며, 확률로서의 p_conf는 M3-3 캘리브레이션 전까지 무의미</td></tr>
+  <tr><td>단일 물체 종</td><td>팔레트 1종. 소형 부품·판재류·유사 형상 혼입 미검증 (M0-3 프로토콜 대상)</td></tr>
+  <tr><td>플립 리콜</td><td>yaw 252° 케이스: 거부는 정직했지만 회복은 못 함 — coarse top-5가 전부 플립. in-plane 후보 다양화 또는 재적분 재시도가 운용 대응 (10%의 재시도 비용)</td></tr>
+</table>
+
+<!-- ═════ 8 ═════ -->
+<h2><span class="no">8</span>재현 방법</h2>
+<pre>uv run pytest tests/test_e2e_geo.py          # E2E 회귀 (대표 시행, CI 게이트)
+uv run python eval/synthetic_report/make_report.py   # 본 보고서 그림·통계 재생성
+                                              # → docs/assets_04/fig*.png, stats.json</pre>
+<p class="small">모든 난수 시드 고정 — 수치는 결정론적으로 재현된다. 시행별 원자료: <code>docs/assets_04/stats.json</code>.</p>
+
+<h2><span class="no">9</span>결론과 다음 단계</h2>
+<p><b>결론</b>: 확정 운용 조건의 클린 합성에서, 학습 없는 기하 파이프라인만으로 요구 스펙(10mm/1°)을 평균 5배 여유로 달성하며, 실패(10%)는 전량 자기 검출된다. 형상 우선 설계(A1)의 하한 성능이 이미 실용 범위라는 뜻이고, M2 학습(Shape6D-PEM)의 역할은 "성능 달성"이 아니라 <b>coarse 강건화(플립·근대칭 리콜)와 저품질 조건 확장</b>으로 재정의된다.</p>
+<p><b>다음</b>: ① M0-3 오염·재도장 프로토콜에 본 하네스 재사용(외형 증강은 RGB 경로 통합 후) ② M0-1 SAM-6D 재현(Ubuntu) ③ SOS Lab RFQ 회신 반영 → σ 실측값으로 본 시뮬레이션 갱신 ④ 03 문서 수정 대장에 §6의 결함 2·5·6 반영 완료.</p>
+
+</div>
+</body>
+</html>

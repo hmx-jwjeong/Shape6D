@@ -19,7 +19,7 @@ class Verifier:
     def __init__(self, K: CameraIntrinsics, sym: SymmetryHandler,
                  sigma_lidar: float = 0.008, theta_acc: float = 0.7,
                  theta_rej: float = 0.3, n_inlier_min: int = 25,
-                 free_viol_max: float = 0.05,
+                 free_viol_max: float = 0.15,
                  calibrator: ConfidenceCalibrator | None = None):
         self.K = K
         self.sym = sym
@@ -33,9 +33,13 @@ class Verifier:
         self.calib = calibrator or ConfidenceCalibrator()
 
     def _evaluate(self, h: PoseHypothesis, obs_pts, obs_uv, X_m, N_m, X_verify,
-                  d_cad, s2_scores, border) -> VerifyResult:
+                  d_cad, s2_scores, border, frame_obs=None) -> VerifyResult:
         R, t, icp_diag = self.icp.refine(h.R, h.t, obs_pts, X_m, N_m, d_cad)
-        _, sd = self.scorer(R, t, X_verify, obs_uv, obs_pts[:, 2])
+        # free-space 검사는 프레임 전체 유효 관측 대상 (제공 시): 오포즈 모델이
+        # "관측된 다른 표면(바닥 등) 앞 공간"을 침범하는 것을 잡는다 — 후보 포인트만
+        # 보면 near-대칭 오포즈(팔레트 90° 등)의 위반이 관측 밖이라 놓친다 (다중 시행 실증)
+        fuv, fz = frame_obs if frame_obs is not None else (obs_uv, obs_pts[:, 2])
+        _, sd = self.scorer(R, t, X_verify, fuv, fz)
         # 주 잔차 통계 = ICP p2pl (법선 투영 — grazing 불변). 스플랫은 free_viol 전용.
         r = icp_diag.get("r_p2pl", np.zeros(0))
         inl = np.abs(r) < self.tau_z
@@ -68,7 +72,10 @@ class Verifier:
     def __call__(self, hyps: list[PoseHypothesis], obs_pts: np.ndarray,
                  obs_uv: np.ndarray, X_m: np.ndarray, N_m: np.ndarray,
                  X_verify: np.ndarray, d_cad: float,
-                 s2_scores: dict | None = None, border: bool = False) -> VerifyResult:
+                 s2_scores: dict | None = None, border: bool = False,
+                 frame_obs: tuple | None = None) -> VerifyResult:
+        """frame_obs: (uv_all [M,2], z_all [M]) — 프레임 전체 유효 LiDAR 관측
+        (free-space 위반 검사용, 강력 권장). None이면 후보 포인트로 폴백."""
         s2_scores = s2_scores or {}
         hyps = self.sym.dedupe(hyps, d_cad)
         # 가설 사전 선별: 스플랫 잔차 점수
@@ -78,13 +85,17 @@ class Verifier:
             pre.append((s, h))
         pre.sort(key=lambda x: -x[0])
 
-        result = self._evaluate(pre[0][1], obs_pts, obs_uv, X_m, N_m, X_verify,
-                                d_cad, s2_scores, border)
-        if result.verdict != "ACCEPT" and len(pre) > 1:
-            # 차순위 재시도 1회 — coarse 가설이므로 ICP 스케줄이 이미 광역 시작 (검증 [M5])
-            retry = self._evaluate(pre[1][1], obs_pts, obs_uv, X_m, N_m, X_verify,
-                                   d_cad, s2_scores, border)
-            if retry.p_conf > result.p_conf:
-                result = retry
-            result.diag["retried"] = True
+        # 가설 전부 ICP 평가 후 증거 비교로 선택 (그리디 first-ACCEPT 금지 —
+        # near-대칭 오포즈가 먼저 평가되면 수락되는 결함을 다중 시행에서 실증).
+        # 선택 지표 = inlier_ratio × coverage − free_viol: 플립/90° 오포즈는
+        # 커버리지에서 정포즈에 크게 밀린다 (실측 0.42 vs 0.99).
+        def _quality(vr: VerifyResult) -> float:
+            s = vr.diag["stats"]
+            return s["inlier_ratio"] * s["coverage"] - s["free_viol"]
+
+        evals = [self._evaluate(h, obs_pts, obs_uv, X_m, N_m, X_verify,
+                                d_cad, s2_scores, border, frame_obs)
+                 for _, h in pre]
+        result = max(evals, key=_quality)
+        result.diag["n_evaluated"] = len(evals)
         return result
