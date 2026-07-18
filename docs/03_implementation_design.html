@@ -580,6 +580,7 @@ iter 5~10: Huber(δ=1.5σ_lidar) 가중 p2pl 잔차 → J=[(q×n)ᵀ,nᵀ] → 6
   <tr><td><b>요구 정밀도 <span class="r g">확정</span></b></td><td>위치 10mm @ 상시 3m + <b>회전 ≤1°</b> (사용자 확인). 위치는 §1.4c 예산으로 조건부 달성 가능. <b>회전 1°가 더 빠듯한 축</b> — §1.4d: 40cm급 여유 / 20cm@3m 경계(ML-A(60)+T=400ms 필요선) / 20cm@5m·10cm@3m 미달. 판재류(r_rms 큰 평면 형상)는 회전 관측성이 더 불리 — M2-B 파일럿에서 형상군별 실측 필요</td></tr>
   <tr><td>확인 필요</td><td>EViT-SAM-L0 임베딩 grid 규약(공식 repo), Jetson JetPack TRT의 grid_sample/ScatterElements 지원 버전, Livox 기종별 최소거리·PTP 지원</td></tr>
   <tr><td>요구 정밀도 스펙</td><td>최종 포즈 허용 오차(mm/°)가 미정 — 캘리브레이션 예산(~3mm@1m 하한)과 σ_lidar/√N 한계 대비 달성 가능성 판정에 필요</td></tr>
+  <tr><td><b>D4. 학습 데이터 라이선스 (M2-C 본학습 전 결정)</b></td><td>MegaPose 셋은 unseen 포즈 학습의 사실상 표준(BOP 공식 배포, SAM-6D·GigaPose·Co-op 등 동일)이나 <b>ShapeNetCore는 연구용 비상업 라이선스</b> — 산업 제품 학습 데이터로는 리스크. 옵션: (a) GSO-only(CC-BY 4.0, ~1M장) (b) ShapeNet → Objaverse 허용 라이선스 서브셋 대체 (c) 연구 단계 전체 사용 + 제품화 시 재학습. 파일럿(M2-B)은 무영향 — 본학습 전 확정</td></tr>
 </table>
 <table>
   <tr><th>02 문서 반영 필요 델타</th><th>내용</th></tr>
