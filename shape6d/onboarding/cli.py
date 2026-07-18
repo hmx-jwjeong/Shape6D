@@ -49,6 +49,13 @@ def main(argv=None):
     pts, nrm = sampling.sample_master(mesh, args.n_master)
     subsets = sampling.make_subsets(pts)
 
+    # 템플릿 42뷰 + TDF (point-splat 렌더 — GL 무의존, 03 §3.2)
+    from .templates import build_view_templates
+    surf_hi, _ = trimesh.sample.sample_surface(mesh, 120000, seed=0)
+    surf_hi = np.asarray(surf_hi, dtype=np.float32)
+    r_bs = float(np.linalg.norm(surf_hi - surf_hi.mean(0), axis=1).max())
+    tpl = build_view_templates(surf_hi, r_bs, diag)
+
     if args.no_sym_detect:
         sym = symmetry.SymmetryResult(sym_rots=np.eye(3, dtype=np.float32)[None],
                                       sym_axes=np.zeros((0, 3), np.float32))
@@ -66,6 +73,7 @@ def main(argv=None):
         "pts_master": pts.astype(np.float16),
         "nrm_master": nrm.astype(np.float16),
         **subsets,
+        **{k: tpl[k] for k in ("tpl_depth", "tpl_pose", "tpl_K", "tpl_pts", "tpl_center", "tdf")},
         "sym_rots": sym.sym_rots,
         "sym_axes": sym.sym_axes,
         "diameter": np.float32(diag),
@@ -79,7 +87,7 @@ def main(argv=None):
     print(f"  대칭: {sym.summary}")
     for line in sym.log:
         print(f"    {line}")
-    print("  [잔여] 템플릿 렌더(tpl_*, tdf, dino_cls)는 M1, dense_fo/geo_embedding_o는 M2에서 --refresh-features")
+    print("  [잔여] dino_cls는 M1(torch), dense_fo/geo_embedding_o는 M2에서 --refresh-features")
 
 
 if __name__ == "__main__":

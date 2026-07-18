@@ -40,9 +40,19 @@ shape6d/pipeline.py  S1→S4 오케스트레이션 + 스테이지 타이머
 tests/               기반 모듈 단위테스트 (대칭 검출 회귀 포함)
 ```
 
+## v0-geo — 무학습 기하 파이프라인 (동작 확인됨)
+
+S2 TDF 정합의 argmax(뷰, in-plane 각, jitter)가 곧 coarse 포즈라는 점을 이용한
+**학습 없는 전체 사슬**: 온보딩 → 클러스터 → 크기 게이팅 → TDF 정합 → coarse 포즈
+(`pose/template_init.py`) → projective ICP → 신뢰도 판정.
+
+E2E 합성 검증 (`tests/test_e2e_geo.py`, 팔레트 1100×1100@3m·희소 LiDAR 1200pt·σ5mm):
+**위치 4.9mm · 회전 0.71° — 요구 스펙(10mm/1°) 통과.** PEM(M2) 학습 전 베이스라인이자 영구 비학습 폴백.
+
 ## 마일스톤 현황
 
-- [x] M0-5 리포 부트스트랩 (기반 모듈 + 테스트)
-- [ ] M0-1 SAM-6D BOP 재현 (Ubuntu PC)
-- [ ] M0-3 오염·재도장 프로토콜
-- [ ] M1 무재학습 v0
+- [x] M0-5 리포 부트스트랩 (기반 모듈 + 테스트 32개)
+- [x] v0-geo 파이프라인 (S0 온보딩 CLI 완결 포함 — point-splat 렌더로 GL 무의존)
+- [ ] M0-1 SAM-6D BOP 재현 (Ubuntu PC 필요)
+- [ ] M0-3 오염·재도장 프로토콜 (Ubuntu PC)
+- [ ] M1 무재학습 v0 (EViT-SAM·DINOv2 통합 — torch 필요)
