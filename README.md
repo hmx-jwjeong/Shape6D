@@ -11,6 +11,8 @@ SAM-6D의 2단 포인트 매칭 구조를 승계하되, 특징을 RGB 주도 →
 | [docs/01_stage_design.html](docs/01_stage_design.html) | 스테이지 정의(S0~S4) + 후보 알고리즘 선정 근거 |
 | [docs/02_development_plan.html](docs/02_development_plan.html) | M0~M5 개발 계획, 게이트, 일정 |
 | [docs/03_implementation_design.html](docs/03_implementation_design.html) | **구현 상세 정본** — FrameBundle/캐시 스키마/알고리즘/임계값. 코드와 불일치 시 이 문서 기준 |
+| [docs/04_synthetic_validation_report.html](docs/04_synthetic_validation_report.html) | v0-geo 합성 검증 보고서 (10시행, 이미지·통계) |
+| [docs/05_concept_review.html](docs/05_concept_review.html) | 컨셉 6기둥 정리 · 교차 검증된 간과점 · 기존 방식 비교 |
 | docs/design_archive/ | 영역별 설계 원문 5건 + 교차 검증 리포트 2건 |
 
 ## 확정 전제 (2026-07-18)
