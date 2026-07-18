@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shape6D — MegaPose 외부 평가 시각 자료집 (v1.0)</title>
+<style>
+  :root {
+    --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb;
+    --accent:#0b5fff; --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00;
+    --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif; color:var(--ink); background:var(--bg); line-height:1.65; font-size:15px; }
+  .wrap { max-width:1080px; margin:0 auto; padding:40px 28px 80px; }
+  h1 { font-size:28px; margin:0 0 4px; letter-spacing:-0.5px; }
+  h2 { font-size:20px; margin:48px 0 12px; padding-top:18px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  p { margin:8px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:22px; }
+  table { width:100%; border-collapse:collapse; margin:12px 0 8px; font-size:12.8px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 10px; font-weight:600; }
+  td { padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.c, th.c { text-align:center; }
+  .r { font-weight:700; } .r.g { color:var(--good); } .r.b { color:var(--bad); }
+  figure { margin:18px 0; }
+  figure img { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; }
+  figcaption { font-size:12.6px; color:var(--sub); margin-top:6px; line-height:1.55; }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:20px; letter-spacing:-0.5px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good { border-left:4px solid var(--good); }
+  .stat.bad { border-left:4px solid var(--bad); }
+  .note { border:1.5px dashed var(--shape); border-radius:10px; background:var(--shape-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  pre { background:#14161b; color:#d6dbe4; border-radius:10px; padding:12px 15px; font-size:11.8px; overflow-x:auto; }
+  code { background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:12px; }
+  .small { font-size:12.5px; color:var(--sub); }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  @media print { .wrap { max-width:100%; } h2 { break-before:page; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>MegaPose 외부 평가 — 시각 자료집</h1>
+<p class="meta">v1.0 · 2026-07-18 · 대상: v0-geo(무학습) · MegaPose-GSO 샤드 100샘플(가시성>0.75), 임의 자세, dense depth→ML-X(80) 격자 희소화(σ 8mm 가정), 직립 프리이어 OFF ·
+케이스 패널은 각각 <b>세그멘테이션·희소화·2D 오버레이·3D 2뷰·depth맵</b>을 포함 ·
+수치 정본: <a href="../eval/external_test/README.md">eval/external_test/README.md</a> · 합성 검증(팔레트)은 <a href="04_synthetic_validation_report.html">04 보고서</a></p>
+
+<div class="hero">
+  <div class="stat good"><b>56%</b><span>모드 A(GT 마스크) ADD&lt;0.1D — 성공 시 3.5mm/0.62°</span></div>
+  <div class="stat good"><b>90%</b><span>근사대칭 등가(플립·90°)까지 허용한 리콜</span></div>
+  <div class="stat bad"><b>오수락 40%</b><span>검증기 도메인 이전 실패 — 가려진 뒷면에서 플립 분리 불가</span></div>
+  <div class="stat bad"><b>5%</b><span>모드 B(풀) — S1 기하 클러스터의 클러터 한계 실증</span></div>
+</div>
+
+<h2><span class="no">1</span>읽는 법 — 케이스 패널의 6분면</h2>
+<table>
+  <tr><th>분면</th><th>내용</th><th>확인 포인트</th></tr>
+  <tr><td>(a) 세그멘테이션</td><td>GT 가시 마스크(주황) — 모드 A의 입력 (S1 우회)</td><td>가림·절단 정도</td></tr>
+  <tr><td>(b) 희소화</td><td>ML-X(80) 각도 격자 재샘플 포인트 (깊이 컬러)</td><td>격자 줄무늬 = 실제 센서의 이방성 샘플링 재현</td></tr>
+  <tr><td>(c) 2D 오버레이</td><td>모델@GT(빨강) vs 모델@추정(초록)</td><td>둘이 겹치면 성공 — <b>플립 케이스는 겹쳐 보여도 실패</b>인 것이 핵심</td></tr>
+  <tr><td>(d)(e) 3D 2뷰</td><td>관측(파랑)·추정(초록)·GT(빨강) 포인트클라우드</td><td>측면뷰에서 얇은 물체의 앞/뒤 모호성</td></tr>
+  <tr><td>(f) depth맵</td><td>원본 dense depth + 대상 윤곽</td><td>희소화 이전의 장면 기하</td></tr>
+</table>
+
+<h2><span class="no">2</span>성공 케이스</h2>
+<figure><img src="assets_06/case_success1.jpg" alt="success1">
+<figcaption><b>성공 ① 정밀 정합</b> — 상자형 물체, 오차 0.1mm/0.0°. 관측 233pt만으로 argmax coarse → ICP가 GT에 수렴. (c)에서 빨강·초록이 완전히 겹치고 (d)(e) 3D에서도 세 색이 한 몸이다.</figcaption></figure>
+<figure><img src="assets_06/case_success2.jpg" alt="success2">
+<figcaption><b>성공 ② 연속축 대칭 물체</b>(원통형 보틀, 검출 연속축 1) — 2.5mm/1.4°(sym-aware). 대칭 등가 처리(swing-twist 제거)가 동작해 회전 오차가 축 주위 자유도를 제외하고 평가된다.</figcaption></figure>
+
+<h2><span class="no">3</span>실패 케이스 — 실패의 구조가 곧 로드맵의 근거</h2>
+<figure><img src="assets_06/case_flip.jpg" alt="flip">
+<figcaption><b>실패 ① 플립(176.3°) — 이 자료집의 핵심 그림.</b> 얇은 수건 팩을 위에서 관측: (c)(d)에서 빨강(GT)과 초록(추정)이 <b>거의 완벽히 겹쳐 보이지만</b> 실제로는 180° 뒤집힌 포즈다. (e) 측면뷰가 이유를 보여준다 — 관측된 것은 얇은 슬랩의 한 면뿐이라 앞/뒤가 기하적으로 등가에 가깝다. 검증 지표(inlier 1.00, coverage 1.00, free_viol 0.013)가 전부 완벽해 ACCEPT — 뒷면이 가려진 공간이라 free-space가 침묵하기 때문. <b>기하 단독의 본질 한계이며, M1(RGB prior)·M2(학습 coarse)의 존재 이유.</b> 팔레트 도메인(04)에서는 직립 프리이어+바닥 관측이 이 모드를 잡았다.</figcaption></figure>
+<figure><img src="assets_06/case_quarter.jpg" alt="quarter">
+<figcaption><b>실패 ② 90°급(89.3°)</b> — 정사각 단면 잉크 카트리지 상자. 대칭 검출이 |S|=4(근사-C4)를 등록했고 90° 회전 포즈가 가시면에 정합. 05 간과점 #13(대칭 과검출→dedupe가 정답 가설 삭제)과 4-A(θ 축퇴)의 결합 사례.</figcaption></figure>
+<figure><img src="assets_06/case_hard.jpg" alt="hard">
+<figcaption><b>실패 ③ 순수 실패(34.3°)</b> — 소형 상자(관측 수백 pt)에서 이웃 뷰·유사 각으로 오정합. 순수 실패는 100건 중 10건뿐 — 나머지 실패는 전부 대칭류 모호성이다.</figcaption></figure>
+
+<h2><span class="no">4</span>모드 B — S1 기하 클러스터의 클러터 한계 (시각 실증)</h2>
+<figure><img src="assets_06/modeB_001839_000011.jpg" alt="modeB">
+<figcaption><b>같은 프레임의 모드 B 시점.</b> (a) voxel 클러스터링 결과 — 접촉한 물체들이 소수의 대형 클러스터로 병합된다. (b) 크기 게이팅 후 — 병합 클러스터는 상한(1.15·D) 초과로 탈락(회색)하고, 대상 물체는 그 안에 묻혀 <b>매칭 기회 자체를 잃는다</b>. 100샘플 중 모드 B 성공이 5%에 그친 구조적 이유이며, M1 EViT-SAM 마스크 경로의 정량 근거다.</figcaption></figure>
+<figure><img src="assets_06/lmo_example.png" alt="lmo">
+<figcaption><b>보너스: LM-O 실측 프레임(SAM-6D 동봉 예제)의 동일 실패.</b> 테이블 클러터가 1.69m 메가 클러스터로 병합 → 진짜 물체(중앙 우측 주전자) 소실 → 하단 책상 모서리 파편이 오정합·오수락(초록). 합성이 아닌 실측 센서 데이터에서도 같은 메커니즘이 재현됨을 보여준다.</figcaption></figure>
+
+<h2><span class="no">5</span>집계 — 오차의 구조</h2>
+<figure><img src="assets_06/aggregate.png" alt="aggregate">
+<figcaption><b>(좌)</b> 회전 오차 vs ADD/D 산점: 성공(좌하단 덩어리)과 실패가 연속적이지 않고 <b>90°·180° 수직 밴드에 클러스터</b>로 분리된다 — 실패의 77%(34/44)가 대칭류 모호성이라는 정량 증거. ACCEPT(파랑)가 플립 밴드에 다수 있는 것이 오수락 40%의 시각화. <b>(중)</b> 모드 A/B 분류 비교. <b>(우)</b> 성공 56건의 위치 오차 분포 — 중앙값 3.5mm, 태반이 5mm 이내.</figcaption></figure>
+
+<h2><span class="no">6</span>이 자료가 뒷받침하는 결론</h2>
+<table>
+  <tr><th>관찰</th><th>함의</th></tr>
+  <tr><td>성공 시 3.5mm/0.62° (20cm 물체·희소 800~1000pt)</td><td class="r g">기하 스택의 정밀도는 도메인 무관하게 스펙급</td></tr>
+  <tr><td>실패의 77%가 플립·90° 밴드에 클러스터</td><td>기하 단독의 한계는 "정확도"가 아니라 <b>"근사대칭 판별"</b> — M1 RGB prior·M2 학습의 정확한 과녁</td></tr>
+  <tr><td>플립 케이스의 검증 지표가 전부 완벽(오수락 40%)</td><td class="r b">물리 증거 검증은 "뒷면이 관측 가능한 도메인"(팔레트+바닥) 전제 — M3-3 보정 셋에 이 유형 필수</td></tr>
+  <tr><td>모드 B 5% + LM-O 재현</td><td>클러터 검출은 S1 기하 클러스터가 아니라 M1 마스크의 몫 (설계 판단의 실증)</td></tr>
+</table>
+
+<h2><span class="no">7</span>재현</h2>
+<pre>uv run python eval/external_test/run_megapose.py --n 100      # 평가 (results.json)
+uv run python eval/external_test/make_visual_report.py        # 본 자료집 이미지 재생성</pre>
+<p class="small">데이터: HF 샤드 1개(548MB) + Fuel 물체별 CAD 109종(~650MB). 전처리 규약(center=AABB, scale=0.2m/최장변)은 GT 재투영 잔차로 실증 확정. 시드 고정 — 결정론적 재현.</p>
+
+</div>
+</body>
+</html>
