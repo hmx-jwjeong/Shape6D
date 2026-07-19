@@ -15,6 +15,7 @@ SAM-6D의 2단 포인트 매칭 구조를 승계하되, 특징을 RGB 주도 →
 | [docs/05_concept_review.html](docs/05_concept_review.html) | 컨셉 6기둥 정리 · 교차 검증된 간과점 · 기존 방식 비교 |
 | [docs/06_external_eval_visual_report.html](docs/06_external_eval_visual_report.html) | MegaPose 외부 평가 시각 자료집 (케이스 패널·3D·집계) |
 | [docs/07_loaded_wrapped_pallet_survey.html](docs/07_loaded_wrapped_pallet_survey.html) | 적재·랩핑 팔레트 인식 방법 서베이 (딥리서치, 검증 24건) + 하부 밴드 모드 설계 시사점 |
+| [docs/08_mr6d_eval_report.html](docs/08_mr6d_eval_report.html) | MR6D 실측 유로팔레트 평가 (150프레임 — 이전성 확인, 적재 장면 붕괴 정량화) |
 | docs/design_archive/ | 영역별 설계 원문 5건 + 교차 검증 리포트 2건 |
 
 ## 확정 전제 (2026-07-18)
