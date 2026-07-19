@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shape6D — 적재·랩핑 팔레트 인식 방법 서베이 (v1.0)</title>
+<style>
+  :root {
+    --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb;
+    --accent:#0b5fff; --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e4;
+    --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif; color:var(--ink); background:var(--bg); line-height:1.65; font-size:15px; }
+  .wrap { max-width:1080px; margin:0 auto; padding:40px 28px 80px; }
+  h1 { font-size:28px; margin:0 0 4px; letter-spacing:-0.5px; }
+  h2 { font-size:20px; margin:48px 0 12px; padding-top:18px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:16px; margin:22px 0 8px; }
+  p { margin:8px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:22px; }
+  table { width:100%; border-collapse:collapse; margin:12px 0 8px; font-size:12.8px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 10px; font-weight:600; }
+  td { padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.c, th.c { text-align:center; }
+  .tag { display:inline-block; border-radius:5px; padding:1px 7px; font-size:11px; font-weight:700; }
+  .tag.v { background:var(--good-soft); color:var(--good); }
+  .tag.m { background:var(--warn-soft); color:var(--warn); }
+  .tag.u { background:var(--panel); color:var(--sub); border:1px solid var(--line); }
+  .tag.x { background:var(--bad-soft); color:var(--bad); }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:17px; letter-spacing:-0.4px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good { border-left:4px solid var(--good); }
+  .stat.warn { border-left:4px solid var(--warn); }
+  .note { border:1.5px dashed var(--shape); border-radius:10px; background:var(--shape-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .caution { border:1.5px dashed var(--warn); border-radius:10px; background:var(--warn-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .small { font-size:12.5px; color:var(--sub); }
+  a { color:var(--accent); text-decoration:none; word-break:break-all; }
+  a:hover { text-decoration:underline; }
+  ul { margin:8px 0; padding-left:22px; }
+  li { margin:4px 0; }
+  code { background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:12px; }
+  @media print { .wrap { max-width:100%; } h2 { break-before:page; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>적재·랩핑 팔레트 인식 방법 서베이</h1>
+<p class="meta">v1.0 · 2026-07-19 · 방법: 딥리서치 워크플로 (6각도 검색 → 22소스 수집 → 104주장 추출 → 상위 25건 3-투표 적대 검증: <b>24 확정 · 1 기각</b>) ·
+근거 등급: <span class="tag v">검증 3-0</span> 적대 검증 통과 · <span class="tag m">벤더 주장</span> 1차 문서이나 자가 보고 · <span class="tag u">수집(미검증)</span> 초록/문서에서 추출, 투표 미실시 ·
+관련: <a href="05_concept_review.html">05 §간과점 2-B(적재·랩핑 운용 공백)</a></p>
+
+<div class="hero">
+  <div class="stat good"><b>포켓 밴드가 표준</b><span>산업계는 팔레트 하부 전면(포켓)만 본다 — 적재물은 아예 안 봄</span></div>
+  <div class="stat good"><b>랩핑 = 설계 요구사항</b><span>ifm은 "수축필름이 포켓을 덮는 경우"를 400+ 필수 케이스에 명시</span></div>
+  <div class="stat warn"><b>대응은 SW 필터링</b><span>특수 광학이 아니라 포인트클라우드 outlier/bloom 제거</span></div>
+  <div class="stat warn"><b>공개 벤치마크 부재</b><span>적재·랩핑 팔레트 6D 포즈 데이터셋은 아직 없음</span></div>
+</div>
+
+<h2><span class="no">1</span>한 줄 결론</h2>
+<p><b>적재 화물·랩핑 필름에 대한 산업 표준 대응은 "팔레트를 통째로 인식하지 않는 것"이다.</b>
+시장 레퍼런스인 ifm PDS를 비롯한 상용 시스템은 낮게 장착한 ToF 3D 카메라로 <b>하부 전면 포켓 밴드만</b> 촬영하고,
+포켓 2개의 기하(블록/스트링거 템플릿)에 대해 고전 기하 알고리즘을 돌려 6-DoF 포즈를 낸다.
+위에 무엇이 실려 있든 포켓 밴드는 항상 노출되므로 적재 상태와 무관해지고,
+랩핑 필름이 일으키는 포인트클라우드 오염(outlier·blooming)은 광학이 아닌 <b>소프트웨어 필터링</b>으로 걷어낸다.
+학술 문헌도 같은 방향으로 수렴한다 — 전면 포켓/블록만 쓰는 접근을 "적재물에 가려지지 않는 유일한 영역"이라는 이유로 채택한다.</p>
+
+<h2><span class="no">2</span>산업 상용 솔루션</h2>
+
+<h3>2.1 ifm PDS (Pallet Detection System) — 시장 레퍼런스 <span class="tag v">검증 3-0 ×20건</span></h3>
+<table>
+  <tr><th style="width:22%">항목</th><th>내용</th></tr>
+  <tr><td>센서·플랫폼</td><td>솔리드스테이트 pmd ToF 3D 카메라. 구세대 O3D3xx(온카메라 처리) → 현세대 O3R(224×172px, 940nm IR, 105×78°/60×45° FoV + RGB 1280×800, 처리는 Jetson 기반 VPU(OVP812)로 이관)</td></tr>
+  <tr><td>파이프라인</td><td>ToF amplitude+distance → 포인트클라우드 → artifact 필터링 → <b>6-DoF 포즈 + 좌/우 포켓 위치</b></td></tr>
+  <tr><td>검출 원리</td><td><b>하부 전면 포켓 기하 템플릿 매칭</b> — 블록 포켓 0.24–0.44m, 스트링거 포켓 0.40–0.49m 등 폭 설정형. GMA·US/호주 CHEP·손상 팔레트/스키드 포함. 카메라는 지면 23–36cm 높이에 수평·정면 장착</td></tr>
+  <tr><td>스펙(벤더 자가 보고)</td><td>표준 2포켓 팔레트 전종, 도달 2m(하드웨어에 따라 4m), <b>±1cm, &lt;1s</b>, Ethernet/CAN 출력</td></tr>
+  <tr><td>적재·랩핑 대응</td><td>"포켓을 덮는 수축필름·골판지·고반사 적재물·손상 팔레트"를 <b>400+ 특수 케이스에 명시된 필수 처리 조건</b>으로 규정. 반사성 랩이 일으키는 outlier·blooming은 전용 지능형 필터로 제거</td></tr>
+  <tr><td>방법론 포지션</td><td><b>휴리스틱 규칙 기반 직접 기하 + 고객/창고별 전문가 튜닝</b> — 합성데이터 학습 ML을 "블랙박스"로 명시 배격. 근거로 10M+ 픽·1,700+ 차량·1,000+ 팔레트 타입 테스트 스위트 제시(자가 보고)</td></tr>
+  <tr><td>API 레벨</td><td><code>getPallet</code>: 포즈는 전면에서만 유도(적재물 분석 없음), 최대 10팔레트, depthHint 옵션. <code>findPocket</code>: 필름 부분 가림에 가장 강건한 옵션으로 문서화(이전 세션 검증). <code>findCorners</code>: 포켓 4모서리 검출 — 포켓 치수 변화에 관대하나 열린 포켓(EPAL 측면)에서 실패</td></tr>
+</table>
+<p class="caution"><b>주의(검증기 판정)</b>: "포켓 밴드 방식이라 적재물과 완전히 무관하다"는 강한 표현은 1-2로 <b>기각</b>됐다 —
+벤더가 명시 보장한 문장이 아니라 기술 문서에서의 신중한 추론으로 서술해야 한다. 또 ToF가 레이저보다 광택 수축필름에 유리하다는
+ifm 백서 주장(<span class="tag m">벤더 주장</span>)은 귀속만 검증됐고 물리는 논쟁적이다(ToF 940nm·LiDAR 905nm 모두 근적외선, ifm 자신도 필름 아티팩트를 필터링).</p>
+
+<h3>2.2 SICK Pallet Pocket Detection <span class="tag u">수집(미검증)</span></h3>
+<ul>
+  <li>Visionary-T Mini AP <b>ToF 카메라 온디바이스 SensorApp</b> — 엣지에서 계산, 결과만 차량 제어기로 전송</li>
+  <li>운용 전제가 강함: 차량이 팔레트 정면 1–3m, 전면(짧은 변)이 카메라를 향하고, 대략적 위치는 이미 알려져 있어야 함</li>
+  <li>알고리즘은 <b>학습 기반</b>(teach-in 이미지로 학습한 신경망 매칭) + Strictness 파라미터로 정밀도↔강건성 트레이드</li>
+  <li>출력은 완전한 6D가 아님 — 좌/우 포켓·팔레트 중심 (X;Y;Z) + yaw 단일 각</li>
+  <li>공식 문서(12p)에 랩핑·적재 언급 없음; 필름·적재 간섭은 포즈 피팅 전 포인트클라우드 필터링으로 대응(문서상 "핵심 단계")</li>
+</ul>
+
+<h3>2.3 자율지게차 벤더 — 3D 카메라·다중 센서 융합이 업계 규범 <span class="tag v">검증 3-0 ×4건</span></h3>
+<table>
+  <tr><th>벤더</th><th>인식 스택</th><th>적재·랩핑 관련</th></tr>
+  <tr><td>OTTO Motors (Rockwell)</td><td>3D 카메라 <b>5대</b>(팔레트 추적·도킹·오버행 검출) + 포크 충격 센서</td><td>"어긋나거나 <b>스트레치랩된</b> 팔레트도 픽" 명시. 포크 센서는 랩을 뚫고 접촉 감지</td></tr>
+  <tr><td>Seegrid</td><td>2D LiDAR + 3D LiDAR + 스테레오 + 독자 비전 <b>4모달 융합</b></td><td>payload detection 마케팅, 임의 forkable·요잉 팔레트 대응 주장 — 기술 상세 비공개</td></tr>
+  <tr><td>Balyo</td><td>2D+3D 센서 조합(VENNY 3D 팔레트 검출), 무반사판 LiDAR SLAM</td><td>상세 비공개</td></tr>
+  <tr><td>Toyota / Linde·KION / Vecna / Crown</td><td>2025 서베이(Fraifer et al.) Table 12: LiDAR+카메라류 조합</td><td>상세 비공개</td></tr>
+</table>
+
+<h2><span class="no">3</span>학술 문헌 — 계보별 정리 <span class="tag u">이 절은 수집(미검증) — 초록·본문에서 추출, 적대 투표는 미실시</span></h2>
+
+<h3>3.1 포인트클라우드 기하 (Shape6D와 가장 가까운 계보)</h3>
+<table>
+  <tr><th style="width:30%">연구</th><th>방식</th><th>적재·랩핑 대응</th></tr>
+  <tr><td>TUM 2018 (SOLI, Kinect v2 ToF)</td><td><b>유로팔레트 하부 3개 목재 블록 전면만</b> 사용 — RANSAC 지면 제거 + PCL. 정적·비적재에서 σ 15–25mm / yaw 0.22–0.87°</td><td>"다른 기하는 적재물에 가려질 수 있다"가 <b>명시적 설계 근거</b>. 단, 실험은 전부 비적재 — 주장과 실증의 갭</td></tr>
+  <tr><td>Percipio 구조광 계열 (2022 MDPI Sensors 22:8019, 2023 후속)</td><td>템플릿 포인트클라우드 정합(ISS+ACFPFH → 정합, RMSE 9mm/0.989s; 후속판 lateral 9.8mm/0.5°)</td><td>비적재 전용 — 랩핑·가림 미취급. 템플릿도 빈 팔레트에서 채취</td></tr>
+  <tr><td>PILA 2021 (RGB-D 하이브리드)</td><td>DNN 검출 ROI + depth 융합 → 전면 기하 keypoint → 6D. 3m에서 1cm/0.4°, 700ms</td><td>전면이 보인다는 전제. 랩핑 미취급</td></tr>
+</table>
+
+<h3>3.2 RGB/RGB-D 딥러닝 (keypoint→PnP가 주류)</h3>
+<table>
+  <tr><th style="width:30%">연구</th><th>방식·성능</th><th>적재·랩핑 대응</th></tr>
+  <tr><td>Fraunhofer IML (arXiv 2210.06001)</td><td>합성 데이터 학습 단안 RGB 유로팔레트 6D — 합성 팔레트 데이터셋 공개</td><td>—</td></tr>
+  <tr><td>Auckland 2025 (arXiv 2503.22965)</td><td>YOLOv8 → 전면 4모서리 keypoint → PnP. Unity 합성 7.5–30k 학습, 실물 mAP50 0.995</td><td><b>랩핑·포장 팔레트를 명시적 open gap으로 선언</b> — 미해결 인정. 선행연구의 스택/랙 mAP 0.05–0.21 인용</td></tr>
+  <tr><td>YOLOv8s-pose 개량 (2025 Springer)</td><td>인체 포즈식 keypoint. 검출 94.4%, 104 FPS, 각도 4°/거리 오차 소</td><td>스택·가림 강건 주장, 랩핑 미언급. 데이터·코드 비공개</td></tr>
+  <tr><td>Hypergraph keypoint (2026 IEEE)</td><td>전면 E-패턴 keypoint + 하이퍼그래프 기하 관계. <b>&lt;1.6°/&lt;18mm, Jetson Orin Nano 72 FPS, 20.2MB</b></td><td>밀집 스택·부분 가림·조명 변화 대응 설계. 16,233장 사내 데이터 — 비공개</td></tr>
+  <tr><td>ADAPT 자율지게차 (2025 arXiv)</td><td>ZED2i 스테레오 + picoScan150 2D LiDAR. 합성 스테레오 150k 학습, 부품 keypoint 투표→6D</td><td>적재 다양성은 합성 증강으로 커버, <b>랩핑은 미취급(갭 명시)</b>. 원거리 정밀도는 스테레오 깊이 오차 지배</td></tr>
+  <tr><td>Navigator 공장 실증 (2024)</td><td>YOLOv8 전면+포켓 2D 박스 → RealSense L515로 <b>전면만 분할</b>해 포즈</td><td><b>랩 필름 부분 가림 데이터를 학습에 포함</b>(드문 사례). 4m 초과 시 포켓 검출 불안정 보고</td></tr>
+  <tr><td>RGB-only 포켓 검출 (2025)</td><td>YOLOv8/11 2D 박스 — 3D 없음</td><td>팔레트 95% vs <b>포켓 72%</b> — RGB에서 포켓은 그림자·랙 틈과 혼동(암부 사각형). RGB 단독의 한계 실증</td></tr>
+</table>
+
+<h3>3.3 2D LiDAR 전면 패턴</h3>
+<ul>
+  <li><b>INRIA/Mohamed et al.</b> (NCAA 2019): 2D 레이저 거리계 단독 — 스캔 래스터화 → Faster R-CNN + CNN 분류기(99.58% k-fold), Kalman 추적으로 접근 중 신뢰 누적. <b>공개 데이터셋 565스캔</b>(팔레트 340/비팔레트 225, Data in Brief 게재). 적재·랩핑 여부는 미명시</li>
+  <li>2025 리뷰(Electronics 14(1):153)의 요지: RGB-only든 포인트클라우드-only든 <b>단일 모달리티는 부정확하거나 고비용</b> — 멀티모달 융합이 open challenge <span class="tag v">검증 3-0</span></li>
+</ul>
+
+<h2><span class="no">4</span>랩핑 필름이 센서에 미치는 영향</h2>
+<table>
+  <tr><th style="width:26%">현상</th><th>근거</th><th>업계 대응</th></tr>
+  <tr><td>ToF 반투명체 깊이 붕괴</td><td>투과광이 배경과 혼합 — Kinect v2 반투명 평면에서 <b>RMS 203.9mm</b> 오차(학습 보정으로 70.4mm). 반투명 오차는 통상 MPI보다 큼 (2018, 비팔레트 소규모 실험) <span class="tag u">수집</span></td><td rowspan="3"><b>공통 해법 = 포인트클라우드 SW 필터링.</b> ifm "지능형 outlier/bloom 필터"(반사판·수축랩·반사면 유발), SICK "포즈 피팅 전 이미지 필터링이 핵심 단계". 특수 광학 하드웨어로 해결한 사례는 검증된 소스에 없음</td></tr>
+  <tr><td>고반사 랩 → outlier·blooming</td><td>ifm 문서 명시: 반사성 랩은 ToF 포인트클라우드를 오염시킴 <span class="tag v">검증 3-0</span></td></tr>
+  <tr><td>ToF vs LiDAR 우열</td><td>ifm 백서: "ToF 능동 IR이 광택 수축랩을 레이저보다 잘 투과" — <b>귀속만 검증, 물리는 논쟁적</b>(둘 다 근적외선) <span class="tag m">벤더 주장</span></td></tr>
+</table>
+
+<h2><span class="no">5</span>공개 데이터셋·벤치마크</h2>
+<table>
+  <tr><th>데이터셋</th><th>내용</th><th>6D 포즈</th><th>적재/랩핑</th></tr>
+  <tr><td><b>LOCO</b> (TUM, ICMLA 2020, CC0)</td><td>실창고 RGB 37,988장(주석 5,593장·152k 박스) — 팔레트·지게차·랙 등 2D bbox</td><td class="c">✗ (2D만)</td><td class="c">상태 구분 없음</td></tr>
+  <tr><td>EUR 팔레트 2D 스캔 (Data in Brief)</td><td>2D 레이저 565스캔, 수동 라벨</td><td class="c">✗</td><td class="c">미명시</td></tr>
+  <tr><td>Fraunhofer 합성 팔레트</td><td>합성 RGB + 포즈</td><td class="c">△(합성)</td><td class="c">✗</td></tr>
+  <tr><td colspan="4" style="background:var(--bad-soft)"><b>결론: 적재·랩핑 팔레트의 실측 6D 포즈 공개 벤치마크는 존재하지 않는다</b> (검증 주장 0건 + 각 논문이 전부 사내 데이터 사용). 학술 최고 성능 논문들(hypergraph, YOLOv8s-pose)도 데이터 비공개 — 이 공백 자체가 기회다.</td></tr>
+</table>
+
+<h2><span class="no">6</span>Shape6D 시사점 — 하부 밴드 부분 정합 모드의 근거와 설계</h2>
+<p class="note"><b>핵심 확인: 업계 전체가 이미 우리의 공리 A1을 실천하고 있다.</b>
+"적재물·랩핑은 신뢰할 수 없으니 아예 보지 않는다 — 항상 노출되는 하부 전면 기하만 믿는다"는 것이
+ifm·SICK·TUM·Navigator가 독립적으로 수렴한 결론이며, 이는 A1(외형 불신)의 기하 버전이다.
+05 간과점 2-B("적재·랩핑 운용 공백")의 해답은 파이프라인 교체가 아니라 <b>정합 영역의 제한</b>이다.</p>
+<table>
+  <tr><th style="width:24%">설계 항목</th><th>제안</th><th>업계 근거</th></tr>
+  <tr><td>① 온보딩: 하부 밴드 서브셋</td><td>S0에서 CAD의 <b>z∈[0, h_band] 영역 포인트 서브셋(idx_band)</b>과 해당 영역 TDF를 추가 생성 — 적재 모드에서는 이것만으로 정합</td><td>ifm getPallet(전면에서만 포즈 유도), TUM(3블록 전면만)</td></tr>
+  <tr><td>② S2: 수평 밴드 뷰 프루닝</td><td>기존 옵션(03 §1.4e)을 적재 모드의 기본값으로 승격 — 뷰는 수평 ±15° 밴드만, upright prior 필수</td><td>ifm 카메라 장착 규정(지면 23–36cm·수평) = 사실상 수평 뷰 고정</td></tr>
+  <tr><td>③ S1/전처리: 필름 outlier 필터</td><td>flag_quality에 <b>고반사 blooming·반투명 mixed-signal 플래그</b> 추가, 밴드 위 클러스터(적재물)는 게이팅에서 팔레트 높이만 비교</td><td>ifm·SICK 공통 "필터링이 핵심 단계", ToF 반투명 RMS 200mm급 실증</td></tr>
+  <tr><td>④ S4: 검증 영역 한정</td><td>inlier/coverage/free-space를 <b>밴드 영역으로 한정</b> — 적재물 포인트가 coverage 분모를 오염시키지 않도록. 포켓 내부 free-space는 유지(포크 진입 가능성 = 물리 검증)</td><td>SICK 출력(포켓 중심+yaw)이 보여주듯 운용상 필요한 것은 포켓 정밀도</td></tr>
+  <tr><td>⑤ 평가: 자체 벤치 구축</td><td>공개 벤치마크가 없으므로 sparse_bench(05 Top5 ②)에 <b>적재·랩핑 합성 시나리오</b>(밴드 위 박스 적재 + 필름 노이즈 모델) 추가 — 랩 필름은 outlier율·투과 깊이 오프셋으로 모델링</td><td>§5 공백 — 학계도 전부 사내 데이터</td></tr>
+</table>
+<p><b>차별점도 명확하다</b>: 상용 시스템은 팔레트 "종류 템플릿"(블록/스트링거 폭 파라미터) 고정에 전문가 튜닝을 더한 전용기이고,
+SICK류 출력은 6D조차 아니다. Shape6D는 <b>임의 CAD 제로샷 + 완전 6D + 증거 기반 검증</b>을 유지한 채
+정합 영역만 밴드로 줄이면 되므로, 기존 스테이지 구조(S0~S4)를 바꾸지 않고 모드 플래그 하나로 수용 가능하다.
+회전 ≤1° 요구는 hypergraph 논문(1.6°)·TUM(0.22–0.87°)과 비교해도 v0-geo 실측(0.71°, 04)이 이미 경쟁선상에 있다.</p>
+
+<h2><span class="no">7</span>검증 상태와 한계</h2>
+<ul>
+  <li>검증 커버리지 불균형: 확정 주장은 ifm에 집중(산업 축). SICK·학술·데이터셋 축은 수집만 되고 투표 미실시(§3·§5의 <span class="tag u">수집</span> 표기) — "부재"가 아니라 "검증 범위 밖"</li>
+  <li>산업 수치(±1cm, &lt;1s, 픽 카운트)는 전부 벤더 자가 보고 — 독립 벤치마크 없음</li>
+  <li>ifm.com 직접 fetch가 403 차단되어 일부 인용은 검색 인덱스·지역 미러로 확인</li>
+  <li>기각 1건: "포켓 밴드 방식 = 적재물과 무관"의 강한 서술(1-2) — 신중한 추론으로만 사용할 것</li>
+  <li>시효: ifm은 O3D3xx→O3R 세대 이행 중(문서 혼재), Hyster-Yale/Balyo 제휴는 ~2023 종료</li>
+  <li>미해결 질문: SICK/VisionNav/Toyota의 알고리즘 상세, ToF vs LiDAR 랩 필름 독립 실측, 학술 방법의 랩핑 실증(대부분 미취급)</li>
+</ul>
+
+<h2><span class="no">8</span>주요 출처</h2>
+<table>
+  <tr><th>축</th><th>출처</th></tr>
+  <tr><td>ifm 1차 문서</td><td><a href="https://www.ifm.com/binaries/content/assets/us/pdfs/resources/white-papers/robotics_ifm_techpaper.pdf">PDS 백서</a> · <a href="https://www.ifm.com/gb/en/shared/technologies/o3d/pallet-detection-system-pds/software-design">software-design</a> · <a href="https://www.ifm.com/de/en/shared/technologies/o3d/pallet-detection-system-pds/integration-of-the-pds">integration</a> · <a href="https://ifm3d.com">ifm3d(getPallet/findPocket/findCorners)</a></td></tr>
+  <tr><td>SICK·벤더</td><td>Visionary-T Mini AP Pallet Pocket Detection 공식 헬프(2023) · <a href="https://ottomotors.com/lifter">OTTO Lifter</a> · <a href="https://seegrid.com/technology/">Seegrid</a> · <a href="https://www.balyo.com/">Balyo</a></td></tr>
+  <tr><td>학술 리뷰</td><td><a href="https://www.mdpi.com/2079-9292/14/1/153">Fraifer et al., Electronics 14(1):153 (2025) — 자율지게차 리뷰</a></td></tr>
+  <tr><td>학술 방법</td><td><a href="https://inria.hal.science/hal-02557329">2D LRF+ML (INRIA)</a> · <a href="https://www.mdpi.com/1424-8220/22/20/8019">템플릿 정합 (Sensors 2022)</a> · <a href="https://arxiv.org/pdf/2210.06001">Fraunhofer 합성 RGB 6D</a> · <a href="https://arxiv.org/html/2503.22965v1">Auckland keypoint→PnP (2025)</a> · TUM SOLI 2018 · Navigator 2024 · hypergraph keypoint (IEEE 2026)</td></tr>
+  <tr><td>데이터셋</td><td><a href="https://github.com/tum-fml/loco">LOCO</a> · EUR 팔레트 2D 스캔(Data in Brief)</td></tr>
+</table>
+<p class="small">생성: deep-research 워크플로 105 에이전트(재개 2회, 캐시 복원 포함) · 원자료: 세션 journal(주장 104건 전문) · 이전 세션 확정분(findPocket 강건성 등 5건) 병합.</p>
+
+</div>
+</body>
+</html>
