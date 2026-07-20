@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shape6D — 산업 강인화 개선 계획 (v1.0)</title>
+<style>
+  :root {
+    --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb;
+    --accent:#0b5fff; --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e4;
+    --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif; color:var(--ink); background:var(--bg); line-height:1.65; font-size:15px; }
+  .wrap { max-width:1080px; margin:0 auto; padding:40px 28px 80px; }
+  h1 { font-size:28px; margin:0 0 4px; letter-spacing:-0.5px; }
+  h2 { font-size:20px; margin:48px 0 12px; padding-top:18px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:16px; margin:22px 0 8px; }
+  p { margin:8px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:22px; }
+  table { width:100%; border-collapse:collapse; margin:12px 0 8px; font-size:12.8px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 10px; font-weight:600; }
+  td { padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.c, th.c { text-align:center; }
+  .tag { display:inline-block; border-radius:5px; padding:1px 7px; font-size:11px; font-weight:700; white-space:nowrap; }
+  .tag.v { background:var(--good-soft); color:var(--good); }
+  .tag.m { background:var(--warn-soft); color:var(--warn); }
+  .tag.u { background:var(--panel); color:var(--sub); border:1px solid var(--line); }
+  .tag.x { background:var(--bad-soft); color:var(--bad); }
+  .tag.s { background:var(--shape-soft); color:var(--shape); }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:16px; letter-spacing:-0.4px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good { border-left:4px solid var(--good); }
+  .stat.warn { border-left:4px solid var(--warn); }
+  .stat.bad { border-left:4px solid var(--bad); }
+  .note { border:1.5px dashed var(--shape); border-radius:10px; background:var(--shape-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .caution { border:1.5px dashed var(--warn); border-radius:10px; background:var(--warn-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .small { font-size:12.5px; color:var(--sub); }
+  a { color:var(--accent); text-decoration:none; word-break:break-all; }
+  a:hover { text-decoration:underline; }
+  ul { margin:8px 0; padding-left:22px; }
+  li { margin:4px 0; }
+  code { background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:12px; }
+  @media (max-width:760px){ .hero { grid-template-columns:repeat(2,1fr); } }
+  @media print { .wrap { max-width:100%; } h2 { break-before:page; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>산업 강인화 개선 계획 — 제로샷 파이프라인 v1</h1>
+<p class="meta">v1.0 · 2026-07-21 · 방법: 3단 멀티에이전트 워크플로 — 현황 판독 3에이전트(설계 문서·평가 증거·코드 확장점) → 6개 렌즈 제안 34건 → 항목별 적대 검증(공리 A1~A4 정합 · 인용 수치의 <code>results.json</code>/코드 라인 재현 대조 · Orin 실현성). 판정: <b>keep 12 · revise 22 · drop 0</b> — revise는 기각이 아니라 구체 수정 지시이며 본 문서에 전부 반영됨 ·
+관련: <a href="05_concept_review.html">05 컨셉 리뷰</a> · <a href="07_loaded_wrapped_pallet_survey.html">07 서베이</a> · <a href="08_mr6d_eval_report.html">08 MR6D 평가</a></p>
+
+<div class="hero">
+  <div class="stat good"><b>출발점 = 실증 2건의 정식 채택</b><span>직립 프리이어 45→55%, 증거 게이트 정밀도 51→94% — 아직 코드에 미채택</span></div>
+  <div class="stat good"><b>본질 해법 = 하부 밴드 모드</b><span>산업 표준("적재물은 안 본다")과 동일 원리 — Phase B 4개 티켓 체인</span></div>
+  <div class="stat bad"><b>최대 기술 리스크 = S4 레이턴시</b><span>실측 757~1,589ms vs 예산 40~60ms — 다중가설 개선 전부의 전제 조건</span></div>
+  <div class="stat warn"><b>측정이 곧 강인성</b><span>오수락 주장에 통계 CI를 — 벤치 동결·야간 FAR·엔벨로프 곡선</span></div>
+</div>
+
+<h2><span class="no">0</span>계획 한눈에</h2>
+<p>"산업 현장에서 강인한 제로샷"을 4개 조건으로 정의하고, 각 조건을 실행 단계(Phase)로 배정한다:
+① <b>틀렸을 때 틀렸다고 안다</b>(오수락 억제 + 행동 지시가 있는 보류) ② <b>적재·랩핑이라는 실제 운용 조건에서 작동한다</b>
+③ <b>Orin NX &lt;1s 예산 안에서 돈다</b> ④ <b>주장에 통계적 근거가 있다</b>(회귀·CI·엔벨로프).</p>
+
+<table>
+<tr><th style="width:8%">Phase</th><th style="width:23%">이름</th><th style="width:12%">기간(공수)</th><th style="width:33%">내용</th><th>통과 게이트</th></tr>
+<tr><td class="c"><b>A</b></td><td><b>정식 채택 + 측정 기반</b></td><td>1~2주</td><td>실증된 직립 프리이어·증거 게이트를 config로 채택, 판정 체계(UNCERTAIN 사유·행동), 벤치 동결·스윕 도구</td><td>프로파일만으로 55.3%·정밀도 93.8% 재현, 회귀 게이트가 직립 OFF 대조군에서 fail 시연</td></tr>
+<tr><td class="c"><b>B</b></td><td><b>하부 밴드 부분 정합 모드</b></td><td>3~4주</td><td>S0 밴드 온보딩 → S1 병합 사멸 제거 → S2 밴드 정합 → S4 밴드 검증 (4티켓 체인)</td><td>적재 장면 5/23 → ≥12/23, 바닥 장면 비열화, 적재 정답의 게이트 통과 0% → ≥60%</td></tr>
+<tr><td class="c"><b>C</b></td><td><b>레이턴시 복원 + 앨리어싱 방어</b></td><td>3주 (B와 병행)</td><td>계층화 ICP, 근사대칭 2계층·앨리어스 가설, 모호성 판정, torch 포팅(M1)</td><td>S4 p50 ≤200ms(numpy), 플립 ACCEPT 8→0, coarse 정답 포함률 ≥95%(yaw 스윕)</td></tr>
+<tr><td class="c"><b>D</b></td><td><b>센서 엔벨로프 + 데이터 체계</b></td><td>지속 트랙</td><td>sparse_bench 승격(필름·적재 매트릭스), 거리×σ 엔벨로프, 품질 플래그, 자체 실측셋, 보정 루프</td><td>운용점 n=200 오수락 Wilson 상한 ≤5%, σ=8mm 스펙 성립 최대 거리 문서화</td></tr>
+</table>
+
+<table>
+<tr><th>지표</th><th class="c">현행 (직립 ON)</th><th class="c">Phase A 직후</th><th class="c">Phase B+C 후 목표</th></tr>
+<tr><td>MR6D 150프레임 성공률 (ADD&lt;0.1D)</td><td class="c">55.3%</td><td class="c">55.3% 유지</td><td class="c"><b>≥65%</b></td></tr>
+<tr><td>적재 장면 000006</td><td class="c">5/23</td><td class="c">—</td><td class="c"><b>≥12/23</b></td></tr>
+<tr><td>ACCEPT 정밀도</td><td class="c">51% (소프트 임계)</td><td class="c"><b>≥90%</b> (게이트 코드 채택)</td><td class="c">≥94% 전 도메인 (밴드 재스윕 포함)</td></tr>
+<tr><td>플립 ACCEPT</td><td class="c">8건 (게이트 미적용 기준)</td><td class="c">게이트가 대부분 차단</td><td class="c"><b>0건</b> (게이트 미적용 기준으로도)</td></tr>
+<tr><td>S4 벽시계 p50</td><td class="c">757~1,589ms (numpy)</td><td class="c">—</td><td class="c"><b>≤200ms</b> (numpy) → torch로 Orin &lt;1s 경로</td></tr>
+<tr><td>비ACCEPT 프레임의 사유·행동 코드</td><td class="c">없음</td><td class="c"><b>100%</b></td><td class="c">100% + 표적 재관측 유효성 리포트</td></tr>
+</table>
+
+<h2><span class="no">1</span>진단 — 실패 모드와 대응 매핑</h2>
+<p>모든 수치는 검증 에이전트가 <code>results.json</code>/<code>results_upright.json</code> 재집계와 코드 라인 대조로 재현 확인한 값이다.</p>
+
+<table>
+<tr><th style="width:24%">실패 모드</th><th style="width:33%">실측 근거</th><th style="width:24%">근본 원인</th><th>대응 티켓</th></tr>
+<tr><td><b>S1 병합 사멸</b> (모드 B)</td><td>gated_out — 000006 22/23, 000005 22/31, 바닥 장면도 27·31·15/32 (모드 B 전체 117/150이 후보 0)</td><td>장면 전체가 단일 클러스터(대각 5.6~7.0m)로 병합 → 크기 상한 하드 리젝. 바닥 평면 파라미터는 버려짐</td><td class="c"><b>BAND-2</b></td></tr>
+<tr><td><b>적재 끌려내림</b></td><td>000006 직립 ON 실패 18건 전원 ACCEPT, e_pos 중앙값 304mm ≈ 팔레트 높이(144mm)의 2.1배</td><td>풀모델 TDF가 밴드-only 관측에 상판 점수 지형을 강요 → 구조적 오프셋 해</td><td class="c"><b>BAND-1·3·4</b></td></tr>
+<tr><td><b>오수락 과관대</b></td><td>ACCEPT 132 중 오수락 65 (정밀도 51%). p_conf는 포화(오수락 0.999 vs 정답 1.000)로 변별력 0</td><td>free_viol 소프트 임계 0.15 과관대 + 임계 3원 발산(코드 0.15 / 독스트링 0.05 / yaml 0.05 미주입)</td><td class="c"><b>GATE-1</b> (+BAND-4)</td></tr>
+<tr><td><b>180° 플립</b></td><td>22건 → 직립 ON 8건(전원 ACCEPT). 06: inlier 1.00·cov 1.00·fv 0.013으로도 ACCEPT</td><td>θ 축퇴(뷰당 argmax 1개) + 근사대칭 미등록 → coarse에 정답 부재, 뒷면 미관측 시 증거 동률</td><td class="c"><b>PRIOR-1·ALIAS-1·AMBIG-1</b></td></tr>
+<tr><td><b>병진 앨리어스</b> (슬롯 미끄러짐)</td><td>병진 지배 실패 18건. 직립+게이트 잔여 오수락 4건 전원 이 계열(e_pos 192~315mm, 전 지표 완벽 통과)</td><td>널판 주기(EPAL 중심 피치 ~163mm) &gt; jitter ±74mm — 인접 슬롯 basin 전이 불가, 병진 자기유사 장치 부재</td><td class="c"><b>GATE-2·GRAZE-1·HOLE-1</b></td></tr>
+<tr><td><b>세워진 팔레트</b></td><td>000005 7/31 정체 (직립 ON에서도)</td><td>직립 마스크는 flat 자세 특수해 — 안착 자세 일반화 부재</td><td class="c"><b>BAND-6</b></td></tr>
+<tr><td><b>S4 예산 붕괴</b></td><td>실측 757~1,589ms vs §8 예산 40~60ms (13~40배)</td><td>전 가설×전 후보 풀 ICP + 가설당 잉여 스플랫 2회. 지배 비용은 오프셋 루프 (2win+1)²×N_src</td><td class="c"><b>RUN-1·RUN-2</b></td></tr>
+<tr><td><b>랩핑 무측정</b></td><td>검증 이력 전체(04·06·08)에 랩핑 시나리오 0건. 필름 리턴(r&lt;0)은 검증기가 관대 처리 → 침묵 실패</td><td>필름 모델·품질 플래그·벤치 부재. 공개 벤치도 없음(07 §5)</td><td class="c"><b>SENS-1·2, EVAL-2·3</b></td></tr>
+<tr><td><b>게이트 리콜 비용</b></td><td>게이트 채택 시 정답 수락 82→61 (cov&lt;0.90 관여 20건, fv&gt;0.06 11건 — 중앙값 0.080)</td><td>가림·grazing 기인 coverage 미달이 지배 — 재시도가 아닌 관측 개선(밴드 모드·표적 재관측)이 해법</td><td class="c"><b>GATE-3·RUN-4·HOLE-1·EVAL-4</b></td></tr>
+</table>
+
+<div class="note"><b>설계 원리 (07 서베이와의 정합)</b> — 산업계가 수렴한 3원칙을 제로샷 기하 파이프라인으로 번역한다:
+① "적재물은 보지 않는다" → 하부 밴드 부분 정합(Phase B) = A1의 기하 버전 ② "포즈 피팅 전 SW 필터링" → 품질 플래그 확장(SENS-2)
+③ ifm의 "400+ 특수케이스 전문가 튜닝" → 우리는 <b>자동화</b>로 대체: 도메인 프로파일(RUN-3), 온보딩 셀프캘리브레이션(GATE-4), 현장 블랙박스 루프(RUN-5·EVAL-6).</div>
+
+<h2><span class="no">2</span>Phase A — 실증분 정식 채택 + 측정 기반 <span class="tag s">1~2주</span></h2>
+<p>새 알고리즘 없이, <b>이미 실증된 것을 코드·설정으로 굳히고 이후 모든 개선의 자(尺)를 만든다</b>. 전 항목이 공수 S~M이고 상호 독립성이 높아 병렬 진행 가능.</p>
+
+<table>
+<tr><th style="width:14%">티켓</th><th style="width:34%">내용</th><th style="width:36%">검증 반영 사항 (revise 지시)</th><th>수용 기준</th></tr>
+<tr><td><b>EVAL-1</b> <span class="tag v">keep</span><br><span class="small">P0/S</span></td><td>MR6D 150프레임 벤치 동결(<code>protocol_v1.yaml</code> + meta 기록) + <code>eval/report.py</code> 실패 모드 분해 리포터 + 기준선 회귀 게이트(pytest 마커)</td><td>직립 ON은 "팔레트 운용 프로파일 한정 기본값"으로 문구 한정(미결 결정 3 선점 방지). 게이트 리콜 비용(82→61)을 리포터 필수 열로 병기. 게이트 coverage = <b>ICP 최종 대응 coverage</b>임을 필드명으로 고정</td><td>동일 커밋 2회 실행 지표 완전 일치. 직립 OFF 대조군에서 회귀 게이트 fail 시연(플립 8→22 검출). 이후 문서 수치는 전부 리포터 산출물에서</td></tr>
+<tr><td><b>RUN-3 ⊕ GATE-1</b> <span class="tag m">revise</span><br><span class="small">P0/S+S</span></td><td><code>config/loader.py</code> + 조립 팩토리 + <code>profiles/pallet_floor.yaml</code>(직립 ON·게이트 fv≤0.06 ∧ cov≥0.90). ACCEPT 필요조건 계층: 게이트 미충족 → verdict 상한 <b>UNCERTAIN 캡</b>, fv&gt;0.15 → 즉시 REJECT. p_conf는 통과자 내부 3단 분기만 담당(필요조건 상쇄 불가). 임계 단일 소스화 + 모드 B <code>view_mask</code> 배선</td><td>"코드 수정 0줄" 정정 — Verifier에 <code>coverage_min</code> 신설(~10줄) 필요. 게이트 실패→UNCERTAIN 매핑을 RUN-4와 공동 설계(재시도 트리거 성립 조건). yaml s4 스키마를 코드의 4단 ICP 스케줄 구조로 현대화. 게이트 파라미터를 모드별 네임스페이스(full/band)로 선반영. <code>all_equivalent</code>·직립 기본값에 "확정 대기" 주석 유지</td><td>실효값-yaml 왕복 테스트 0건 불일치. 프로파일만으로 55.3%·정밀도 ≥90% 재현. 게이트 미충족 정답의 ≥90%가 REJECT 아닌 UNCERTAIN. <code>config_hash</code>가 결과 JSON에 기록</td></tr>
+<tr><td><b>PRIOR-1</b> <span class="tag v">keep</span><br><span class="small">P0/S</span></td><td>직립 프리이어 정식 채택: <code>pose_prior.view_mode ∈ {upright, free, band}</code> 설정화, 모드 B 관통, 전 후보 REJECT 시 전뷰(42) 승급 예외 경로(1.5s 예외 트랙)</td><td>실측상 하드 마스크가 세워진 장면도 악화시키지 않음(4→7, 플립 9→0) — 승급 경로는 필수가 아닌 안전장치로 <b>기본 OFF + 발동률 리포트</b>부터. 승급이 되살린 플립 뷰는 AMBIG-1 연동을 채택 조건으로</td><td>모드 B에서 --upright가 실제 반영(뷰 27/42 로그). 모드 A 재현: ≥55%·플립 ≤8. 03 §11이 이미 의무화한 조항의 이행임</td></tr>
+<tr><td><b>GATE-3 ⊕ RUN-4</b> <span class="tag m">revise</span><br><span class="small">P0/S+M</span></td><td>판정을 행동 지시로: 사유 코드 enum {LOW_COVERAGE, HIGH_FREE_VIOL, LOW_INLIER, DEGENERATE, AMBIGUOUS_ALIAS, LOW_CONF} + <code>next_action ∈ {retry_inplace, recapture, reapproach(방향 힌트), abort}</code> 계약. 재시도 2경로: (a) 게이트 <b>경계 실패는 top1 자체를</b> 강화 예산(iter 15·τ_assoc×2)으로 재정련 — 리콜 회복 주경로, (b) 차순위 가설 재시도는 모호(top1-top2 격차&lt;ε) 전용. 부스트 후 게이트 통계는 <b>표준 τ로 재산출</b>(오수락 재유입 차단)</td><td>원안의 "차순위 재시도로 +5건"은 메커니즘·목표 불일치로 기각 — top1이 이미 정답인 21건에 2위를 다듬는 건 회복 경로가 아님. 기대 효과 +1~3건으로 하향, 주 가치를 "사유 코드 기반 표적 재관측"으로 재정의(LOW_COVERAGE→시점 변경 권고가 곧 밴드 모드 필요성의 정량화). 증거 정정: fv&gt;0.06 11건의 중앙값은 0.080(경계 아님)</td><td>전 비ACCEPT에 사유·행동 코드 100%. 재시도 신규 오수락 0. 재시도 추가 시간이 1.5s 예외 경로 예산 내(StageTimer)</td></tr>
+<tr><td><b>GATE-5</b> <span class="tag v">keep</span><br><span class="small">P1/M · A에서 착수</span></td><td><code>sweep_gate.py</code>(저장된 stats로 재실행 없는 운영점 곡선) + 야간 합성 대량 시행 FAR 게이트 + MR6D 원커맨드 재현 집계 + 의도적 임계 완화 시 적색 전환 canary</td><td>2단계 목표 명문화: 1단계 200시행 Wilson 상한 &lt;2% → 최종 400+시행 상한 &lt;1%(02 목표 인증). M3-4 ROC·M0-4 레이턴시 게이트를 "실행형으로 흡수"로 로드맵 정리. GATE-1과 동시 착수(측정 인프라가 전 티켓의 acceptance를 수행)</td><td>sweep가 README 표(65 통과/오수락 4)를 ±1건 내 재생산. canary 적색 전환 확인</td></tr>
+</table>
+
+<h2><span class="no">3</span>Phase B — 하부 밴드 부분 정합 모드 <span class="tag s">3~4주 · 4티켓 체인</span></h2>
+<p>적재 팔레트의 본질 해법. 07 §6 스케치를 스테이지별 티켓으로 구체화한 것으로, <b>순서 의존이 강하다</b>: BAND-1(온보딩 산출물) → BAND-2(후보 소생) → BAND-3(정합) → BAND-4(검증·게이트 재보정).</p>
+
+<table>
+<tr><th style="width:14%">티켓</th><th style="width:34%">내용</th><th style="width:36%">검증 반영 사항</th><th>수용 기준</th></tr>
+<tr><td><b>BAND-1</b> <span class="tag m">revise</span><br><span class="small">P0/M(S에서 상향)</span></td><td>S0 밴드 온보딩: 정준 up축 기준 하부 밴드 점 추출(상판 상면 제외, 블록·포켓 내벽·널판 전면 포함) → <code>idx_band</code>·<code>idx_band_verify[2048]</code>·밴드 TDF·<code>band_tpl_center</code> 캐시(스키마 v2). <code>--band-axis</code> override 제공</td><td><b>핵심 수정</b>: 원안의 수평 링 뷰(고도 0°±10°)는 MR6D 실측 고도(000006 중앙값 29°, ±10° 커버 0%)와 정면 불일치 — 뷰 집합을 (a) 기존 icosphere 직립 서브셋 27뷰에 밴드 표면점만 재굽기 또는 (b) 다행 고도 {0,15,30,45,60}°링으로 교체. <b>배포 지오메트리(포크리프트 수평)와 평가 지오메트리(부감)를 구분</b>해 대상 장면 고도 분포 산출을 acceptance 선행 절차화. TDF의 D 정규화는 풀모델 고정. 공수 S→M 정정</td><td>idx_band에 상판 상면 0%. 스키마 v2 저장·로드 왕복. 밴드-only 합성 관측에서 밴드 정합 s_depth가 풀모델 대비 +0.1↑</td></tr>
+<tr><td><b>BAND-2</b> <span class="tag m">revise</span><br><span class="small">P0/M</span></td><td>S1 병합 사멸 경로 제거: RANSAC 바닥 평면 (n,d) 보존 → 크기 상한 위반 클러스터에 높이 슬랩 분리 → SizeGate 밴드 모드(투영 extent·높이 분리 게이팅) → <code>load_above</code> 플래그 전파</td><td><b>재프레이밍</b>: 실측상 병합체는 "팔레트+적재물"이 아니라 장면 전체(5.6~7.0m) — 절차를 "슬랩 추출→<b>voxel 재클러스터</b>→서브클러스터별 분리 게이팅"으로 명시해야 함. 000005(세워짐) acceptance는 삭제하고 BAND-6으로 이관. 바닥 장면 acceptance를 "gated_out ≤5/32급 회복"으로 승격 — 이 티켓의 실제 가치는 <b>모드 B 전 장면 소생</b>(117/150 사멸 해소)</td><td>000006 gated_out 22/23 → ≤2/23. 바닥 장면 gated_out ≤5/32급 회복. 합성 접촉·적재 분리 성공률 ≥90%</td></tr>
+<tr><td><b>BAND-3</b> <span class="tag m">revise</span><br><span class="small">P0/M</span></td><td>S2 밴드 한정 TDF 정합 + 컨텍스트 스위칭: <code>load_above</code> 시 matcher를 밴드 TDF로 교체(코드 무수정 — 인자 교체), 비적재는 풀모델 유지, 불확실 구간은 양 경로 top-k 합집합을 S4 증거 비교에</td><td>BAND-1 수정안(뷰 집합 교체)을 <b>전제 조건으로 명기</b> — acceptance에 "대상 장면 최근접 밴드 뷰 고도 오차 ≤ icosphere 양자화(~20°)" 사전 검증 추가. 이중 경로 가설 수를 <b>전역 예산(총 k≤5)</b>으로 캡(BAND-6과 공유) — S4 예산 악화의 정량 통제</td><td>000006 성공 ≥12/23 (BAND-1·4 결합) ∧ 바닥 장면 −2건 이내. 합성 "밴드 위 박스 적재" 10시행 ≥8</td></tr>
+<tr><td><b>BAND-4</b> <span class="tag v">keep</span><br><span class="small">P0/M</span></td><td>S4 밴드 한정 검증: coarse 포즈 기준 관측 높이 슬랩 필터 → ICP coverage/inlier 분모를 밴드-정합 관측으로 재정의, ICP 타깃 <code>master[idx_band]</code>·검증점 <code>idx_band_verify</code>, free_viol의 frame_obs는 전 프레임 유지. <b>게이트 모드 분리</b>: 바닥 모드는 실증값, 밴드 모드는 동일 방법론 재스윕</td><td>6개 제안 중 증거 최강(000006 정답 5건의 현행 게이트 통과 0건 — cov 0.80·fv 역전 실측). 수정 2건: acceptance ≥60%에 "BAND-3 결합 시" 조건 명기 + 슬랩 단독 기여 분리 리포트. stride 4→2 대신 <b>idx_band_verify 증량(2048→4096)</b>을 1차안으로(홀 채움發 가짜 free_viol 방지). <code>verify_mode</code> 태그를 results 스키마에 — 바닥/밴드 스윕 비호환의 구조적 방지</td><td>ACCEPT 정밀도 ≥90% ∧ 바닥 리콜 −5% 이내 ∧ 적재·세워짐 정답의 게이트 통과 0%→≥60%(결합 조건)</td></tr>
+</table>
+
+<div class="caution"><b>순환 리스크 관리</b> — 슬랩 필터는 coarse 포즈 조건부(오된 coarse → 오된 슬랩): 슬랩 폭 관대(+30mm)·ICP 2단계 후 재필터 1회·필터 전후 coverage 격차를 진단 특징으로 노출. coverage 분모 재정의로 기존 게이트 스윕 수치와 비호환 — <b>밴드 모드 전용 재스윕 필수</b>(바닥 수치 재사용 금지).</div>
+
+<h2><span class="no">4</span>Phase C — 레이턴시 복원 + 앨리어싱 방어 <span class="tag s">3주 · B와 병행 가능</span></h2>
+<p>RUN-1이 이 Phase의 <b>선행 전제</b>다 — ALIAS-1·GATE-2·BAND-3/6·PRIOR-1 승급이 전부 가설 수를 늘리는데, S4는 이미 예산 13~40배 초과 상태. 검증자가 전 항목에 "계층화 ICP 결합 조건"을 달았다.</p>
+
+<table>
+<tr><th style="width:14%">티켓</th><th style="width:34%">내용</th><th style="width:36%">검증 반영 사항</th><th>수용 기준</th></tr>
+<tr><td><b>RUN-1</b> <span class="tag m">revise</span><br><span class="small">P0/M</span></td><td>계층화 검증: 스테이지 A = 전 가설 coarse 2단 + 중간 증거 산출 → 스테이지 B = 상위 2(~3)개만 fine 2단 + 풀 밀도. 잉여 사전 스플랫 호출 삭제. 선택 지표 단일 소스화. StageTimer 배선</td><td><b>비용 모델 정정</b>: 지배 비용은 splat이 아니라 <code>_associate</code>의 (2win+1)²×N_src 오프셋 루프 — 타깃 서브샘플로는 안 줄어듦. 스테이지 A에 <b>source 서브샘플(≤512pt)·coarse stride 상향(4→8)·별도 win 캡</b> 추가. 절감 지표를 "오프셋-패스×N_src"로 재정의. top-2 컷 임계는 coarse-τ 기준으로 MR6D 재실측 후 확정</td><td>최종 선택 ≥95% 일치 ∧ 성공률 낙폭 ≤1pt ∧ 오수락 +0 ∧ S4 p50 ≤200ms(numpy)</td></tr>
+<tr><td><b>RUN-2</b> <span class="tag v">keep</span><br><span class="small">P0/L · A 직후 착수하는 병행 트랙</span></td><td>M1 실행안: S2 TDF match 배치 gather·ICP _associate·스코어러를 torch 네이티브 op로 포팅(torch_scatter 금지 준수), numpy↔torch 동등성 테스트, <code>eval/latency</code> 승격 + nightly 레이턴시 회귀 게이트</td><td>수용 기준 ③을 "스테이지별 분해 기반 Orin 환산 리포트 + 예산표 대조 게이트"로 재표현(&lt;1s를 산출물 요건으로 전제하지 말 것). TRT ScatterElements/grid_sample 지원 버전 확인(03 §11 미결)을 선행 체크리스트로</td><td>성공률 ±1pt·선택 일치 ≥98%. RTX S2 ≤15ms/후보·e2e p50 ≤150ms. 고의 퇴행 주입 시 게이트 fail</td></tr>
+<tr><td><b>ALIAS-1</b> <span class="tag v">keep</span><br><span class="small">P0/M</span></td><td>S0 대칭 검출 2계층화: 정밀 등가(<code>sym_rots</code>, dedupe 허용)와 근사-앨리어스 군(<code>alias_rots</code>, dedupe <b>금지</b>·가설 생성원) 분리 → 온라인에서 top-1에 앨리어스 가설 주입(t 보정 <code>t'=t+R(c−A_k·c)</code>, 검산 완료) + pass2 θ 상위 2개 유지(이격 ≥45°)</td><td>정본 지표는 (a) coarse top-k 정답 포함률 ≥95%(yaw 스윕)로 못박기 — 성공률 ≥60%는 게이트/AMBIG-1 결합 config에서만 측정. 0.6τ/2τ 경계는 팔레트+MegaPose 양쪽 스윕으로 확정. 대칭 중심 오프셋 단위테스트는 "타당을 넘어 필수"(잠복 버그)</td><td>yaw 0~360° 스윕 top-k 정답 포함률 ≥95%(현행 252° 케이스 0%). 근사-C4 케이스(06 실패②) dedupe 생존. 가설 p95 ≤8</td></tr>
+<tr><td><b>AMBIG-1</b> <span class="tag m">revise</span><br><span class="small">P0/M</span></td><td>모호성 판정: top1/top2 _quality 격차 Δq + 판별영역 관측성 ρ(두 가설 zbuf 차이 셀 중 실제 관측된 비율) — 구별 불가면 정직 UNCERTAIN + <code>diag.ambiguity</code> 기록. 대칭 등가 정책(<code>all_equivalent</code>)을 코드 스위치로 구체화(미결 결정 2 대기)</td><td>표적 정정: 직립+게이트 잔여 오수락 4건은 플립 0(전부 병진 계열) — acceptance를 "<b>게이트 미적용 기준 플립 ACCEPT 8→0</b>"으로 교체(게이트와 독립 측정). 쌍 존재 의존 명시: 플립 쌍은 ALIAS-1, 병진 계열은 GRAZE-1 선행이 전제. ρ 판별 셀에 <b>실루엣 배타 셀 포함</b>(플립 판별의 주 신호원)</td><td>게이트 미적용 직립 기준 플립 ACCEPT 8→0 ∧ 정답 ACCEPT 감소 ≤3 ∧ 환산 재촬영률 ≤10%</td></tr>
+<tr><td><b>GATE-2</b> <span class="tag m">revise</span><br><span class="small">P0/M</span></td><td>병진·플립 앨리어스 명시 주입 + 마진 게이트: S0에서 축별 병진 자기상관 극소(널판 피치) 등록 → S4에서 best에 앨리어스 변환 적용한 경쟁 가설 주입 → 비등가 경쟁자와 마진 &lt; θ_m이면 UNCERTAIN 강등(AMBIGUOUS_ALIAS)</td><td>수치 정정(e_pos 192~315mm·cov 0.926~0.955). <b>dedupe 우회 규약 명기</b>(15°∧0.05D 창이 피치급 앨리어스를 흡수 — 태깅 후 통과 또는 분리 주입). 마진 비교는 동일(저해상) 스케줄 산출 _quality로, 근접 시에만 풀 스케줄 승격하는 2단 규약. MegaPose ≤15%는 하드 acceptance에서 추적 지표로 강등. RUN-1을 선행 전제로 승격</td><td>게이트 잔여 오수락 4→≤1 ∧ 정답 손실 ≤3. 합성 슬롯-시프트·플립 주입 케이스 100% UNCERTAIN 이상 강등</td></tr>
+</table>
+
+<h2><span class="no">5</span>Phase D — 센서 엔벨로프 + 데이터 체계 <span class="tag s">지속 트랙</span></h2>
+
+<table>
+<tr><th style="width:14%">티켓</th><th style="width:36%">내용</th><th style="width:32%">검증 반영 사항</th><th>수용 기준</th></tr>
+<tr><td><b>EVAL-2</b> <span class="tag v">keep</span><br><span class="small">P0/M</span></td><td><code>eval/sparse_bench/</code> 승격: 씬 생성기(거리·yaw·접촉·적재·세워짐) × 센서 모델(고정 격자 + 2성분 노이즈 + 캘리브 바이어스 + mixed-pixel + 필름) × 조건당 n≥200 Wilson CI 리포트</td><td>acceptance의 판정 구성(게이트 ON/OFF·직립)을 프로토콜에 고정 명시(구성에 따라 결과 급변). sparsified-BOP 공정 비교는 범위 밖임을 명시("승격 완료" 오해 방지)</td><td>σ×필름×적재 매트릭스 자동 생성 + 셀별 CI 상한. 운용점 클린 n=200 오수락 CI 상한 ≤5%</td></tr>
+<tr><td><b>SENS-3</b> <span class="tag v">keep</span><br><span class="small">P0/S</span></td><td>거리(2~5m)×σ{5,8,15}×격자 위상 8샘플 엔벨로프 곡선: sparsify에 위상 인자·레이 방향 노이즈·고정 패턴 σ_f 추가. 3m에서 수직 격자 간격 22.0mm = 데크 보드 두께 22mm(CAD 실측) — 위상 취약성의 통제 측정</td><td>"위상 미샘플링" 표현을 "통제 위상 스윕 부재"로 정정. HFOV 가장자리 수치는 RFQ 회신 후 기재. 오프센터 시나리오 추가가 이 항목의 실가치</td><td>σ=8mm 스펙 성립 최대 거리 명시. 3m 위상 최악-평균 격차 정량화. nightly 200시행 게이트 등록</td></tr>
+<tr><td><b>SENS-1</b> <span class="tag v">keep</span><br><span class="small">P0/M</span></td><td>수축필름 물리 모델 벤치: 브리징 standoff d_gap∈[10,80]mm(τ_z=24mm를 양쪽으로 걸침 — ICP 편향/침묵 수락 두 레짐 분리 측정) × 투과 오프셋 × p_f 스윕. "검증기 침묵" 정량화</td><td>두 레짐(standoff&lt;τ_z 편향 / &gt;τ_z 침묵) 분리 집계를 리포트에 명시 — SENS-2 튜닝 근거 정밀화. sparsify 확장 4건(SENS-1·3·5·6)의 인자 설계를 1회 통합 리팩터로</td><td>필름 OFF 대비 열화 곡선 + 필름 유발 오포즈 중 ACCEPT 비율 보고(침묵 정량화)</td></tr>
+<tr><td><b>SENS-2</b> <span class="tag m">revise</span><br><span class="small">P0/M</span></td><td>품질 플래그 확장: BLOOM(강도 이상+깊이 이탈)·FILM_MIXED(전방 오프셋+분산 과대)·GHOST_SUBFLOOR(바닥 평면 아래 미러 허상) + S1/ICP 소비 배관 — 산업계 "SW 필터"의 대응물</td><td><b>배관 정정</b>: GHOST_SUBFLOOR는 S1 평면 적합 직후 2단계 플래그 갱신으로(flag_quality는 S1 이전 실행 — NEAR_MASK_BOUNDARY 선례). 검출 recall을 p_f 층화로 재기술(고밀도 랩핑에선 필름이 컨센서스가 되어 역전). EDGE_MIXED와의 중복 판정 단위테스트</td><td>저p_f(≤0.3) 검출 recall ≥80%·클린 오플래그 ≤5%. MR6D 무회귀(±2건)</td></tr>
+<tr><td><b>EVAL-3</b> <span class="tag m">revise</span><br><span class="small">P0 분할</span></td><td>자체 적재·랩핑 실측셋 v1: 무마커 GT(바닥 ChArUco + 빈 상태 사전 등록 → 상태만 변경하는 <b>통제쌍</b> — 동일 포즈의 빈↔적재↔랩핑), BOP 포맷으로 기존 드라이버 무수정 재사용</td><td><b>P0 분할</b>: P0 = 프로토콜 문서 + annotate/verify_gt 골격 + 2~3m 파일럿 수십 프레임. 풀 수집(300+)은 P1. GT 예산 거리별 차등(코어 동결은 2~3m 한정, 5m는 완화 예산 보조 스플릿). 프레임별 GT 불확도 병기 — 스펙(10mm/1°) 판정은 GT 불확도가 스펙 1/3 이하인 프레임 한정. <b>사용자 결정 1(적재·랩핑 범위) 확정이 매트릭스 동결의 선행 게이트</b></td><td>v1 동결 ≥100프레임(적재 ≥30·랩핑 ≥30·통제쌍 ≥15조) + GT 검증 리포트. 통제쌍 낙폭 조건 분리 보고</td></tr>
+<tr><td><b>EVAL-4</b> <span class="tag v">keep</span><br><span class="small">P1/M</span></td><td>신뢰도 보정 루프(M3-3 재정의): 전 가설 특징 로깅(negative 자동 수확 — 이미 계산돼 버려지는 중) → 3도메인 보정셋 → IRLS 적합(모드별) → risk-coverage 곡선으로 하드 게이트와 지배 관계 판정. 하드 게이트는 하한 안전망으로 병치</td><td>EVAL-2 완료를 보정셋 선행 조건으로 명시. v0-geo 모드 특징 정리: s2_sem 결손과 s3_match 공선(TDF 점수 유래)을 구분. "≥94%"는 "베이스라인(93.8%) 이상"으로 표기(반올림 게이트 함정 회피)</td><td>장면 교차 홀드아웃에서 정밀도 베이스라인 이상 ∧ 정답 수락 ≥61 또는 risk-coverage 지배 시연</td></tr>
+<tr><td><b>EVAL-5</b> <span class="tag m">revise</span><br><span class="small">P1/S</span></td><td>3티어 수용 매트릭스(랩/파일럿/양산) + 레이턴시 회귀 게이트 배선(StageTimer → results meta → ±20% 게이트)</td><td><b>방법론 교체</b>: 티어 수치를 선험 목표가 아니라 "EVAL-1 동결 베이스라인 − 회귀 마진"으로 재정의(예: 정밀도 ≥ base−1pt). 미실측 셀은 "측정→동결→게이트화" 2단 절차, 그전엔 게이트 없음 표기. 개선 목표(적재 ≥60% 등)는 pass/fail에서 분리된 target 열로. Orin 환산은 M0-2 실측 계수 전 'unverified' 라벨 강제</td><td>Tier-L 자동 pass/fail 출력. §8 레이턴시 표가 실측 기반으로 재작성</td></tr>
+</table>
+
+<h2><span class="no">6</span>후속 백로그 — P1·P2</h2>
+<table>
+<tr><th style="width:14%">티켓</th><th style="width:10%" class="c">우선순위</th><th style="width:44%">내용 요약 (검증 수정 반영)</th><th>착수 조건</th></tr>
+<tr><td><b>BAND-6</b> <span class="tag m">revise</span></td><td class="c">P1/M</td><td>안착 자세 열거(trimesh <code>compute_stable_poses</code>) 기반 뷰 프리이어 일반화 — 세워진 팔레트(000005 ≥11/31 목표). 클러스터 중력축 extent로 자세 모드 1~2개 사전 선별을 기본 경로로, 전역 가설 예산(총 k≤5) 공유, 중력 폴백 명시. <b>배관 정식화 부분(view_mask 관통·config화)은 떼어 PRIOR-1에 선행 포함</b></td><td>RUN-1 + 미결 결정 3</td></tr>
+<tr><td><b>HOLE-1</b> <span class="tag m">revise</span></td><td class="c">P1/M</td><td>free-space를 solid/hole 분리: fv_solid 하드 게이트 복원(리콜 비용 실측 1건뿐 — 원안 0.05 하드보다 강한 근거) + hole_consistency 판별 신호. coverage 리콜 회복 파트는 "정답 ICP coverage가 왜 0.90 미달인가" 원인 분석으로 재설계(스플랫 coverage는 게이트에 안 쓰임 — 검증에서 인과 절반 기각)</td><td>Phase A 게이트 채택 후</td></tr>
+<tr><td><b>GRAZE-1</b> <span class="tag m">revise</span></td><td class="c">P1/M</td><td>슬롯 주기 병진 앨리어스: S0 병진 자기유사 검출 + ICP H-스펙트럼 약구속 방향의 이산 대안 가설. <b>선행 게이트: 반나절 귀속 검증</b>(18건의 병진 오차 벡터를 모델 좌표로 회전해 보드 법선축·피치 정수배 정합 판정 — 슬립 서명 과반 미만이면 티켓 축소). 피치는 EPAL 실기하 ~163mm로 정정</td><td>귀속 검증 통과 시</td></tr>
+<tr><td><b>BAND-5</b> <span class="tag m">revise</span></td><td class="c">P1/M</td><td>수축필름 대응 종합: 합성 벤치는 SENS-1과 통합 진행. FILM_SUSPECT 플래그는 EDGE_MIXED 대비 증분 AUC를 합성에서 선입증(사전 게이트), 리콜 acceptance는 실센서 계측(D2-a) 후로 이관. 포켓 3치 증거는 랩핑 컨텍스트 분기 재설계(비랩핑=위반 증거, 랩핑=중립)</td><td>SENS-1 + D2-a</td></tr>
+<tr><td><b>SENS-4</b> <span class="tag m">revise</span></td><td class="c">P1/M</td><td>바닥 평면 프리이어(pitch/roll 구속 — 5m 1.5°→≤1°): <b>각도 게이트 필수 승격</b>(추정 상향축∠바닥노멀 &lt; 25°일 때만 적용 — 세워진 팔레트 회귀 차단, 검증에서 원안 결함 확인). 재실행 변형 폐기, 가상 구속 행 변형만. 평면 메타는 SENS-2·5와 단일 스키마로 1회 구현</td><td>SENS-2 GHOST 선행</td></tr>
+<tr><td><b>SENS-5</b> <span class="tag m">revise</span></td><td class="c">P1/M</td><td>취득창 내 다중 프레임 σ 저감(F=2~4, 03 §1.4b 명문화 전략의 구현 — A3 무위반) + 온라인 σ̂: <b>주 소스를 시간축 방향별 MAD로 교체</b>(평면 잔차는 RANSAC 절단으로 ~46% 과소추정 — 폴백으로 강등+절단 보정). σ̂ 적응 시 게이트·보정기 재검증 연동(calibrator_version에 σ̂ 레짐 축)</td><td>RFQ ④ 회신과 병행</td></tr>
+<tr><td><b>RUN-5</b> <span class="tag v">keep</span></td><td class="c">P1/M</td><td>FrameBundle 블랙박스: 비ACCEPT 자동 덤프(~1MB/프레임)·결정론 리플레이·약라벨 수집 루프 — ifm식 전문가 튜닝의 자동화 대체 핵심. 게이트 채택 후 비ACCEPT ~40~55% 기준으로 저장 예산 수치화, "동일 머신·동일 git rev" 전제 명문화</td><td>RUN-3 (config_hash)</td></tr>
+<tr><td><b>RUN-6</b> <span class="tag m">revise</span></td><td class="c">P1/M</td><td>온보딩 캐시 배포 체계: <b>스케일 검출은 절대 기준으로</b>(합성 카메라를 절대 운용 거리 고정 — 폐루프는 자기일관이라 mm/m 스왑 미검출, 검증에서 원리 결함 확인), 대칭은 등록 회전별 chamfer 직접 검사, 폐루프는 TDF·정합 경로 결함 검출로 한정. encoder_hash fail-fast·플릿 무결성 CLI</td><td>Phase A 후</td></tr>
+<tr><td><b>GATE-4</b> <span class="tag v">keep</span></td><td class="c">P1/M</td><td>온보딩 합성 셀프캘리브레이션: 물체별 게이트 임계·보정기 자동 산출(CAD+σ 모델만, 실데이터 0 — A2 정합 해석을 결정 문서에 명문화, 실패 시 전역 실증치 폴백 필수 규약). M3-3 항목 개정으로 이중 작업 방지. 클램프는 조임 단방향(과보수 가능성 문서화)</td><td>GATE-2 앨리어스 군(음성 생성원)</td></tr>
+<tr><td><b>SENS-6</b> <span class="tag m">revise</span></td><td class="c">P2/S</td><td>저반사·흑색 드롭아웃 내성: p_ret ∝ ρ·cos θ/Z² 스윕 + LOW_INTENSITY <b>절대 임계 병용을 구현 범위로 승격</b>(percentile 규칙은 균일 저반사에서 무력). "자신 있게 틀림"의 정직 강등 전환 측정. 인용 정정 반영(26/60은 기타 전체 기준)</td><td>D2-a와 병행</td></tr>
+<tr><td><b>EVAL-6</b> <span class="tag v">keep</span></td><td class="c">P2/M</td><td>GT-less 현장 피드백 루프: 리플레이 직렬화 + 트리거 정책(비ACCEPT 전건+ACCEPT 1%) + 포크 삽입 이벤트 약라벨 환류 — Tier-M 오수락 &lt;1% 실측정의 성립 조건. 비동기 쓰기 설계 명시</td><td>파일럿 단계</td></tr>
+<tr><td><b>TDFV-1</b> <span class="tag m">revise</span></td><td class="c">P2/S</td><td>TDF 해상도·뷰 증강의 데이터 기반 판정: 무비용 대안 A/B — <b>tpl_pts chamfer 재랭킹을 1차 수단으로 승격</b>(τ 샤프닝은 복셀 양자화 37mm와 같은 자릿수라 대조군으로 강등), s_depth 스케일 분리(게이트/융합 오염 차단), 각거리-성공률 상관 유의할 때만 뷰 증강 티켓 발행 — ×8 메모리 증강의 낭비 방지 장치</td><td>Phase C 후</td></tr>
+</table>
+
+<h2><span class="no">7</span>공리 정합성 총괄</h2>
+<ul>
+<li><b>A1 (외형 불신)</b> — 34건 전부 기하·센서 물리 신호만 사용. intensity는 판별이 아닌 신뢰도 필터 용도 한정(기존 LOW_INTENSITY 선례). 하부 밴드 모드는 A1의 기하 버전("적재물 외형은 아예 안 봄").</li>
+<li><b>A2 (제로샷·무학습)</b> — 학습 기반 제안 0건. 경계 사례는 GATE-4(온보딩 셀프캘리브레이션)와 EVAL-4(로지스틱 보정) 2건뿐인데, 전자는 CAD+노이즈 모델만 쓰는 온보딩 산출물(대칭 자동검출과 동급), 후자는 03 설계 M3-3 그 자체(object-agnostic) — 단 이 해석을 결정 문서에 명문화하고 폴백 규약을 필수화한다.</li>
+<li><b>A3 (최초 사이클)</b> — 재시도류는 전부 03 §7.3·§8이 이미 규정한 동일 프레임 내 예외 경로(1.5s)의 구현이며 재촬영·트래킹이 아님. 다중 프레임 누적(SENS-5)도 03 §1.4b가 명문화한 취득창 내 전략의 구현.</li>
+<li><b>A4 (Orin &lt;1s·보정된 신뢰도)</b> — 유일한 전면 긴장 지점. 가설 수를 늘리는 모든 티켓(ALIAS-1·GATE-2·BAND-3/6·PRIOR-1 승급)은 <b>RUN-1 계층화 + 전역 가설 예산(총 k≤5)</b>을 선행 전제로 검증자가 못박음. "틀렸을 때 틀렸다고 아는" 요건은 GATE-1의 하드 필요조건 + GATE-3의 사유 코드 + AMBIG-1의 정직 UNCERTAIN이 직접 구현.</li>
+</ul>
+
+<h2><span class="no">8</span>선행 사용자 결정 3건 <span class="tag x">차단 요소</span></h2>
+<table>
+<tr><th style="width:34%">결정</th><th style="width:33%">차단되는 티켓</th><th>결정 전 잠정 기본값</th></tr>
+<tr><td><b>① 적재·랩핑 팔레트가 인식 대상인가</b> (05 §2 결정 1)</td><td>EVAL-3 수집 매트릭스 동결(선행 게이트로 명문화), BAND-5 범위</td><td>대상으로 가정하고 Phase B 진행 — 07 서베이상 물류 표준 조건이라 "제외" 가능성 낮음. 단 매트릭스 동결만 보류</td></tr>
+<tr><td><b>② 대칭 등가 정책</b> (all_equivalent — 포크 삽입 등가 yaw 180°를 정답 취급?)</td><td>AMBIG-1 정책 스위치, EVAL-4 라벨 기준(변경 시 재적합)</td><td>보수적 강등(등가 미인정 시 UNCERTAIN) — 코드 스위치로 구체화해 결정을 대기</td></tr>
+<tr><td><b>③ 비직립 물체(세워짐·행잉·경사 적치) 지원 범위</b></td><td>BAND-6 허용 자세 집합 config, 직립 기본값의 확정</td><td>직립 ON을 팔레트 운용 프로파일 한정 기본값으로(실측상 세워진 장면도 악화 없음 — 4→7, 플립 9→0). 행잉·경사 적치는 커버 밖 명시</td></tr>
+</table>
+
+<h2><span class="no">9</span>기존 로드맵과의 정합 (이중 작업 방지)</h2>
+<table>
+<tr><th style="width:30%">기존 항목</th><th>본 계획에서의 처리</th></tr>
+<tr><td>M1 (torch/GPU 포팅)</td><td><b>RUN-2가 실행안</b> — 실측 비용 순서(S2 match → ICP _associate → 스코어러)로 구체화, TRT op 확인 선행 조건 추가</td></tr>
+<tr><td>M3-3 (신뢰도 보정, 보정셋=BOP val)</td><td><b>GATE-4 + EVAL-4로 재정의</b> — BOP val(밀집 depth) 대신 자체 희소 합성 + MR6D + MegaPose 3도메인. 02 문서의 M3-3 항 개정 필요</td></tr>
+<tr><td>M3-4 (ROC 리포트) · M0-4 (레이턴시 게이트)</td><td>GATE-5 · EVAL-5/RUN-2의 실행형으로 흡수</td></tr>
+<tr><td>05 Top5 ① σ 스윕 ② sparse_bench ③ yaml 로더 ④ 계층화 ICP ⑤ θ 다양화</td><td>각각 SENS-3 · EVAL-2 · RUN-3 · RUN-1 · ALIAS-1이 이행 — Top5 전건이 본 계획 P0에 포함됨</td></tr>
+<tr><td>07 §6 하부 밴드 모드 설계 5항</td><td>BAND-1~4가 티켓화 — 단 §6 ②의 수평 링 뷰는 실측 고도 분포와 불일치로 <b>직립 서브셋 재굽기로 수정</b>(검증 발견)</td></tr>
+<tr><td>08 §4 결론 매핑 (밴드 모드 / M3-3 / M1·M2)</td><td>본 계획의 Phase B / A·D / C가 1:1 대응</td></tr>
+</table>
+
+<h2><span class="no">10</span>즉시 착수 순서 (첫 2주 체크리스트)</h2>
+<ul>
+<li><b>1일차</b>: EVAL-1 리포터+벤치 동결 착수 · GRAZE-1 귀속 검증(반나절 — 18건 병진 오차의 슬립 서명 판정, P1 티켓 규모 확정)</li>
+<li><b>1주차</b>: RUN-3⊕GATE-1 (yaml 로더·게이트 계층 판정·coverage_min 신설·모드 B 배선) · PRIOR-1 설정화 · GATE-5 sweep 도구</li>
+<li><b>2주차</b>: GATE-3⊕RUN-4 (사유 코드·2경로 재시도) · Phase A 게이트 판정(프로파일만으로 55.3%·93.8% 재현 + 회귀 게이트 fail 시연) · BAND-1 착수(대상 장면 고도 분포 산출부터) · RUN-2 병행 트랙 개시</li>
+</ul>
+
+<div class="note"><b>본 계획이 의도적으로 하지 않는 것</b> — ① 학습 모델 신규 도입(M2 PEM은 기존 로드맵대로 별도 트랙 — 본 계획은 그 전에 무학습 상한을 끌어올려 "학습이 정말 필요한 갭"을 좁힘) ② TDF 해상도·뷰 수의 선제 증강(TDFV-1이 데이터 기반 판정 장치 — ×8 메모리 낭비 방지) ③ 실기 확보 전 Orin 수치 주장(환산 리포트는 'unverified' 라벨 강제).</div>
+
+<p class="small">작성: 멀티에이전트 워크플로(판독 3 → 제안 6렌즈 34건 → 적대 검증 6) 결과의 종합. 각 티켓의 상세 근거(문제 정의·증거·접근·plug-in 파일:라인·리스크·검증 판정 전문)는 워크플로 산출물에 보존됨. 다음 갱신 트리거: Phase A 완료 시 실측 재현 수치 반영, 사용자 결정 3건 확정 시 §8 갱신.</p>
+
+</div>
+</body>
+</html>
