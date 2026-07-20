@@ -53,12 +53,20 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=100)
     ap.add_argument("--overlays", type=int, default=8)
+    ap.add_argument("--upright", action="store_true",
+                    help="직립 프리이어 ON: 아래에서 올려다보는 뷰 프루닝 (03 §1.4e, 04에서 플립 차단 실증)")
+    ap.add_argument("--out", default=None, help="결과 json 파일명 (기본 results.json)")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
 
     mesh = trimesh.load(DATA / "models" / "obj_000001.ply")
     mesh.apply_scale(0.001)                      # mm → m (AABB 중심은 이미 원점)
     onb = onboard_mesh(mesh)
+    view_mask = None
+    if args.upright:
+        from shape6d.onboarding.templates import upright_view_mask
+        view_mask = upright_view_mask()
+        print(f"직립 프리이어 ON: 뷰 {int(view_mask.sum())}/42 유지", flush=True)
     sym_h = SymmetryHandler(onb["sym"].sym_rots, onb["sym"].sym_axes)
     print(f"onboard: diam {onb['diam']:.3f}m, |S| {len(onb['sym'].sym_rots)}, "
           f"연속축 {len(onb['sym'].sym_axes)}", flush=True)
@@ -125,7 +133,8 @@ def main():
                                   lidar_idx=idx, n_lidar=len(idx)),
                 pts=fb.lidar_points[idx], uv=fb.lidar_pixels[idx])
             matcher = PointToTemplateMatcher(onb["tpl"]["tdf"], onb["tpl"]["tpl_center"],
-                                             onb["diam"], top_views_pass2=5)
+                                             onb["diam"], top_views_pass2=5,
+                                             view_mask=view_mask)
             m = matcher.match(cand.pts, k=5)
             cand.scores["depth"] = m.s_depth
             hyps = coarse_poses_from_match(m, onb["tpl"]["tpl_pose"], onb["tpl"]["tpl_center"])
@@ -161,7 +170,7 @@ def main():
                   f"{sum(1 for r in results if r['A'])}  경과 {time.time()-t_start:.0f}s",
                   flush=True)
 
-    json.dump(results, open(OUT / "results.json", "w"), indent=1)
+    json.dump(results, open(OUT / (args.out or "results.json"), "w"), indent=1)
 
     # --- 집계 (run_megapose와 동일 포맷 + 스펙 게이트) ---
     A = [r["A"] for r in results if r["A"]]
@@ -189,7 +198,7 @@ def main():
 
     agg(A, "모드 A (GT 마스크)")
     agg(B, "모드 B (풀 파이프라인)")
-    print("저장:", OUT / "results.json")
+    print("저장:", OUT / (args.out or "results.json"))
 
 
 if __name__ == "__main__":
