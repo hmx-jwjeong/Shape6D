@@ -28,6 +28,7 @@ SAM-6D의 2단 포인트 매칭 구조를 승계하되, 특징을 RGB 주도 →
 | [docs/17_full_line_redesign_and_training_plan.html](docs/17_full_line_redesign_and_training_plan.html) | **전체 입출력 라인 재구성 v3** — SAM3/DINOv3 제안의 3라운드 비판 검토, SAM-6D 승계 확정, 네트워크 명세 + Phase 0/A/B/C 학습 계획(~10주) |
 | [docs/18_module_networks_and_pretraining_plan.html](docs/18_module_networks_and_pretraining_plan.html) | **슬롯별 네트워크·사전학습 결정** — 13개 슬롯 조달표, 학습 5슬롯, 데이터셋 인벤토리·라이선스 매트릭스, Phase별 데이터 흐름 (UAM 비사용) |
 | [docs/19_license_assessment.html](docs/19_license_assessment.html) | **라이선스 실사** — 18 조달안 상업 판정. 빨강 5건 교체(FB가중치 NC→timm Apache, SAM-6D·GeDi 무라이선스→클린룸·자체학습, CroCo·EdgeSAM NC 제외), 교체 후 기본 경로 전부 초록 |
+| [docs/21_phase_a_retry_and_optimization.html](docs/21_phase_a_retry_and_optimization.html) | **Phase A 재시도 보고** — 5회 안정화 이력(MegaPose 스케일 발견 포함), 첫 제로샷 신호(≤30° 10→25.9%), 배치/Muon 최적화 체인, 0.1°/1mm 타당성 [D-10] |
 | docs/design_archive/ | 영역별 설계 원문 5건 + 교차 검증 리포트 2건 |
 
 ## 확정 전제 (2026-07-18)

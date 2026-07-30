@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase A 재시도 — 안정화 이력 · 배치/옵티마이저 최적화 · 정밀도 목표 검토</title>
+<style>
+  :root { --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb; --accent:#0b5fff;
+          --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e3;
+          --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; } }
+  :root[data-theme="dark"] {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+         color:var(--ink); background:var(--bg); line-height:1.7; font-size:15px; }
+  .wrap { max-width:1130px; margin:0 auto; padding:44px 28px 110px; }
+  h1 { font-size:24px; margin:0 0 6px; letter-spacing:-0.5px; line-height:1.35; text-wrap:balance; }
+  h2 { font-size:19px; margin:50px 0 12px; padding-top:16px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:24px 0 8px; }
+  p { margin:9px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.4px; }
+  th { background:var(--ink); color:var(--bg); text-align:left; padding:7px 9px; font-weight:600; }
+  th.c, td.c { text-align:center; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.g td { background:var(--good-soft); } tr.g td:first-child { border-left:3px solid var(--good); }
+  tr.y td { background:var(--warn-soft); } tr.y td:first-child { border-left:3px solid var(--warn); }
+  tr.r td { background:var(--bad-soft); } tr.r td:first-child { border-left:3px solid var(--bad); }
+  .cap { font-size:12.3px; color:var(--sub); margin:4px 0 18px; }
+  code { font-family:"JetBrains Mono",Consolas,monospace; font-size:12.3px;
+         background:var(--panel); padding:1px 5px; border-radius:4px; }
+  pre { background:#12151b; color:#e6e9ef; padding:12px 15px; border-radius:9px; overflow-x:auto;
+        font-size:12.2px; line-height:1.6; }
+  .abs { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:15px 19px; margin:16px 0 24px; font-size:14px; }
+  .abs b.t { display:block; font-size:15px; margin-bottom:5px; }
+  .crit { border:1px solid var(--line); border-left:4px solid var(--bad); background:var(--bad-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; }
+  .crit .h { font-weight:800; color:var(--bad); margin-bottom:4px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; }
+  .warnbox { border:1.5px dashed var(--warn); background:var(--warn-soft); border-radius:10px;
+             padding:11px 15px; margin:13px 0; font-size:13.2px; }
+  ul, ol { margin:8px 0; padding-left:22px; } li { margin:4px 0; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:13px 19px;
+         margin:16px 0 6px; font-size:13.2px; column-count:2; column-gap:28px; }
+  .toc a { display:block; padding:2px 0; break-inside:avoid; }
+  .tiny { font-size:11.8px; color:var(--sub); }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0 6px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:10px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:19px; font-variant-numeric:tabular-nums; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good b { color:var(--good); } .stat.bad b { color:var(--bad); } .stat.warn b { color:var(--warn); }
+  @media (max-width:820px){ .toc{column-count:1;} .hero{grid-template-columns:repeat(2,1fr);} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Phase A 재시도 보고<br>— 학습 안정화 이력 · 배치/옵티마이저 최적화 · 정밀도 목표(0.1°/1mm) 검토</h1>
+<div class="meta">v1.0 · 2026-07-31 · 대상: <a href="20_final_design_plan.html">20 §5 Phase A</a>의 첫 실행 사이클 · 코드: <code>train/{pem_mini,train_phase_a,recover_gso_scale,muon,bench_bs,dashboard}.py</code> · 모니터: <code>http://127.0.0.1:8035</code><br>
+<span class="tiny">v1.1 · 상태: 벤치·옵티마이저 A/B 확정(§3·§4) — AdamW+OneCycle 유지, Muon 보류(조건부 재검토). a0 lr3e-4 재실행 중.</span></div>
+
+<div class="abs">
+<b class="t">요약</b>
+Phase A 최소 매칭부는 <b>5회 재시도</b> 끝에 학습이 성립했다. 결정적 원인은 코드가 아니라 <b>데이터 계보</b>였다 — MegaPose-GSO 렌더가 raw GSO 메시가 아닌 <b>물체별 리스케일 메시</b>(s ∈ 0.10~1.43)로 만들어져 라벨이 무효였다(§1). 보정 후 v5에서 <b>미학습 34종 rot_p50 77.2°→58.0°, ICP 수렴반경(≤30°) 진입률 10.0%→25.9%</b> — 프로젝트 첫 유효 제로샷 학습 신호다(§2).<br><br>
+이어지는 재시도(자동 체인)는 두 축을 최적화한다: <b>배치</b>(96GB GPU 실측 스윕 — 현 bs48은 명백한 과소 활용)와 <b>옵티마이저</b>(2025-26 대세 <b>Muon</b> 하이브리드 vs AdamW-cosine A/B — OneCycle의 두 실패 이력을 대체)(§3·§4).<br>
+정밀도 목표 <b>0.1°/1mm</b> 검토(§5): <b>파이프라인 구조는 타당</b>(정밀도는 coarse가 아니라 ICP 담당, 합성 실측 1.6mm/0.25°가 증거) · <b>0.1°는 팔레트급에서 도달권</b>(N≥200pt 조건) · <b>1mm은 랜덤 성분은 가능하나 시스템 바이어스(≈6mm)가 지배 — 절대 정확도로는 현 캘리브 예산에서 불가</b>. [D-10] 등재.
+</div>
+
+<div class="hero">
+  <div class="stat good"><b>25.9%</b><span>미학습 ≤30° 진입률 (초기 10.0%) — a1 30ep</span></div>
+  <div class="stat"><b>5회</b><span>재시도 (NaN×1 · 정식화×1 · 데이터×1 · 구조×1 · 연장×1)</span></div>
+  <div class="stat warn"><b>s 0.10~1.43</b><span>발견: MegaPose 물체별 메시 스케일</span></div>
+  <div class="stat bad"><b>≈6mm</b><span>1mm 목표를 막는 시스템 바이어스 바닥</span></div>
+</div>
+
+<div class="toc">
+<a href="#s1">1. 재시도 이력 — 5회의 원인과 수정</a>
+<a href="#s2">2. v5 결과 — 첫 유효 제로샷 신호</a>
+<a href="#s3">3. 배치 크기 최적화</a>
+<a href="#s4">4. 옵티마이저 서베이와 A/B</a>
+<a href="#s5">5. 정밀도 목표 0.1°/1mm 타당성</a>
+<a href="#s6">6. 자동 체인 · 다음</a>
+</div>
+
+<h2 id="s1"><span class="no">1</span>재시도 이력 — 5회의 원인과 수정</h2>
+
+<table>
+<tr><th style="width:6%">차수</th><th style="width:26%">증상</th><th style="width:32%">진단된 원인</th><th>수정</th></tr>
+<tr class="r"><td>v1</td><td>ep2에서 CE NaN → 학습 동결</td><td>① 비정규화 내적 × τ0.1 → 로짓 폭주 ② P̂=ΣA·P/(1−bg) — bg→1에서 10⁶배 폭주</td><td>코사인 유사도(정규화, 로짓 유계) · 전경 조건부 분포(볼록결합) · 비유한 스텝 스킵 안전망</td></tr>
+<tr class="r"><td>v2</td><td>NaN 없이 20ep — 그러나 CE ≈ 2.5에 고정</td><td>CE 2.5 = 0.55·(bg 정답)+0.45·ln196 — <b>전경/배경만 배우고 대응은 균등분포</b></td><td>(v3로) 밀도 317→519pt · 거리 RPE(쌍거리 attn 바이어스) · 2블록 복원 · 평가 6뷰</td></tr>
+<tr class="r"><td>v3</td><td>여전히 정체 (train rot 125°)</td><td><b>좌표계 붕괴 실측</b>: GT로 되돌린 장면점의 표면 최근접거리 p50 = 0.10·D — 라벨 자체가 무효. 전역 변환 격자 전멸 → 물체별 병합 클라우드 sim-ICP로 <b>물체별 스케일 s∈[0.10,1.43] 발견</b></td><td><code>recover_gso_scale.py</code> — 164/168종 보정 회수(res/D 1.85%), 4종 제외, 빌더 통합 재생성 → <b>nn/D 0.103→0.026</b></td></tr>
+<tr class="y"><td>v4</td><td>bg 0.14(정답)·병진 0.17D 개선, 회전은 서서히</td><td>라벨 복구 확인. 10ep는 OneCycle이 하강 중 종료</td><td>C-7 수렴 규약대로 30ep 연장</td></tr>
+<tr class="g"><td><b>v5</b></td><td colspan="2"><b>학습 성립</b> — §2. (a0 30ep 진행 중)</td><td>→ 자동 체인: 배치·옵티마이저 최적화 재시도 (§3·§4)</td></tr>
+</table>
+<div class="cap">부수 발견 2건: ① <code>pkill -f</code> 자기명령줄 매칭 함정(2회) → <code>[a]</code> 브래킷 패턴 규약화 ② 대칭 g* 선택을 부분 뷰 기준으로 하면 라벨 불안정(일치율 0.73) — 03 규격(master 기준) 준수 필요성 실측. 데이터 계보 발견은 메모리 영구 기록 — <b>잔여 861종 메시 수급 시에도 동일 보정 필수</b>.</div>
+
+<h2 id="s2"><span class="no">2</span>v5 결과 — 첫 유효 제로샷 신호</h2>
+
+<table>
+<tr><th style="width:22%">지표 (미학습 34종)</th><th class="c" style="width:12%">ep0 (초기)</th><th class="c" style="width:12%">a1 ep30</th><th class="c" style="width:12%">a0 ep30</th><th>비고</th></tr>
+<tr><td>회전 오차 p50 (sym-aware)</td><td class="c">77.2°</td><td class="c"><b>58.0°</b></td><td class="c tiny">진행 중</td><td>막판에도 −0.4°/ep — <b>미포화</b></td></tr>
+<tr class="g"><td><b>≤30° 진입률</b> (ICP 수렴반경)</td><td class="c">10.0%</td><td class="c"><b>25.9%</b></td><td class="c tiny">진행 중</td><td>coarse의 실질 성공 지표 (15 §4)</td></tr>
+<tr><td>병진 p50</td><td class="c">0.170D</td><td class="c">0.152D</td><td class="c tiny">진행 중</td><td>—</td></tr>
+<tr><td>train CE / 회전</td><td class="c">4.94 / 126°</td><td class="c">3.14 / 82°</td><td class="c tiny">진행 중</td><td>전경 균등 바닥(4.53) 돌파</td></tr>
+</table>
+<div class="fair"><div class="h">해석</div>
+분류 정식화에서는 원리적으로 불가능했던 미학습 물체 개선(15 §4: 5.8% 동결)이 <b>매칭 정식화에서 실제로 일어난다</b> — v3 재구성(17)의 핵심 결정이 실증됐다. 절대값(25.9%)은 아직 낮으나 ① 1블록급 최소 매처 ② 134종 학습 ③ 미포화 30ep ④ CAD 2뷰 커버리지 한계라는 4중 축소판임을 감안해야 한다. 다음 지렛대는 §3·§4의 최적화와 뷰 커버리지·학습 물체 확장이다.</div>
+
+<h2 id="s3"><span class="no">3</span>배치 크기 최적화</h2>
+
+<p><b>동기</b>: 현 bs48은 96GB GPU에서 명백한 과소 활용(v5 중 점유 ~수 GB). 배치 확대는 처리량뿐 아니라 <b>대응 CE의 부정 샘플 통계</b>도 개선할 수 있다(배치 내 물체 다양성↑).</p>
+<table>
+<tr><th style="width:18%">항목</th><th>설계</th></tr>
+<tr><td>스윕</td><td>bs ∈ {48, 96, 192, 320, 512} — 실데이터 fwd+bwd 전체 경로, step 중앙값·samples/s·피크 메모리 (<code>train/bench_bs.py</code>)</td></tr>
+<tr><td>선택 규칙</td><td>피크 &lt;70GB 내 처리량 최대 — 단 <b>더 작은 bs가 최대치의 95% 이상이면 작은 쪽</b>(일반화 여유·수확 체감)</td></tr>
+<tr><td>lr 스케일</td><td>AdamW·Muon 공히 <b>√(bs/48)</b> 스케일 (자동 — <code>--lr</code> 미지정 시)</td></tr>
+</table>
+<table>
+<tr><th class="c" style="width:12%">bs</th><th class="c" style="width:16%">ms/step</th><th class="c" style="width:18%">samples/s</th><th class="c" style="width:16%">peak GB</th><th>판정</th></tr>
+<tr class="g"><td class="c"><b>48</b></td><td class="n">102</td><td class="n">470</td><td class="n">8.7</td><td><b>선택</b> — 최대 처리량의 96%를 최소 메모리로</td></tr>
+<tr><td class="c">96</td><td class="n">197</td><td class="n">488</td><td class="n">16.7</td><td>최대 — 그러나 +4%뿐</td></tr>
+<tr><td class="c">192</td><td class="n">406</td><td class="n">473</td><td class="n">32.8</td><td>—</td></tr>
+<tr><td class="c">320</td><td class="n">671</td><td class="n">477</td><td class="n">54.2</td><td>—</td></tr>
+<tr><td class="c">512</td><td class="n">1079</td><td class="n">474</td><td class="n">86.3</td><td>—</td></tr>
+</table>
+<div class="crit"><div class="h">벤치의 진짜 발견 — 병목은 배치가 아니라 스텝 내 파이썬이다</div>
+처리량이 bs 48→512에서 <b>평탄(470~488 samples/s)</b>하다. GPU 연산은 이미 한가하고, 스텝 시간을 지배하는 것은 <b>순차 파이썬 오버헤드</b> — 특히 <code>fps_torch</code>의 196회 파이썬 루프(장면+CAD 양측), <code>make_geo_maps</code>·손실의 cdist 체인이다. <b>결론: 배치 확대는 무익, 실효 최적화는 스텝 벡터화</b>(FPS 배치화·전처리 이동)다 — 백로그 등재. 48 유지가 옳다(메모리 8.7GB — activation ckpt 없이도 Phase B 여유 확인이라는 부수 소득).</div>
+
+<h2 id="s4"><span class="no">4</span>옵티마이저 서베이와 A/B</h2>
+
+<h3>4.1 2025–26 동향 조사</h3>
+<table>
+<tr><th style="width:16%">계열</th><th style="width:30%">현황 (조사 2026-07-31)</th><th>우리 적합성</th></tr>
+<tr class="g"><td><b>Muon</b> (+하이브리드)</td><td>모멘텀 Newton-Schulz 직교화, <b>2D 은닉 행렬 전용</b>. Kimi K2(1T)·GLM-5(744B) 프로덕션 채택, AdamW 대비 <b>~2× 샘플 효율</b> 보고, PyTorch/DeepSpeed 공식 지원. 대규모 안정화판 MuonClip(QK-clip)</td><td><b>1순위 시험</b> — 매처(全 Linear)와 conv(평탄화)에 정확히 들어맞는 파라미터 구조. 소형 모델 검증 부족이 리스크 → A/B로 판정</td></tr>
+<tr><td>AdamW (기준선)</td><td>여전한 기본값. 스케줄 선택이 실질 변수</td><td>기준선 유지 — 단 <b>OneCycle 폐지</b>: 본 프로젝트에서 2회 실패(고lr 구간이 사전학습 파괴 13 §6.2 · 하강 중 조기 종료 §1 v4) → <b>cosine+3% warmup</b>으로 교체</td></tr>
+<tr><td>Schedule-Free AdamW</td><td>스케줄 제거(평균화 기반) — 총 스텝 미정 상황에 강점</td><td>후보 유지 (수렴점을 모르는 파일럿 성격과 부합) — 1차 A/B 이후 필요 시</td></tr>
+<tr><td>Lion / SOAP / AdEMAMix</td><td>각자 지지 결과 있으나 채택 폭 제한적</td><td>보류 — 비교 폭발 방지</td></tr>
+</table>
+
+<h3>4.2 적용 구현</h3>
+<pre>train/muon.py     Muon(NS 5회, momentum 0.95, nesterov) + HybridMuon(행렬→Muon lr0.02·√s, 그외→AdamW)
+train/train_phase_a.py  --opt {adamw,muon} --sched {onecycle,cosine} --bs N --lr (√스케일 자동)
+검증: NS 직교화 특이값 0.68~1.14 (≈1) · HybridMuon step 단위테스트 통과</pre>
+<h3>4.3 A/B 확정 (v1.1 — 2026-07-31)</h3>
+<table>
+<tr><th style="width:22%">구성 (a1·bs48)</th><th class="c" style="width:11%">ep10</th><th class="c" style="width:11%">ep20</th><th class="c" style="width:11%">ep30</th><th class="c" style="width:12%">wall-clock</th><th>비고</th></tr>
+<tr class="g"><td><b>AdamW + OneCycle</b> (현 표준)</td><td class="c">74.0° / 10.9%</td><td class="c">69.3° / 16.6%</td><td class="c"><b>58.0° / 25.9%</b></td><td class="c">54분/30ep</td><td><b>유지</b> — wall-clock·최종치 모두 우세</td></tr>
+<tr><td>AdamW + cosine</td><td class="c">71.1° / 12.6%</td><td class="c">72.4° / 16.4%</td><td class="c">—</td><td class="c">35분/20ep</td><td>OneCycle과 동급 — 대안 확보 (조기종료 병리 없음)</td></tr>
+<tr class="y"><td>Muon(0.004)+AdamW 하이브리드</td><td class="c"><b>61.3° / 19.2%</b></td><td class="c">66.8° / 17.5%</td><td class="c">—</td><td class="c">79분/20ep</td><td>에폭 효율 우세(ep10이 AdamW ep20+급) · 그러나 <b>①상수 lr로 ep10 이후 후퇴 ②스텝 2.3배(NS 오버헤드)로 wall-clock 패배</b></td></tr>
+<tr class="r"><td>Muon lr 0.02 (표준값)</td><td class="c" colspan="3">ep1: CE 3.10·rot 79° (AdamW 30ep급) → ep2 발산</td><td class="c">—</td><td>소형망엔 과대 — 효율 신호와 함께 기각</td></tr>
+</table>
+<div class="fair"><div class="h">옵티마이저 판정</div>
+<b>Phase A 표준은 AdamW+OneCycle 유지.</b> Muon은 에폭당 효율은 실증했으나(ep10 ≈ AdamW ep20+), 우리 규모에선 미최적화 NS 오버헤드(스텝 105→237ms)가 이득을 상쇄하고 상수 lr이 이득을 반납한다. <b>재검토 조건 2가지를 명시하고 보류</b>: ① 스텝 파이썬 병목 벡터화 후(§3 — NS 비중이 상대적으로 줄면 재평가) ② Phase B 규모(full PEM 8M)에서 lr 감쇠 꼬리를 붙여 재시험.</div>
+<div class="warnbox"><b>a0 폭주 이력 (별건)</b> — a0(스크래치·lr 1e-3)는 2회 연속 ep2~4에 파라미터 발산(skip 986 전 스텝). Kabsch 퇴화 가드(w 바닥 1e-4)로도 별도 경로 폭주 — <b>스크래치 lr 1e-3(단일 CAD 파일럿 유래)이 매칭 과제엔 과대</b>가 유력. lr 3e-4 재실행 중 + <b>연속 skip 300 조기중단 가드</b> 추가(전멸 상태 55분 낭비 재발 방지). C-7 lr 정책은 결과 확인 후 개정.</div>
+
+<h2 id="s5"><span class="no">5</span>정밀도 목표 0.1° / 1mm 타당성 — [D-10]</h2>
+
+<p class="tiny">전제: 현 정본 스펙은 <b>10mm / ≤1° @3m</b>(20 C-1). 0.1°/1mm은 그 10배 강화로, 아래는 센서 물리 대비 검토다. 모델: σ_rot ≈ σ_eff/(√N·r_rms), σ_pos ≈ σ_eff/√N (03 §1.4 산출 모델, ±2× 오더 추정).</p>
+
+<h3>5.1 회전 0.1° — 조건부 도달권</h3>
+<table>
+<tr><th style="width:22%">시나리오</th><th class="c" style="width:14%">r_rms</th><th class="c" style="width:14%">σ_eff</th><th class="c" style="width:18%">필요 N (0.1°)</th><th>판정</th></tr>
+<tr class="g"><td>팔레트 1100 @3m</td><td class="c">≈330mm</td><td class="c">8mm</td><td class="c"><b>≥193</b></td><td><b>가능</b> — 실측 관측 수백 pt 확보</td></tr>
+<tr class="y"><td>팔레트, 보수적 노이즈</td><td class="c">330mm</td><td class="c">15mm</td><td class="c">≥680</td><td>경계 — 프레임 평균(T=400ms)으로 충족</td></tr>
+<tr class="r"><td>20cm 부품 @3m</td><td class="c">≈60mm</td><td class="c">8mm</td><td class="c">≥5,800</td><td><b>불가</b> (실측 ~124pt) — 근접 재측정으로도 σ≤3mm 필요</td></tr>
+</table>
+
+<h3>5.2 병진 1mm — 랜덤은 되나 바이어스가 막는다</h3>
+<table>
+<tr><th style="width:30%">성분</th><th class="c" style="width:16%">크기 @3m</th><th>비고</th></tr>
+<tr class="g"><td>랜덤 노이즈 (σ_eff/√N)</td><td class="c">≤1mm if N≥64 (σ8)</td><td>쉽게 충족</td></tr>
+<tr class="r"><td>외부 캘리브 회전 0.05° 예산</td><td class="c"><b>2.6mm</b> 바이어스</td><td>ICP로 회복 불가 (03 §2.3)</td></tr>
+<tr class="r"><td>외부 캘리브 병진 예산</td><td class="c">2.0mm</td><td>〃</td></tr>
+<tr class="r"><td>LiDAR 거리 바이어스 (유닛 보정 후)</td><td class="c"><b>~5mm</b></td><td>03 §1.4c 전제</td></tr>
+<tr><td><b>RSS 바이어스 바닥</b></td><td class="c"><b>≈6.1mm</b></td><td>10mm 스펙엔 통과, <b>1mm엔 6배 초과</b></td></tr>
+</table>
+<div class="crit"><div class="h">판정</div>
+<b>절대 정확도 1mm은 현 센서·캘리브 예산에서 불가</b>다. 도달하려면: 유닛별 거리 보정 ≤0.5mm + 외부 캘리브 회전 ≤0.02°(=1.0mm@3m)·병진 ≤0.5mm — 캘리브 방법론을 예산 대비 <b>~5배</b> 조여야 하며 실현성 미검증. <b>대안 재정의 2안</b>: ① <b>상대/반복 정밀도</b>(같은 자세 재측정 산포)로 정의하면 랜덤 성분만 남아 1mm 도달권 ② 도킹 등 최종 접근은 <b>서보잉(상대 제어)</b>로 전환해 절대 바이어스를 루프 밖으로.</div>
+
+<h3>5.3 접근·셋업의 타당성 — 구조는 맞다</h3>
+<div class="fair"><div class="h">근거 3가지</div>
+① <b>정밀도의 담당 스테이지가 옳다</b> — 0.1°/1mm은 coarse(PEM)가 아니라 <b>ICP(S4)</b>의 일이고, coarse는 수렴반경(≤30°)만 넘기면 된다. 현 파일럿 지표(≤30° 진입률)가 정확히 그 계약을 재고 있다.<br>
+② <b>알고리즘 체인은 이미 그 스케일을 시연했다</b> — v0-geo 골든 실측 <b>1.60mm / 0.254°</b> (σ5mm·~1200pt·단일 프레임 합성). 4프레임 평균(σ_eff/2)이면 외삽 ≈0.8mm/0.13° — <b>병목은 알고리즘이 아니라 센서 시스템틱</b>이다.<br>
+③ 따라서 셋업 개정 방향은 네트워크가 아니라 <b>측정계</b>: 프레임 평균 T=400ms 기본화(팔레트), 유닛별 거리 보정, 캘리브 강화 — 전부 03에 예고된 손잡이들이다.</div>
+
+<h2 id="s6"><span class="no">6</span>자동 체인 · 다음</h2>
+<pre>[실행 중] v5 a0 30ep → (자동) bench_bs 스윕 → bs 선택 → a1·muon·20ep → a1·adamw-cosine·20ep
+모니터: http://127.0.0.1:8035 (60s 갱신 · 파라미터 패널 · 수렴 기울기)</pre>
+<ol>
+<li>체인 완료 → 본 문서 v1.1 (§3 벤치 표 · §4 A/B 표) + 승자 설정을 Phase A 표준으로</li>
+<li>정밀도 목표: [D-10] 스펙 회의 안건 — 상대/반복 정의 채택 여부 결정</li>
+<li>Phase A 본 비교 복귀: 인코더 4후보 + 무학습 기준선, 최적화된 설정으로</li>
+</ol>
+
+<p class="tiny" style="margin-top:24px">출처 — <a href="https://pytorch.org/blog/using-muon-optimizer-with-deepspeed/">PyTorch/DeepSpeed Muon</a> · <a href="https://arxiv.org/pdf/2507.20534">Kimi K2 기술보고서 (MuonClip)</a> · 내부: <a href="03_implementation_design.html">03 §1.4·§2.3</a> · <a href="15_network_and_training_scope.html">15 §4</a> · <a href="17_full_line_redesign_and_training_plan.html">17</a> · <a href="20_final_design_plan.html">20 C-1·C-7·D-10</a></p>
+
+</div>
+</body>
+</html>
