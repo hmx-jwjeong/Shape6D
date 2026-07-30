@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shape6D — Track 0 + 검증기 보정 1차 학습 결과 (v1.0)</title>
+<style>
+  :root {
+    --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb;
+    --accent:#0b5fff; --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00;
+    --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif; color:var(--ink); background:var(--bg); line-height:1.65; font-size:15px; }
+  .wrap { max-width:1080px; margin:0 auto; padding:40px 28px 80px; }
+  h1 { font-size:28px; margin:0 0 4px; letter-spacing:-0.5px; }
+  h2 { font-size:20px; margin:48px 0 12px; padding-top:18px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:16px; margin:26px 0 8px; }
+  p { margin:8px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:22px; }
+  table { width:100%; border-collapse:collapse; margin:12px 0 8px; font-size:12.8px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 10px; font-weight:600; }
+  td { padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.c, th.c { text-align:center; }
+  .r { font-weight:700; } .r.g { color:var(--good); } .r.b { color:var(--bad); } .r.p { color:var(--shape); }
+  figure { margin:18px 0; }
+  figure img { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; }
+  figcaption { font-size:12.6px; color:var(--sub); margin-top:6px; line-height:1.55; }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:19px; letter-spacing:-0.5px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good { border-left:4px solid var(--good); }
+  .stat.bad { border-left:4px solid var(--bad); }
+  .stat.pur { border-left:4px solid var(--shape); }
+  .note { border:1.5px dashed var(--shape); border-radius:10px; background:var(--shape-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .warnbox { border:1.5px solid var(--bad); border-radius:10px; background:var(--bad-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  pre { background:#14161b; color:#d6dbe4; border-radius:10px; padding:12px 15px; font-size:11.8px; overflow-x:auto; }
+  code { background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:12px; }
+  .small { font-size:12.5px; color:var(--sub); }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  @media (max-width:760px) { .hero { grid-template-columns:repeat(2,1fr); } }
+  @media print { .wrap { max-width:100%; } h2 { break-before:page; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Track 0 + 검증기 보정 1차 학습 — 결과 보고</h1>
+<p class="meta">v1.0 · 2026-07-23 · <a href="08_training_plan.html">08 학습 계획</a>의 W1 실행분: Track 0(무학습 픽스)과 Track 2 1차(M3-3 보정 학습) ·
+평가: UAM 실기 70샘플(<a href="07_uam_field_log_eval_report.html">07</a>과 동일 세트) + GSO 보정 셋 800행 ·
+수치 정본: <code>eval/external_test/uam_results_t0c/</code> · <code>eval/external_test/calib_data/</code> ·
+학습 환경: RTX PRO 6000 Blackwell 96GB (GSO 1,039/1,040샤드 507GB 무결 확인)</p>
+
+<div class="hero">
+  <div class="stat pur"><b>95% · 오수락 0</b><span>보정 p 선택 — 시험세션(0716·17, 미학습) 모드 B 정선택 18/19</span></div>
+  <div class="stat pur"><b>13% → 98%</b><span>UAM 정포즈 ACCEPT율 (θ=0.8, 오수락 0) — 07 판정 역전 해소</span></div>
+  <div class="stat good"><b>평면 오수락 0</b><span>Track 0 평면성 게이트 — 부스·게시판·바닥 오수락 클래스 제거</span></div>
+  <div class="stat bad"><b>부호 반전 실증</b><span>free_viol 가중치: 완전 CAD −13.4 ↔ 부분 CAD + — 2차 특징 재설계의 실측 근거</span></div>
+</div>
+
+<div class="note"><b>한 줄 요약</b> — 07이 진단한 "판정 역전"(정포즈 87% 기각·오수락 95%)을 두 단계로 공략했다.
+① Track 0 평면성 게이트가 평면 클러터 오수락 클래스를 무학습으로 제거했고(부작용: 비평면 클러터가 후보에 진입해 선택 지표 q의 한계 추가 노출),
+② GSO 800행+UAM 255행으로 학습한 <b>로지스틱 보정 p를 선택·판정에 적용하자 미학습 세션에서 정선택 95%·오수락 0</b>이 됐다.
+동시에, 완전 CAD(GSO)만으로 학습한 보정기는 UAM에서 무력함(8/36)을 확인 — <b>free-space 특징의 의미가 CAD 완전성에 따라 반전</b>된다는
+08 계획 §4.1 가설이 가중치 수준에서 실증됐다.</div>
+
+<h2><span class="no">1</span>무엇을 시험했나</h2>
+<table>
+<tr><th style="width:16%">항목</th><th>내용</th></tr>
+<tr><td>Track 0 (무학습)</td><td>T0-1 평면성 게이트: 클러스터 λ₃/λ₁ &lt; 0.02 배제 (실측: 기체 0.24~0.39 vs 평면 클러터 0.0001~0.011) · T0-2 FOV-aware ACCEPT 강등 (모델 투영 화면 내 비율 &lt; 0.6)</td></tr>
+<tr><td>Track 2 (학습)</td><td>M3-3 신뢰도 보정 — 기존 10-d 특징(<code>shape6d/verify/confidence.py</code>) 위 IRLS 로지스틱. 표준화 + 도메인 균형 + l2 선택(holdout AUC)</td></tr>
+<tr><td>보정 데이터</td><td><b>GSO 800행</b>: 4샤드 200장면 — GT마스크 정합(gso_A: 정 110/오 90, 자연 실패 포함) + 의도적 플립·90° 오포즈 ICP 수렴(gso_flip: 정 169/오 431, 라벨은 항상 sym-aware ADD&lt;0.1D) · <b>UAM 255행</b>: 70샘플의 A/B 최종 + 모드 B 후보 풀 전체 (라벨: SAM-6D 로그 위치 dt&lt;1m 정 / &gt;2m 오, essential 무참조는 07 육안 검증된 원거리·바닥 패턴만 오)</td></tr>
+<tr><td>평가 정책</td><td>① 판정: 보정 p ≥ θ ACCEPT (구 하드 가드는 free&gt;0.5 극단만 잔류) ② 선택: 후보 argmax를 q(inlier×cov−free) vs 보정 p로 비교 ③ 일반화: GSO-only 학습본 교차 + <b>세션 분할</b>(0710·14·15 학습 → 0716·17 시험)</td></tr>
+</table>
+
+<h2><span class="no">2</span>Track 0 결과 — 평면 오수락 제거, 그러나 선택 지표의 한계 추가 노출</h2>
+<table>
+<tr><th>지표 (모드 B)</th><th class="c">07 기준선</th><th class="c">Track 0 적용</th><th>해석</th></tr>
+<tr><td>평면 클러터 오수락 (부스·게시판·바닥)</td><td class="c">지배적</td><td class="c r g">0건</td><td>λ₃/λ₁ 게이트가 실패 클래스 제거 — 바닥 스트립 p=1.00류 소멸</td></tr>
+<tr><td>전체 ACCEPT 오수락</td><td class="c">34</td><td class="c">20</td><td>잔여는 8~10m 비평면 클러터 (인파·부스 구조물)</td></tr>
+<tr><td>기체 정선택 (dt&lt;1m)</td><td class="c">18/37</td><td class="c r b">9/36</td><td>평면이 빠진 top-5에 새 클러터 진입 → <b>q가 원거리 희소 클러터에 패배</b>. 기체 클러스터 자체는 게이트 통과(λ₃/λ₁ 0.39) — 게이트 부작용이 아니라 선택 지표 문제</td></tr>
+<tr><td>프레임 시간 (중앙)</td><td class="c">28.9s</td><td class="c r g">17.0s</td><td>후보 수 감소 (−41%)</td></tr>
+</table>
+<p class="small">이 후퇴가 곧 다음 절의 실험 설계가 됐다: 선택도 판정도 학습된 신뢰도가 맡아야 한다는 것.</p>
+
+<h2><span class="no">3</span>보정 학습 결과 — 판정</h2>
+
+<h3>3.1 학습 곡선 요약</h3>
+<table>
+<tr><th>항목</th><th>결과</th></tr>
+<tr><td>holdout AUC (도메인 층화 30%)</td><td>전체 0.885 — gso_A 0.815 · gso_flip 0.890 · uam_B 1.000(n=16)</td></tr>
+<tr><td>UAM 판정 게이트 (θ 스캔)</td><td>θ=0.7: 정포즈 ACCEPT <b>45/45 (100%)</b>·오수락 0 · θ=0.8: 44/45 (98%)·0 · θ=0.9: 33/45 (73%)·0 — <b>07의 13% → 98~100%</b></td></tr>
+<tr><td class="r b">전 도메인 단일 운용점</td><td>FA&lt;1%에서 리콜 11% — <b>미달.</b> 도메인 간 특징 의미 상충(3.2)이 원인. 도메인별 임계로는 성립, 단일 모델은 2차 특징 필요</td></tr>
+</table>
+
+<h3>3.2 핵심 발견 — free-space 특징의 부호 반전</h3>
+<table>
+<tr><th>특징</th><th class="c">GSO-only 학습 (완전 CAD)</th><th class="c">GSO+UAM 학습 (부분 CAD 포함)</th></tr>
+<tr><td>coverage</td><td class="c r g">+13.9</td><td class="c">−1.3</td></tr>
+<tr><td>free_viol</td><td class="c r g">−13.4 (위반=오포즈)</td><td class="c r b">+0.2 (위반해도 정포즈 가능)</td></tr>
+<tr><td>rmse_over_tau</td><td class="c">−15.5</td><td class="c">−3.8</td></tr>
+</table>
+<p>GSO-only 보정기는 물리적으로 "타당한" 가중치를 배우지만 UAM에서 무력하다(선택 8/36 — q와 동급).
+부분 CAD(미모델 로터·받침대) 도메인에서는 <b>정포즈일수록 free 위반이 크기 때문</b>이다.
+단일 선형 모델은 두 도메인을 동시에 못 섬긴다 — 위반의 <b>총량이 아니라 공간 분포</b>(국소 부착물 vs 광역 오포즈)를
+특징화해야 한다는 08 §4.1 재설계 방향이 실측으로 확정됐다.</p>
+
+<figure><img src="assets_09/p_vs_freeviol.png" alt="p vs free_viol">
+<figcaption><b>그림 1 — 보정 신뢰도 p(세션분할 학습)와 free-space 위반율</b> (UAM 313행: 정포즈 80 · 오포즈 233).
+구 하드 가드(주황 점선 0.15) 우측의 정포즈(파란 원)는 07에서 전부 기각되던 영역인데, 보정 p는 이를 0.4~0.95로 올리고
+오포즈(빨간 ×)는 위반율과 무관하게 0.3 이하로 눌러 분리한다. θ=0.7(회색 점선) 아래의 정포즈 일부가 리콜 손실분.</figcaption></figure>
+
+<h2><span class="no">4</span>보정 학습 결과 — 후보 선택</h2>
+
+<figure><img src="assets_09/progression.png" alt="단계별 개선">
+<figcaption><b>그림 2 — 단계별 진행.</b> 좌: 모드 B 기체 정선택률 — Track 0에서 일시 후퇴(25%)했다가 보정 선택으로 89%(도메인 내)·
+<b>95%(미학습 시험세션)</b>. 우: ACCEPT 오수락 — 34건 → 0건(시험세션). 시험세션 수치가 정직한 일반화 성능이다
+(0716·17 UAM 데이터를 학습에서 완전 제외).</figcaption></figure>
+
+<table>
+<tr><th>선택 정책 (모드 B)</th><th class="c">정선택 (dt&lt;1m)</th><th class="c">ACCEPT 정 / 오</th></tr>
+<tr><td>q = inlier×cov − free (기존)</td><td class="c">9/36 (25%)</td><td class="c">2 / 14</td></tr>
+<tr><td>보정 p, 도메인 내 (참고치 — 순환성 있음)</td><td class="c">32/36 (89%)</td><td class="c">32 / 4</td></tr>
+<tr><td class="r p">보정 p, 세션분할 시험세션 (0716·17 미학습)</td><td class="c r p">18/19 (95%)</td><td class="c r p">12 / 0 · 행단위 AUC 1.000 (n=127)</td></tr>
+</table>
+
+<h2><span class="no">5</span>케이스 패널 — 같은 프레임에서 q 선택 vs 보정 p 선택</h2>
+<p class="small">초록=기존 q 선택 · 보라=보정 p 선택 · 빨간 ×=SAM-6D 로그 위치. 렌더에 쓴 보정기는 <b>세션분할 가중치</b>
+(0716·17 UAM 미학습 — 5.1~5.4는 완전 미학습 세션). 괄호 p는 각 선택 후보의 보정 신뢰도.</p>
+
+<h3>5.1 시험세션 — q는 우측 부스로, p는 기체로 (dt 9.77 → 0.26m)</h3>
+<figure><img src="assets_09/sel_robot_log__20260717_104956_828_sam6d.jpg" alt="case 104956">
+<figcaption><b>robot_log 0717 10:49</b> — 보라(p=0.62)가 캐빈·받침대에 정확히 안착, 초록 q 선택(p=0.05)은 9.8m 클러터.
+07에서 "발견-기각"이던 프레임이 발견-수락으로 전환된 대표 사례.</figcaption></figure>
+
+<h3>5.2 시험세션 — dt 4.74 → 0.87m</h3>
+<figure><img src="assets_09/sel_robot_log__20260716_151300_810_sam6d.jpg" alt="case 151300">
+<figcaption><b>robot_log 0716 15:13</b> — q는 중거리 비평면 클러터(Track 0 이후 새로 진입한 유형, p=0.03), 보정 p=0.72는 기체.</figcaption></figure>
+
+<h3>5.3 시험세션 — dt 5.41 → 0.87m</h3>
+<figure><img src="assets_09/sel_robot_log__20260717_154115_026_sam6d.jpg" alt="case 154115">
+<figcaption><b>robot_log 0717 15:41</b> — 동일 패턴 (q 선택 p=0.003 vs 기체 후보 p=0.69).</figcaption></figure>
+
+<h3>5.4 시험세션 — dt 4.70 → 0.87m</h3>
+<figure><img src="assets_09/sel_robot_log__20260716_133531_534_sam6d.jpg" alt="case 133531">
+<figcaption><b>robot_log 0716 13:35</b> — q 선택 p=0.008 vs 기체 후보 p=0.63.</figcaption></figure>
+
+<h3>5.5 SAM-6D 실패 세션(essential, 참조 없음) — 보정 p가 기체 발견</h3>
+<figure><img src="assets_09/sel_robot_log_essential__20260710_182410_897_sam6d.jpg" alt="case 182410">
+<figcaption><b>essential 0710 18:24</b> — 탑재 SAM-6D가 검출 0건이던 장면. q는 좌측 원거리 구조물(p=0.02),
+보정 p 선택(p=0.85)은 z=4.08m 기체 위치에 안착 — 07의 부스 오수락(10.7m ACCEPT p=0.98)과 대비.</figcaption></figure>
+
+<h3>5.6 essential 저프레임 검출 케이스 — dt 5.11 → 0.51m</h3>
+<figure><img src="assets_09/sel_robot_log_essential__20260710_192818_093_sam6d.jpg" alt="case 192818">
+<figcaption><b>essential 0710 19:28</b> — 07 §5.6의 "ROI만 근접-기각" 프레임. 이제 풀 파이프라인 선택이 기체(p=0.91)로 간다.</figcaption></figure>
+
+<h2><span class="no">6</span>한계 — 이 수치를 그대로 일반화하지 말 것</h2>
+<table>
+<tr><th style="width:24%">한계</th><th>내용</th></tr>
+<tr><td>라벨이 프록시</td><td>UAM 정/오 = SAM-6D 로그 위치 dt&lt;1m — mm급 정밀도 검증 아님. essential 무참조 음성은 육안 검증된 패턴(원거리·바닥)만 사용</td></tr>
+<tr><td>단일 장면·단일 물체</td><td>세션 분할은 시간·조명·시점 변화만 담보. 다른 장소·물체로의 이전은 미검증 — free_viol 부호 반전이 보여주듯 도메인 의존성이 크다</td></tr>
+<tr><td>전 도메인 단일 운용점 미달</td><td>GSO+UAM 통합 임계로는 FA&lt;1%@리콜 11%. 도메인별 임계는 우회일 뿐 — <b>2차: free-space 공간 분해 특징 + 미모델 영역 마스크</b>(08 §4.1)로 단일 모델 성립이 목표</td></tr>
+<tr><td>보정기 미통합</td><td>선택·판정 개선은 오프라인 평가(후보 특징 재채점). 파이프라인 통합 후 회귀 3종(BOP·오염·UAM) 기준선 재측정 필요</td></tr>
+</table>
+
+<h2><span class="no">7</span>재현</h2>
+<pre>
+# Track 0 적용 재평가 (후보 특징 포함) → uam_results_t0c/
+python3 eval/external_test/run_uam_log.py --n 35 --out eval/external_test/uam_results_t0c
+
+# 보정 데이터 생성 (GSO 4샤드×50장면 → 800행, CAD는 Fuel 자동 캐시)
+python3 eval/external_test/gen_calib_set.py --shards 4 --per-shard 50
+
+# 보정 학습 + 게이트 리포트 → calib_data/calib_v1.npz
+python3 train/train_verifier_calib.py
+
+# 선택 정책 오프라인 평가 (q vs p)
+python3 train/eval_selection_policy.py
+
+# 보고서 그림·비교 오버레이
+python3 eval/external_test/make_t0_calib_overlays.py
+</pre>
+<p class="small">산출물: <code>calib_data/calib_gso.json</code>(800행) · <code>calib_v1.npz</code>(통합 학습) ·
+<code>calib_v1_sessionsplit.npz</code>(세션분할 검증용) · 결과 3세대: <code>uam_results</code>(07 정본) /
+<code>uam_results_t0</code> / <code>uam_results_t0c</code>(후보 특징 포함 정본).</p>
+
+</div>
+</body>
+</html>

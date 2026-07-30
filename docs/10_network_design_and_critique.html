@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shape6D 네트워크 — 설계 해설 · SOTA 대조 · 비판 (v1.0)</title>
+<style>
+  :root {
+    --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb;
+    --accent:#0b5fff; --accent-soft:#e8f0ff; --good:#0a7d43; --good-soft:#e6f5ec;
+    --warn:#a05a00; --warn-soft:#fdf3e3; --bad:#b4232a; --bad-soft:#fdecec;
+    --shape:#6d28d9; --shape-soft:#f1eafd;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif; color:var(--ink); background:var(--bg); line-height:1.65; font-size:15px; }
+  .wrap { max-width:1140px; margin:0 auto; padding:40px 28px 100px; }
+  h1 { font-size:28px; margin:0 0 4px; letter-spacing:-0.5px; }
+  h2 { font-size:20px; margin:56px 0 12px; padding-top:18px; border-top:2px solid var(--ink); letter-spacing:-0.3px; }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:26px 0 8px; }
+  h4 { font-size:14px; margin:18px 0 6px; color:var(--sub); }
+  p { margin:8px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:22px; }
+  table { width:100%; border-collapse:collapse; margin:12px 0 8px; font-size:12.6px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 9px; font-weight:600; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.c, th.c { text-align:center; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.pick td { background:var(--good-soft); }
+  tr.pick td:first-child { border-left:3px solid var(--good); font-weight:700; }
+  tr.hi td { background:var(--bad-soft); }
+  tr.me td { background:var(--shape-soft); }
+  tr.me td:first-child { border-left:3px solid var(--shape); font-weight:700; }
+  .r { font-weight:700; } .r.g { color:var(--good); } .r.w { color:var(--warn); } .r.b { color:var(--bad); }
+  code, .mono { font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace; font-size:12.4px; background:var(--panel); padding:1px 5px; border-radius:4px; }
+  pre { background:#12151b; color:#e6e9ef; padding:13px 16px; border-radius:9px; overflow-x:auto; font-size:12.3px; line-height:1.55; margin:10px 0; }
+  pre .c { color:#7f8996; } pre .k { color:#79b8ff; } pre .s { color:#9ecbff; } pre .hl { color:#ffab70; font-weight:600; }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0 4px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:20px; letter-spacing:-0.5px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.bad b { color:var(--bad); } .stat.good b { color:var(--good); } .stat.warn b { color:var(--warn); }
+  .box { border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:8px; padding:12px 16px; margin:12px 0; font-size:13.5px; background:var(--panel); }
+  .box b.t { display:block; font-size:14px; margin-bottom:4px; }
+  .crit { border:1px solid var(--line); border-left:4px solid var(--bad); background:var(--bad-soft); border-radius:8px; padding:13px 17px; margin:16px 0; }
+  .crit .h { font-weight:800; font-size:14.5px; color:var(--bad); margin-bottom:6px; }
+  .crit .h .sev { font-size:11px; background:var(--bad); color:#fff; padding:1px 7px; border-radius:20px; margin-right:8px; vertical-align:2px; letter-spacing:0.3px; }
+  .crit .sofar { font-size:12.5px; color:var(--sub); border-top:1px dashed #e0b4b6; margin-top:9px; padding-top:7px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft); border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.4px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; font-size:14px; }
+  .note { border:1.5px dashed var(--shape); border-radius:10px; background:var(--shape-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .warnbox { border:1.5px dashed var(--warn); border-radius:10px; background:var(--warn-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .status { border:2px solid var(--bad); border-radius:12px; background:var(--bad-soft); padding:15px 20px; margin:20px 0 8px; }
+  .status .t { font-weight:800; color:var(--bad); font-size:16px; margin-bottom:6px; }
+  .flow { display:flex; align-items:stretch; gap:0; margin:18px 0 10px; flex-wrap:wrap; }
+  .flow .s { flex:1; min-width:120px; border:1px solid var(--line); background:var(--panel); padding:10px 12px; font-size:12.3px; position:relative; }
+  .flow .s:first-child { border-radius:8px 0 0 8px; }
+  .flow .s:last-child { border-radius:0 8px 8px 0; }
+  .flow .s b { display:block; font-size:13px; margin-bottom:3px; }
+  .flow .s.done { background:var(--good-soft); border-color:#a8d8bd; }
+  .flow .s.none { background:var(--bad-soft); border-color:#e8b4b6; }
+  .flow .s .tag { font-size:10.5px; font-weight:700; letter-spacing:0.3px; text-transform:uppercase; }
+  .flow .s.done .tag { color:var(--good); } .flow .s.none .tag { color:var(--bad); }
+  .flow .s.part { background:var(--warn-soft); border-color:#e8ceA0; } .flow .s.part .tag { color:var(--warn); }
+  ul, ol { margin:8px 0 8px; padding-left:22px; } li { margin:4px 0; }
+  .src { font-size:11.5px; color:var(--sub); }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 20px; margin:20px 0; font-size:13.3px; column-count:2; column-gap:30px; }
+  .toc a { display:block; padding:2px 0; break-inside:avoid; }
+  .kv { display:grid; grid-template-columns:150px 1fr; gap:4px 14px; font-size:13.3px; margin:10px 0; }
+  .kv dt { color:var(--sub); } .kv dd { margin:0; }
+  .tiny { font-size:11.8px; color:var(--sub); }
+  @media (max-width:820px){ .hero{grid-template-columns:repeat(2,1fr);} .toc{column-count:1;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Shape6D 네트워크 — 설계 해설 · SOTA 대조 · 비판</h1>
+<div class="meta">v1.0 · 2026-07-28 · 대상: <code>docs/03_implementation_design.html §6</code>(Shape6D-PEM 정본) · 코드 실사 <code>shape6d/</code> 1,909줄 + <code>train/</code> 332줄 · SOTA 기준일 2026-07-28 (BOP 리더보드 직접 파싱)<br>
+선행 문서 관계: 이 문서는 <a href="08_training_plan.html">08 학습 계획</a>과 <a href="09_track0_calib_eval_report.html">09 Track 0·보정 결과</a>를 <b>전제로 하고 그 위에서 비판</b>합니다. 08·09가 이미 진단·계획한 항목은 §7·§9에서 명시적으로 구분했습니다.</div>
+
+<div class="status">
+  <div class="t">먼저 알아야 할 것 — 이 문서가 설명하는 네트워크는 아직 존재하지 않습니다</div>
+  레포 전체에서 <code>nn.Module</code> 상속 클래스 <b>0개</b>, 학습 루프 <b>0개</b>, 손실 함수 <b>0개</b>, torch <code>Dataset</code> <b>0개</b>입니다.
+  torch를 쓰는 코드는 <code>train/smoke_loader.py:97</code>의 <code>torch.from_numpy(...).to(dev)</code> 3줄이 전부이며, 이는 모델이 아니라 데이터 로더 처리량 확인용입니다.
+  따라서 <b>§1~2는 "설계 문서에 적힌 계획"의 해설이고, §5 이후의 비판은 그 계획과 실제 코드 양쪽을 대상으로 합니다.</b>
+  현재 동작하는 것은 학습이 전혀 없는 기하 파이프라인 <b>v0-geo</b>입니다.
+</div>
+
+<div class="hero">
+  <div class="stat bad"><b>0</b><span>구현된 신경망 모듈 수</span></div>
+  <div class="stat"><b>1,909</b><span>shape6d/ 전체 줄 수 (순수 NumPy)</span></div>
+  <div class="stat good"><b>32/32</b><span>단위테스트 통과 (6.6초)</span></div>
+  <div class="stat warn"><b>544 GB</b><span>수신 완료한 MegaPose-GSO 학습 데이터</span></div>
+</div>
+
+<div class="toc">
+  <a href="#s1">1. 파이프라인 속 S3의 위치와 설계 계보</a>
+  <a href="#s2">2. Shape6D-PEM 네트워크 구조 (설계)</a>
+  <a href="#s3">3. 2026년 SOTA 지형 — BOP 2024/2025</a>
+  <a href="#s4">4. Shape6D vs SOTA 대조표</a>
+  <a href="#s5">5. 비판 A — 구현 실사에서 나온 것</a>
+  <a href="#s6">6. 비판 B — 전략·포지셔닝</a>
+  <a href="#s7">7. 비판 C — 검증 체계의 붕괴 증거</a>
+  <a href="#s8">8. 공정한 평가 — 설계가 실제로 앞선 지점</a>
+  <a href="#s9">9. 권고 — 무엇을 먼저 바꿔야 하는가</a>
+</div>
+
+
+<h2 id="s1"><span class="no">1</span>파이프라인 속 S3의 위치와 설계 계보</h2>
+
+<p>Shape6D는 5단 파이프라인입니다. 아래는 <b>설계상 역할</b>과 <b>2026-07-28 기준 실제 구현 상태</b>를 함께 표시한 것입니다.</p>
+
+<div class="flow">
+  <div class="s done"><span class="tag">구현+테스트</span><b>S0 온보딩</b>CAD → 16384pt 마스터 샘플 · 42뷰 depth 템플릿 · TDF · 대칭 자동검출 · 캐시</div>
+  <div class="s part"><span class="tag">절반</span><b>S1 제안</b>평면제거 + voxel BFS 클러스터<br><span class="r b">EViT-SAM 부재</span></div>
+  <div class="s part"><span class="tag">절반</span><b>S2 판별</b>크기 게이트 + TDF 정합<br><span class="r b">DINOv2·점수융합 부재</span></div>
+  <div class="s none"><span class="tag">부재</span><b>S3 포즈</b><b>Shape6D-PEM</b><br>대체재: 38줄 폐형식 <code>template_init.py</code></div>
+  <div class="s done"><span class="tag">구현+테스트</span><b>S4 검증</b>projective p2pl ICP · 스플랫 잔차 · 로지스틱 신뢰도 · accept/reject</div>
+</div>
+
+<h3>1.1 설계 계보 — "SAM-6D의 특징 축을 뒤집는다"</h3>
+
+<p>Shape6D-PEM은 <b>SAM-6D(CVPR 2024)의 Pose Estimation Model을 구조적으로 승계하되 특징의 주도권을 역전</b>시킨 것입니다. SAM-6D PEM은 ViT-B로 뽑은 <b>RGB 특징</b>이 매칭을 주도하고 기하는 보조입니다. Shape6D는 이를 <b>기하가 주도하고 RGB가 보조</b>하도록 뒤집습니다.</p>
+
+<p>이 역전의 동기는 프로젝트 전제 <b>A1</b>입니다 — 산업 현장에서 물체의 외형(도장·오염·녹)은 신뢰할 수 없고, LiDAR가 주는 기하는 희소하지만 정밀하다. 따라서 재도장된 부품에서도 성능이 유지되어야 합니다.</p>
+
+<div class="box">
+  <b class="t">SAM-6D 대비 개조 지점 6건 (<code>03 §6.0</code>)</b>
+  <ol style="margin:6px 0 0">
+    <li><b>ViT-B RGB 특징 → 기하 인코더 교체</b> + RGB 보조 branch</li>
+    <li><b>오브젝트 측 온라인 연산 전량 제거</b> — 템플릿 forward·FPS·geo_embedding 재계산을 S0 캐시로 (SAM-6D <code>pose_estimation_model.py:34-37</code>이 매 프레임 재계산)</li>
+    <li><b>pointnet2 커스텀 CUDA 제거</b> — FPS/gather/QueryAndGroup → voxel 인덱스 엔진 입력화 + <code>torch.gather</code> + 거리행렬 top-k (TensorRT 변환 가능성 확보)</li>
+    <li><b>용량 축소</b> — hidden 256→192(→128), 블록 3→2</li>
+    <li><b>best-1 → top-k=3 + pose-NMS</b> — 대칭 물체의 다중 가설을 S4로 넘김</li>
+    <li><b>TRT 비호환 op 분리</b> — <code>torch.svd</code>/<code>searchsorted</code>를 엔진 밖 후처리로</li>
+  </ol>
+</div>
+
+
+<h2 id="s2"><span class="no">2</span>Shape6D-PEM 네트워크 구조 (설계)</h2>
+
+<h3>2.1 입력 텐서 — 희소성을 정면으로 다루는 설계</h3>
+
+<table>
+<thead><tr><th style="width:130px">텐서</th><th style="width:150px">shape</th><th>내용과 설계 의도</th></tr></thead>
+<tbody>
+<tr><td><code>rgb</code></td><td class="mono">(B, 3, 224, 224)</td><td>마스크 bbox 정사각 crop → 224 리사이즈</td></tr>
+<tr class="me"><td><code>geo_maps</code></td><td class="mono">(B, 10, 224, 224)</td><td><b>핵심 입력.</b> XYZ(3, centroid 중심화 + radius 정규화) + 노멀(3) + <b>유효마스크(1)</b> + 정규화 깊이(1) + flags 브로드캐스트(2: <code>rgb_valid</code>, <code>domain</code>). 유효마스크가 1급 채널인 것이 희소 depth 대응의 요체</td></tr>
+<tr><td><code>pts</code> / <code>pixel_uv</code></td><td class="mono">(B,1024,3) / (B,1024,2)</td><td><b>N_f=1024 고정.</b> 관측점이 1024보다 많으면 voxel 다운샘플, <b>적으면 복원추출 + σ0.3mm jitter</b> (중복점의 geo-kNN 퇴화 방지). 가변 길이를 포기한 것은 TRT 정적 shape 유지 + linear attention에 마스크 경로가 없기 때문</td></tr>
+<tr><td><code>fps_idx_m</code></td><td class="mono">(B, 196) i32</td><td>coarse 인덱스. 전처리에서 계산해 엔진 입력으로 주입 (커스텀 FPS op 제거)</td></tr>
+<tr><td><code>valid_count</code></td><td class="mono">(B,)</td><td>실제 유효 포인트 수 → S4 신뢰도 특징으로 전달</td></tr>
+</tbody>
+</table>
+
+<h3>2.2 기하 인코더 — 3후보 통제 비교 (M2-B에서 수치로 결정)</h3>
+
+<table>
+<thead><tr><th style="width:170px">후보</th><th>구성</th><th class="c" style="width:100px">Params/GMACs</th><th class="c" style="width:60px">TRT</th><th style="width:200px">탈락 조건</th></tr></thead>
+<tbody>
+<tr class="pick"><td>(a) image-grid conv<br><span class="tiny">우선순위 1</span></td><td>ResNet18-lite+FPN, stride-4 출력 56²×256. <b>초기 2레이어 partial conv</b> — 유효 밀도 1~2%에 대응해 <code>y = conv(x⊙m)·k²C/(conv_ones(m)+ε)</code></td><td class="c">2.0M / 1.6</td><td class="c">◎</td><td>깊이 불연속에서 "2D 이웃 ≈ 3D 이웃" 근사 붕괴 시</td></tr>
+<tr><td>(b) PointNet++ lite</td><td>SA 2단(512→196), 노멀 포함. ball query를 1024² 거리행렬 + radius 마스킹 + TopK로 대체해 커스텀 op 제거</td><td class="c">0.35M / 0.5</td><td class="c">○</td><td>(a) 대비 +1pt 미만인데 레이턴시 2배면</td></tr>
+<tr><td>(c) sparse conv</td><td>SubMConv3d 4단, voxel 2~4mm. 표현력 상한 확인용</td><td class="c">3.5M / ~0.3</td><td class="c">△</td><td>TRT 배포 경로 기한 내 미확보 시 즉시</td></tr>
+</tbody>
+</table>
+
+<p class="tiny">노멀은 학습이 아니라 전처리로 구합니다 — 유효마스크 가중 박스필터로 15~21px 창의 9개 모멘트 맵 → 픽셀별 3×3 공분산 → <b>Cardano 해석적 고유분해</b> → 최소 고유벡터. 이웃 5pt 미만 픽셀은 노멀 0 + 유효비트 해제. 전부 표준 op라 TRT 친화적입니다.</p>
+
+<h3>2.3 RGB 보조 branch와 modality dropout — 학습·추론 그래프 통일</h3>
+
+<pre><span class="c"># 03 §6.3 — [H5] 통일 규칙</span>
+f_rgb_eff = <span class="hl">flag</span> · g·F_rgb + (1 − <span class="hl">flag</span>) · <span class="hl">e_norgb</span>
+
+<span class="c"># flag(rgb_valid) ∈ {0,1}</span>
+<span class="c">#   학습: dropout p=0.3 으로 flag=0 을 샘플링</span>
+<span class="c">#   추론: RGB 결측 시 동일 경로 — 그래프가 갈라지지 않으므로 TRT 정적 유지</span>
+<span class="c"># g       = 학습형 게이트 (실제 F_rgb 에만 적용)</span>
+<span class="c"># e_norgb = 학습되는 "RGB 없음" 임베딩</span>
+
+dense_fm = Linear(320→256)( concat( grid_sample(geo56, uv), f_rgb_eff ) )  <span class="c"># (B,1024,256)</span></pre>
+
+<p>이 설계의 요점은 <b>RGB가 없는 상태를 예외가 아니라 학습된 정규 상태로 만든다</b>는 것입니다. RGB branch 자체는 MBConv 소형 CNN 0.4M (E2에서 distilled DINOv2-S와 비교 예정).</p>
+
+<h3>2.4 CAD 측 인코더 — 42뷰 depth 렌더 경유 (가중치 공유)</h3>
+
+<p>후보 (a) grid-conv는 CAD 포인트를 직접 받을 수 없습니다. 그래서 S0에서 42뷰 depth를 렌더한 뒤 <b>장면 측과 동일한 인코더</b>(RGB=<code>e_norgb</code>, <code>domain_flag=0</code>)에 통과시켜 per-pixel 특징을 3D 역투영하고, 마스터 포인트에 뷰 가중 최근접으로 집계해 <code>dense_fo</code>를 만듭니다.</p>
+
+<div class="box">
+  <b class="t">왜 이 우회로가 오히려 정답인가</b>
+  ① cross-attention은 양측이 동일 임베딩 공간이어야 하는데, <b>가중치 공유가 이를 구조적으로 보장</b>합니다.
+  ② depth 렌더는 외형과 무관하므로 전제 A1이 유지됩니다.
+  ③ 오프라인 연산이라 <b>온라인 비용 0</b>.
+  ④ 장면 측이 2.5D 부분 관측이므로, CAD 측도 부분 관측(뷰별 가시면)으로 맞추는 것이 도메인 정합에 유리합니다.
+</div>
+
+<h3>2.5 매칭부 — coarse / fine 2단</h3>
+
+<table>
+<thead><tr><th style="width:110px">단계</th><th>구성</th><th style="width:250px">SAM-6D 대비 변경</th></tr></thead>
+<tbody>
+<tr><td><b>coarse</b></td><td>197 토큰(196 + background), RPE, <code>geo_embedding_o</code>는 S0 캐시에서 로드. 2블록, H=192, heads 4</td><td>블록 3→2, hidden 256→192. 유사도 공간은 <b>256 유지</b>(teacher 유사도행렬 distill 정렬용)</td></tr>
+<tr><td><b>가설 생성</b></td><td><code>nproposal</code> 2000/100 → 가중 SVD → <b>top-k=3 + pose-NMS</b> (geodesic 30° / Δt 0.05·D_cad)</td><td>SAM-6D 6000/300 · best-1 → 축소 + NMS 그리디. NMS는 엔진 밖 후처리(3×3 행렬, CPU µs급)</td></tr>
+<tr><td><b>fine</b></td><td>1024pt, linear attention(focusing 3), <b>bg_token 유지</b>. QueryAndGroup → 거리행렬(1024²) + radius 마스킹 + TopK gather, nsample 32/64→16/32</td><td>2048→1024pt. bg_token은 배경 혼입의 배출구라 유지 필수</td></tr>
+<tr><td><b>가설 통과 규약</b></td><td colspan="2">fine은 <code>hypo[0]</code>(best)만 통과 → <b>S4 입력은 비대칭</b>: <code>{hyp0: fine 정련품 + score, hyp1..2: coarse 원본}</code></td></tr>
+</tbody>
+</table>
+
+<h3>2.6 손실 — 대칭군 최소 대응 (SAM-6D 미처리 지점을 고침)</h3>
+
+<p>SAM-6D의 <code>compute_correspondence_loss</code>는 <b>단일 GT 포즈 기준</b> 양방향 최근접 + 배경 빈 CE입니다. 대칭 처리가 없어 대칭 물체에서 모순 그라디언트가 발생합니다 — 이는 코드 확인으로 확정된 사실이며, MegaPose 논문도 회귀형 coarse 학습이 <b>대칭 때문에 붕괴</b>했다고 보고합니다.</p>
+
+<pre><span class="c"># 03 §9.3 — 수정 설계</span>
+S0 <span class="k">sym_rots</span> (연속축은 12분할 이산화, G ≤ 16)
+  → <span class="hl">샘플당 단일 g* 선택</span>   <span class="c"># 포인트별 min 은 강체 비일관 라벨 → 금지</span>
+  → g* 는 <span class="hl">coarse 해상도(2048×196)에서 선택</span>
+  → <span class="hl">fine 라벨은 g* 하나로만</span>
+  → g* 분포(비항등 선택률) 로깅으로 감시
+
+정밀도: bf16 autocast + fp32 master · <span class="hl">매칭 softmax/CE·loss 는 fp32 고정</span></pre>
+
+<h3>2.7 연산 예산</h3>
+
+<table>
+<thead><tr><th></th><th class="c">SAM-6D PEM</th><th class="c">Shape6D-PEM (H192·2블록·1024pt)</th></tr></thead>
+<tbody>
+<tr><td>온라인 파라미터 / FLOPs</td><td class="c">~104M / ~32 GFLOPs</td><td class="c"><b>~8M / ~7 GFLOPs</b> (매칭부 5.5M + 인코더 2.4M)</td></tr>
+<tr><td>오브젝트 측 온라인 연산</td><td class="c">템플릿 forward + FPS + geo_emb 재계산</td><td class="c"><b>0</b> (전량 S0 캐시)</td></tr>
+<tr><td>목표 레이턴시 (Orin NX, S3 단독)</td><td class="c">—</td><td class="c">110~140 ms (인스턴스 B=3 배치)</td></tr>
+</tbody>
+</table>
+
+<p class="tiny">즉 <b>파라미터 13배·연산 4.5배 축소</b>가 설계 목표입니다. 이 축소가 정확도를 얼마나 깎는지는 아직 아무도 모릅니다 — 비판 §6.3에서 다룹니다.</p>
+
+
+<h2 id="s3"><span class="no">3</span>2026년 SOTA 지형 — BOP 2024/2025</h2>
+
+<p>Shape6D의 기준선인 SAM-6D는 CVPR 2024 논문입니다. 그 사이 이 분야는 크게 움직였습니다.</p>
+
+<h3>3.1 BOP-Classic-Core 6D localization (unseen objects) — 리더보드 현황</h3>
+
+<table>
+<thead><tr><th style="width:210px">방법</th><th class="c" style="width:64px">AR</th><th class="c" style="width:64px">ITODD</th><th class="c" style="width:64px">T-LESS</th><th class="c" style="width:70px">시간</th><th class="c" style="width:76px">학습</th><th>비고</th></tr></thead>
+<tbody>
+<tr><td>WAPR.v2 (Multi Det)</td><td class="c n"><b>0.845</b></td><td class="c n">0.798</td><td class="c n">0.817</td><td class="c n">50.8s</td><td class="c"><span class="r b">객체별<br>4.3분 학습</span></td><td>논문 없음 (동남대). <b>엄밀히 zero-shot 아님</b> — BOP 5분 온보딩 예산을 객체별 ResNet34 학습에 소진</td></tr>
+<tr class="pick"><td>FreeZeV2.2</td><td class="c n"><b>0.833</b></td><td class="c n">0.754</td><td class="c n">0.799</td><td class="c n">21.7s</td><td class="c"><span class="r g">학습 전무</span></td><td><b>동결 DINOv2 + 동결 GeDi 특징 매칭 + RANSAC + ICP.</b> 가중치를 한 번도 갱신하지 않음</td></tr>
+<tr><td>FreeZeV2.1 🏆 BOP24</td><td class="c n">0.821</td><td class="c n">0.742</td><td class="c n">0.755</td><td class="c n">24.9s</td><td class="c"><span class="r g">학습 전무</span></td><td>+ symmetry-aware refinement</td></tr>
+<tr><td>WAPR.v2.1 (MUSE) ⚡</td><td class="c n">0.806</td><td class="c n">0.705</td><td class="c n">0.731</td><td class="c n"><b>0.72s</b></td><td class="c">객체별 학습</td><td>정확도/속도 트레이드오프 현 최고</td></tr>
+<tr><td>Co-op (CVPR 2025)</td><td class="c n">0.771</td><td class="c n">0.629</td><td class="c n">0.695</td><td class="c n">6.9s<br><span class="tiny">0.8s(1hyp)</span></td><td class="c">대규모 사전학습</td><td>0.8초에 AR 75.9 — BOP24 Best Fast</td></tr>
+<tr><td>FoundationPose</td><td class="c n">0.734</td><td class="c n">0.580</td><td class="c n">0.646</td><td class="c n">29.3s</td><td class="c">대규모 사전학습</td><td>BOP24·25 Best Open-Source</td></tr>
+<tr class="hi"><td><b>SAM-6D</b> ← Shape6D 기준선</td><td class="c n">0.704</td><td class="c n">0.602</td><td class="c n">0.515</td><td class="c n">4.4s</td><td class="c">대규모 사전학습</td><td><b>현 1위 대비 −14.1 AR</b></td></tr>
+<tr><td>Drost-CVPR10-Edges (PPF)</td><td class="c n">0.550</td><td class="c n"><b>0.570</b></td><td class="c n">0.500</td><td class="c n">87.6s</td><td class="c"><span class="r g">학습 불필요</span></td><td>2010년 방법. ITODD에서 <b>지금까지 제출된 모든 RGB-only 방법을 여전히 이김</b></td></tr>
+</tbody>
+</table>
+<p class="src">출처: BOP 리더보드 직접 파싱(2026-07-28) + <a href="https://arxiv.org/abs/2504.02812">BOP Challenge 2024 리포트</a>(CVPRW 2025 Best Paper). ⚠ 리더보드 Time 컬럼은 <b>하드웨어 미표준화</b>(참가자가 각자 측정) — 방법 간 직접 비교 무효.</p>
+
+<h3>3.2 "기하가 외형보다 강하다"는 Shape6D의 가설은 이미 입증됐습니다 — 남이</h3>
+
+<p>FreeZe(ECCV 2024)의 modality ablation은 Shape6D의 핵심 가설에 대한 가장 강한 외부 증거입니다. LM-O, refinement 없음:</p>
+
+<table>
+<thead><tr><th>특징 구성</th><th class="c" style="width:90px">AR</th><th>해석</th></tr></thead>
+<tbody>
+<tr><td>FPFH (수제 기하)</td><td class="c n">20.7</td><td rowspan="2" class="tiny" style="vertical-align:middle">고전·초기 학습형 기하 디스크립터</td></tr>
+<tr><td>FCGF (학습 기하)</td><td class="c n">20.8</td></tr>
+<tr class="pick"><td><b>MS-GeDi</b> — 기하 단독 최고</td><td class="c n"><b>56.5</b></td><td>동결 기하 foundation model</td></tr>
+<tr><td>raw RGB</td><td class="c n">15.1</td><td></td></tr>
+<tr><td>CLIP ViT-L</td><td class="c n">30.5</td><td></td></tr>
+<tr><td><b>DINOv2 ViT-G</b> — 시각 단독 최고</td><td class="c n">39.6</td><td><b>기하 단독이 시각 단독을 +16.9 앞섬</b></td></tr>
+<tr><td>MS-GeDi + DINOv2 (융합)</td><td class="c n">64.7</td><td>융합 이득 +8.2</td></tr>
+<tr><td>+ ICP</td><td class="c n">69.0</td><td></td></tr>
+</tbody>
+</table>
+<p class="src">FreeZe, ECCV 2024, Table 2 (<a href="https://arxiv.org/abs/2312.00947">arXiv:2312.00947</a>). 저자 원문: <i>"geometric features outperforms visual ones by a significant margin."</i> — 이것은 텍스처가 <b>있는</b> LM-O에서의 결과입니다.</p>
+
+<h3>3.3 그러나 "texture-less면 기하가 이긴다"는 절반만 참입니다</h3>
+
+<p>같은 방법의 RGB-D판과 RGB판을 뺀 <b>사실상의 modality ablation</b>을 데이터셋별로 보면 그림이 갈립니다. (아래 Δ는 BOP 공식 표에서 직접 계산)</p>
+
+<table>
+<thead><tr><th style="width:180px">방법 (RGB-D → RGB)</th><th class="c">LM-O</th><th class="c" style="background:#8a1e24">T-LESS</th><th class="c">TUD-L</th><th class="c">IC-BIN</th><th class="c" style="background:#0a5c33">ITODD</th><th class="c">HB</th><th class="c">YCB-V</th></tr></thead>
+<tbody>
+<tr><td>GDRNPP (BOP22)</td><td class="c n">−6.2</td><td class="c n">−8.8</td><td class="c n">−13.5</td><td class="c n">−9.9</td><td class="c n"><b>−23.1</b></td><td class="c n">−5.7</td><td class="c n">−9.6</td></tr>
+<tr><td>Co-op (BOP24)</td><td class="c n">−6.3</td><td class="c n"><b>−1.3</b></td><td class="c n">−16.2</td><td class="c n">−4.6</td><td class="c n"><b>−12.3</b></td><td class="c n">−2.2</td><td class="c n">−20.1</td></tr>
+<tr><td>GenFlow (BOP23)</td><td class="c n">−5.9</td><td class="c n" style="color:var(--good)"><b>+1.4</b></td><td class="c n">−16.5</td><td class="c n">−7.1</td><td class="c n"><b>−14.9</b></td><td class="c n">−3.1</td><td class="c n">−18.5</td></tr>
+<tr><td>MegaPose (BOP23)</td><td class="c n">−6.6</td><td class="c n" style="color:var(--good)"><b>+2.1</b></td><td class="c n">−16.4</td><td class="c n">−4.8</td><td class="c n"><b>−12.2</b></td><td class="c n">−2.4</td><td class="c n">−14.4</td></tr>
+</tbody>
+</table>
+
+<div class="warnbox">
+  <b>T-LESS와 ITODD는 둘 다 "텍스처 없는 산업 부품"인데 정반대로 거동합니다.</b>
+  ITODD에서 depth를 빼면 −12~−23이지만, <b>T-LESS에서는 −1.3 / +1.4 / +2.1 — depth가 오히려 해롭기도 합니다.</b>
+  이유는 T-LESS의 난점이 "텍스처 부재"가 아니라 <b>대칭과 객체 간 형상 유사성</b>이기 때문이며, 그것은 depth로 풀리지 않습니다.
+  ITODD가 depth-critical인 이유는 따로 있습니다 — <b>그레이스케일 전용, 실 학습영상 0장, 50mm 망원 렌즈</b>(ITODD 저자 원문: 초점거리가 길어 이미지상 스케일 오차가 z 오차로 크게 증폭).
+  <b>Shape6D의 타깃인 "팔레트급 대칭 물체"는 ITODD형이 아니라 T-LESS형입니다.</b> 이 함의는 §6.2에서 다룹니다.
+</div>
+
+
+<h2 id="s4"><span class="no">4</span>Shape6D vs SOTA 대조표</h2>
+
+<table>
+<thead><tr><th style="width:130px">축</th><th style="width:250px">Shape6D (설계)</th><th style="width:230px">FreeZeV2.2 (현 최고 zero-shot)</th><th style="width:200px">Co-op (속도 균형)</th><th>SAM-6D (기준선)</th></tr></thead>
+<tbody>
+<tr><td><b>학습 필요</b></td><td class="r w">대규모 (7~9주 계획)</td><td class="r g">전무 (동결 모델)</td><td>대규모 사전학습</td><td>대규모 사전학습</td></tr>
+<tr><td><b>주 입력</b></td><td class="r b">희소 LiDAR depth (~10% 충전율)</td><td>dense RGB-D</td><td>RGB(+D)</td><td>dense RGB-D 필수</td></tr>
+<tr><td><b>특징 주도권</b></td><td>기하 주도, RGB 보조 (dropout p=0.3)</td><td>기하(GeDi) 주도 + 시각(DINOv2) 융합</td><td>RGB 주도</td><td>RGB 주도</td></tr>
+<tr><td><b>온라인 파라미터</b></td><td class="r g">~8M / ~7 GFLOPs</td><td>DINOv2 ViT-G + GeDi (수십억 규모 동결)</td><td>—</td><td>~104M / ~32 GFLOPs</td></tr>
+<tr><td><b>타깃 하드웨어</b></td><td class="r b">Jetson Orin NX, <b>1초</b></td><td>L40S, 21.7초</td><td>RTX 3090 Ti, 0.8~6.9초</td><td>RTX 3090, 4.4초</td></tr>
+<tr><td><b>대칭 처리 (학습)</b></td><td class="r g">대칭군 최소 대응 loss (g* 단일선택)</td><td>메시에서 자가 추정 + SAR refinement</td><td class="r w">없음 (GT 5° 임계 BCE)</td><td class="r b">없음 (단일 GT 최근접 CE)</td></tr>
+<tr><td><b>accept/reject</b></td><td class="r g">10-d 로지스틱 보정 + 하드 가드</td><td>없음 (BOP는 요구 안 함)</td><td>없음</td><td>없음</td></tr>
+<tr><td><b>학습 물체 다양성</b></td><td class="r b">GSO 1,030종<br><span class="tiny">(ShapeNet은 D4 라이선스로 보류)</span></td><td>해당 없음</td><td>MegaPose 셋 (GSO+ShapeNet)</td><td>MegaPose 셋 (GSO+ShapeNet)</td></tr>
+<tr><td><b>검증 벤치마크</b></td><td class="r w">BOP + 자체 UAM 로그</td><td>BOP</td><td>BOP</td><td>BOP</td></tr>
+</tbody>
+</table>
+
+<div class="note">
+  <b>참고 — 3PT(Intrinsic, CVPR 2026 Highlight)가 던지는 반례.</b>
+  <b>RGB만으로</b> BOP-Industrial 1위(AP 0.881, IPD 0.984)를 차지했고, RGB-D 방법들(FreeZeV2.2 0.617, SAM-6D 0.463)을 크게 앞섭니다.
+  비결은 <b>멀티뷰 RGB refinement</b>(ablation상 개선분 12.3 중 10.0이 이 모듈)와 <b>10만 종 이상의 고유 CAD × 50만 장 이상 렌더</b>로 한 사전학습입니다.
+  즉 "산업 부품 = 기하 우선"이라는 명제는 <b>충분한 학습 규모와 멀티뷰가 있으면 뒤집힙니다.</b>
+</div>
+
+
+<h2 id="s5"><span class="no">5</span>비판 A — 구현 실사에서 나온 것</h2>
+
+<div class="crit">
+  <div class="h"><span class="sev">치명</span>A-1. 설정 파일이 죽어 있고, 이미 세 곳이 어긋났습니다</div>
+  <code>shape6d/config/pipeline.yaml</code> 2행은 "코드에 하드코딩 금지, 여기서 주입"이라고 선언하지만,
+  <b>이 yaml을 읽는 프로덕션 코드는 0개</b>입니다 (유일한 독자는 <code>tests/test_pipeline.py:21</code>의 존재 확인 테스트).
+  모든 임계값은 함수 기본인자에 하드코딩되어 이중 관리 중이며, 이미 다음이 어긋났습니다:
+  <table style="margin-top:8px">
+    <thead><tr><th>파라미터</th><th class="c">yaml</th><th class="c">실제 코드</th><th>영향</th></tr></thead>
+    <tbody>
+    <tr class="hi"><td><code>free_viol_max</code></td><td class="c n">0.05</td><td class="c n"><b>0.15</b> <span class="tiny">(verifier.py:22)</span></td><td><b>실동작이 설계보다 3배 관대.</b> 같은 파일 docstring도 0.05라고 적혀 있음</td></tr>
+    <tr><td><code>s4.stride</code></td><td class="c n">2</td><td class="c n">4 <span class="tiny">(scorer.py:82)</span></td><td>스플랫 해상도 절반</td></tr>
+    <tr><td><code>s4.icp_iters</code></td><td class="c n">10</td><td class="c n">스케줄 18회 <span class="tiny">(icp.py:75-82)</span></td><td>coarse-to-fine 스케줄이 본문 리터럴로 박힘</td></tr>
+    </tbody>
+  </table>
+  <div class="sofar">조용히 어긋나는 구조입니다 — yaml을 고쳐도 아무 일이 일어나지 않으므로, 다음 사람이 yaml을 믿고 실험하면 결과 해석이 통째로 틀립니다. <b>PEM 학습을 시작하기 전에 반드시 정리해야 합니다.</b> 학습 하이퍼파라미터(<code>s3.hidden_dim</code> 등)도 지금 같은 yaml에 있고 역시 아무도 읽지 않습니다.</div>
+</div>
+
+<div class="crit">
+  <div class="h"><span class="sev">높음</span>A-2. 학습해 놓은 검증기 계수를 런타임이 로드하지 않습니다</div>
+  <code>eval/external_test/calib_data/calib_v1.npz</code>가 학습·저장되어 있지만, <code>shape6d/</code> 안의 어떤 코드도 이를 읽지 않습니다.
+  <code>Verifier</code>는 <code>calibrator=None</code>일 때 <code>confidence.py:15</code>의 <b>손으로 찍은 상수</b>
+  <code>_W0 = [4, −2, 2, −8, 2, 0.5, 1, 0.5, 0.3, −0.3]</code>를 씁니다.
+  사용처는 <code>train/eval_selection_policy.py</code>와 평가 스크립트 뿐입니다.
+  <div class="sofar">즉 <b>라이브러리 기본 경로는 여전히 휴리스틱</b>이며, 보정 작업의 성과가 파이프라인에 반영되지 않습니다. §7에서 보듯 이 차이는 사소하지 않습니다.</div>
+</div>
+
+<div class="crit">
+  <div class="h"><span class="sev">높음</span>A-3. E2E 테스트가 회귀를 잡지 못합니다</div>
+  <code>tests/test_e2e_geo.py:136-137</code>은 <code>e_pos &lt; 0.010</code>, <code>e_rot &lt; 1.0</code>만 검사합니다.
+  README가 자랑하는 실측치는 <b>4.9mm / 0.71°</b>인데, <b>성능이 9.9mm / 0.99°로 두 배 나빠져도 테스트는 통과</b>합니다.
+  게다가 이 테스트는 SAM/RGB 경로를 전혀 타지 않고(<code>rgb = zeros</code>, <code>mask = None</code>), 온보딩 CLI를 우회하며,
+  <code>frame_obs</code>를 넘기지 않아 <b>실제 평가 하네스가 쓰는 프레임 전역 free-space 경로를 커버하지 않습니다</b>.
+  <div class="sofar">PEM 학습을 시작하면 "학습 결과가 v0-geo보다 나은가"를 판정해야 하는데, 그 기준선을 지키는 안전망이 마진 검사뿐입니다. <b>실측치 고정(golden number) 회귀 테스트가 필요합니다.</b></div>
+</div>
+
+<div class="crit">
+  <div class="h"><span class="sev">중간</span>A-4. TDF 정합 점수가 단방향이라 "작은 점 뭉치"가 만점을 받습니다</div>
+  <code>identify/depth_match.py:76</code>의 점수는 <code>mean(max(0, 1 − tdf/τ))</code> — <b>관측 → 템플릿 편도</b>입니다.
+  템플릿 표면 중 관측이 덮지 않은 부분에 대한 페널티가 없으므로,
+  <b>템플릿 위에 얹힌 작은 점 뭉치는 <code>s_depth ≈ 1.0</code>을 받습니다.</b> 현재 유일한 방어선은 선행하는 <code>SizeGate</code>입니다.
+  <div class="sofar">S2가 S3(PEM)의 입력을 결정하므로, 이 취약점은 학습 단계에서 <b>오염된 후보를 PEM에 먹이는 경로</b>가 됩니다. coverage 항(템플릿 측 재현율)을 점수에 넣는 것이 정석입니다.</div>
+</div>
+
+<div class="crit">
+  <div class="h"><span class="sev">중간</span>A-5. 오케스트레이터가 데드코드이고, 실제 조립은 평가 스크립트가 합니다</div>
+  <code>shape6d/pipeline.py</code>의 <code>Shape6DPipeline</code>은 전 스테이지를 <code>None</code>으로 받아 <code>NotReady</code>를 던지는 껍데기이고,
+  실제 파이프라인은 <code>eval/external_test/harness.py:78-124</code>의 <code>run_frame()</code>이 조립합니다.
+  <code>pipeline.py:58-61</code>에는 <code>... if False else ...</code> 죽은 분기도 남아 있습니다.
+  <div class="sofar">평가 하네스가 사실상의 정본이 되면, 라이브러리와 평가 경로가 갈라져 "평가에서는 되는데 배포하면 다른" 상황을 만듭니다.</div>
+</div>
+
+
+<h2 id="s6"><span class="no">6</span>비판 B — 전략·포지셔닝</h2>
+
+<div class="crit">
+  <div class="h"><span class="sev">치명</span>B-1. 학습이 정말 필요한지 검증하지 않고 7~9주와 544GB를 투입하려 합니다</div>
+  <p>Shape6D의 핵심 가설은 <b>"기하 주도로 뒤집으면 외형 변화에 강해진다"</b>입니다.
+  그런데 <b>FreeZe는 이 가설을 학습 없이 이미 실증했고, 그 상태로 BOP 2024 1위(AR 82.1)를 했습니다.</b>
+  동결 GeDi(기하) 단독 56.5 vs 동결 DINOv2(시각) 단독 39.6 — 기하 우위 +16.9 (§3.2).</p>
+  <p>즉 "기하가 외형보다 강하다"를 <b>증명하기 위해</b> 학습할 필요는 없습니다. 이미 남이 증명했고, 심지어 학습 없이 했습니다.
+  Shape6D가 학습으로 얻어야 하는 것은 그것이 아니라 <b>"Jetson에서 1초 안에"</b>라는 배포 제약뿐입니다.
+  그렇다면 M2의 정당화는 "기하 우선의 실증"이 아니라 "<b>동결 foundation 기하 특징을 8M 파라미터로 증류할 수 있는가</b>"여야 합니다. 이는 전혀 다른 실험 설계입니다.</p>
+  <div class="sofar"><b>권고:</b> M2-B 인코더 파일럿의 후보에 <b>"(d) 동결 GeDi/DINOv2 특징 + RANSAC + ICP (무학습)"</b>를 <b>기준선으로 반드시 추가</b>하십시오. 이 기준선이 v0-geo와 목표 정확도 사이의 갭을 이미 메운다면, M2는 "정확도 확보"가 아니라 "증류·경량화" 프로젝트로 재정의되어야 하고, 그것이 실제로 더 짧고 리스크가 낮은 경로입니다.<br>
+  <b>단, 이 권고에는 중대한 단서가 붙습니다 — §6.7을 반드시 함께 읽으십시오.</b> GeDi를 포함한 학습형 기하 디스크립터는 <b>밀도 불일치에서 붕괴한다는 것이 문헌으로 확인</b>되며, 그것이 정확히 Shape6D의 조건입니다.</div>
+</div>
+
+<div class="crit">
+  <div class="h"><span class="sev">치명</span>B-2. "기하 우선" 논거가 자기 타깃에 가장 약하게 적용됩니다</div>
+  <p>§3.3의 표가 보여주듯, depth 추가 이득은 <b>ITODD에서 +12~23, T-LESS에서 −1.3~+2.1</b>입니다.
+  그리고 Shape6D의 확정 타깃은 <b>"팔레트급 대칭 물체(T11 1100×1100×150 ≈ C4, EUR 1200×800×144 ≈ C2)"</b>입니다.</p>
+  <p>팔레트는 텍스처가 없지만, 그 난점은 ITODD형(그레이스케일·반사·망원렌즈)이 아니라
+  <b>T-LESS형(대칭·자기유사·평면 반복 구조)</b>입니다. 그리고 T-LESS는 <b>기하를 더해도 거의 이득이 없는 데이터셋</b>입니다.
+  실제로 프로젝트 자체 MegaPose 외부 평가에서도 순수 실패 10% 외에 <b>34%가 플립·90°급 근사대칭 실패</b>였는데, 이는 정확히 "기하만으로는 원리적으로 구분 불가"한 유형입니다.</p>
+  <div class="sofar"><b>기하 우선은 센서 선택(LiDAR)의 정당화로는 타당하지만, 대칭 물체의 자세 모호성을 푸는 근거가 될 수 없습니다.</b> 후자를 푸는 것은 (a) 직립 뷰 프라이어, (b) free-space 증거, (c) RGB 판별, (d) 멀티뷰입니다. 04 문서의 팔레트 성공은 (a)+(b) 덕분이었고, 외부 데이터에서 그 둘이 사라지자 무너졌습니다 — 이미 자체 실증된 사실입니다.</div>
+</div>
+
+<div class="crit">
+  <div class="h"><span class="sev">높음</span>B-3. 성능 게이트가 2년 전 기준입니다</div>
+  <p>M2 게이트는 <b>"BOP AR ≥ 68 (SAM-6D −2.4pt 이내)"</b>입니다. 그런데 SAM-6D는 현재 리더보드에서 <b>AR 0.704, 1위 대비 −14.1</b>입니다.
+  즉 이 게이트를 통과해도 <b>2026년 기준으로는 14pt 뒤처진 상태</b>이며, "SAM-6D 대비 −2.4pt 이내"라는 표현은 목표가 아니라 <b>낙폭 허용치</b>입니다.</p>
+  <p>더 문제는 압축 게이트 <b>"AR ≥ 67"</b>입니다. 파라미터를 104M → 8M(13배), FLOPs를 32 → 7 GFLOPs(4.5배) 줄이면서 AR을 1pt만 잃는다는 가정에 근거가 없습니다. 문헌에서 이 규모의 축소 후 정확도 손실을 보고한 6D pose 사례를 찾지 못했습니다.</p>
+  <div class="sofar"><b>권고:</b> 게이트를 절대 AR이 아니라 <b>"v0-geo 대비 개선폭"</b>과 <b>"UAM 실기 로그 성공률"</b>로 재정의하십시오. Shape6D가 BOP 1위와 경쟁할 이유는 없습니다 — 다른 문제(희소 LiDAR·엣지 1초·accept/reject)를 풀고 있기 때문입니다. 그렇다면 게이트도 그 문제를 재야 합니다.</div>
+</div>
+
+<div class="crit">
+  <div class="h"><span class="sev">높음</span>B-4. 학습 물체 다양성이 SOTA의 1/50~1/100입니다</div>
+  <p>수신 완료한 학습 데이터는 <b>MegaPose-GSO 1,030종</b>입니다 (<code>gso_models.json</code> 실측).
+  ShapeNetCore는 D4 라이선스 리스크로 보류 중입니다.</p>
+  <table style="margin-top:6px">
+    <thead><tr><th>방법</th><th class="c">학습 물체 종수</th><th class="c">렌더 규모</th></tr></thead>
+    <tbody>
+      <tr class="me"><td><b>Shape6D (계획)</b></td><td class="c"><b>1,030</b> (GSO만)</td><td class="c">~104만 샘플</td></tr>
+      <tr><td>SAM-6D / MegaPose</td><td class="c">GSO + ShapeNetCore (~5만+)</td><td class="c">200만 img</td></tr>
+      <tr><td>FoundationPose</td><td class="c">Objaverse-LVIS + GSO</td><td class="c">120만</td></tr>
+      <tr><td>3PT (Industrial 1위)</td><td class="c"><b>10만+ 고유 CAD</b></td><td class="c">50만+ 렌더</td></tr>
+    </tbody>
+  </table>
+  <div class="sofar"><b>08 §3.2가 이미 이 문제를 정확히 다루고 있습니다</b> — "파일럿에서 GSO-only와 GSO+ShapeNet을 나란히 측정해 ShapeNet 제외 비용을 수치화, 낙폭 ≤1pt면 GSO-only 확정, 초과 시 Objaverse 대체 검토". 계획 자체는 옳습니다.<br>
+  <b>제가 더하는 지적은 두 가지입니다.</b> ① <b>현재 디스크에는 GSO만 있습니다</b> — ShapeNet을 받지 않았으므로 "나란히 측정"이 지금은 불가능하고, 파일럿 시작 시점에 데이터가 없어 비교가 생략될 위험이 있습니다. ② <b>낙폭을 BOP AR로만 재면 과소평가됩니다</b> — BOP 코어 객체가 학습 분포와 가까우면 다양성 부족이 AR에 드러나지 않습니다. 낙폭 판정은 <b>UAM 실기 셋(학습 분포와 무관한 산업 물체)에서 함께</b> 재야 의미가 있습니다.</div>
+</div>
+
+<div class="crit">
+  <div class="h"><span class="sev">높음</span>B-5. 검증 벤치마크와 배포 조건이 10배 어긋나 있고, 이를 메울 벤치마크가 세상에 없습니다</div>
+  <p>조사 결과 <b>희소 LiDAR로 알려진 CAD 물체의 6D 포즈를 추정하는 공개 벤치마크도, 확립된 방법론도 존재하지 않습니다.</b>
+  인접 분야는 (a) dense RGB-D 6D pose(BOP), (b) yaw 1자유도만 추정하는 자율주행 3D detection, (c) 대형 강체 LiDAR 정합으로 갈라져 있고 그 사이가 비어 있습니다.</p>
+  <p>이는 기회이자 <b>검증 공백</b>입니다. BOP의 depth는 전부 구조광·ToF 기반 <b>dense</b>이고, Shape6D의 실제 조건은 충전율 <b>~9.6%</b>의 LiDAR 투영 depth입니다(UAM 로그 실측). 즉 <b>BOP AR 게이트를 통과해도 실배포 조건 성능을 보증하지 않습니다.</b></p>
+  <div class="warnbox" style="margin:10px 0 0">
+    <b>추가로, 학습 분포 설계가 실측과 어긋나 있습니다.</b>
+    설계의 학습 분포는 <code>N_obj ~ U[32, 2000]</code>인데, UAM 로그 실측(2026-07-22)에서 물체 주변 반경 1m 내 포인트는
+    <b>p10/p50/p90 = 9.9k / 11.3k / 12.8k</b>였습니다(Ruby128, 배경 포함 상한이므로 물체 위 점수는 이보다 적음).
+    ML-X(80) 격자 희소화 기준으로는 중앙값 ~956pt로 분포 내에 들어오지만, <b>두 센서 레짐이 약 10배 차이납니다.</b>
+    최종 센서가 확정되지 않은 상태에서 상한 2000으로 학습하면, Ruby128 레짐에서 분포 밖 추론이 됩니다.
+  </div>
+  <div class="sofar"><b>UAM 셋의 1급 승격은 08 §1이 이미 원칙 ③으로 명문화했습니다</b>("UAM 70샘플 하네스를 BOP·오염 프로토콜과 함께 상시 회귀 3종 세트로 승격"). 그 부분은 이미 옳습니다.<br>
+  <b>남는 지적은 증강 분포입니다</b> — <code>N_obj ~ U[32, 2000]</code>의 상한이 최종 센서 미확정 상태에서 한쪽 레짐만 덮습니다. 그리고 <b>BOP AR 게이트가 dense depth에서 측정된다는 구조적 한계는 승격으로 해소되지 않습니다</b> — 두 게이트가 충돌할 때(BOP는 통과, UAM은 후퇴) 무엇을 따를지 지금 정해 두어야 합니다. 참고로 OpenCV Bin-Picking Challenge 2025에서 <b>지표상 1위와 실제 로봇 파지 1위가 뒤바뀌었고, 대상 데이터셋 fine-tuning이 오히려 성능을 떨어뜨렸습니다</b>(0.768 → 0.745) — 이 충돌은 가상의 우려가 아닙니다.</div>
+</div>
+
+<div class="crit">
+  <div class="h"><span class="sev">중간</span>B-6. 1초 목표의 난이도가 문서에 정직하게 반영되어 있지 않습니다</div>
+  <p>현재 SOTA 중 가장 빠른 축이 <b>WAPR.v2.1 0.72초 / Co-op 0.8초인데, 이는 H100·RTX 3090 Ti 기준</b>입니다.
+  실측된 데스크톱↔Orin 격차는 파이프라인 수준에서 <b>5~7배</b>이고, Orin NX는 AGX Orin의 약 1/2입니다.
+  즉 <b>현 SOTA를 그대로 Orin NX에 올리면 4~10초</b>입니다.</p>
+  <p>더구나 <b>Isaac ROS 공식 벤치마크에 Orin NX의 FoundationPose 항목은 아예 없습니다</b> — NVIDIA 답변에 따르면 7.5GB GPU 여유 메모리가 필요해 <b>Orin Nano/NX급에서는 엔진 빌드 자체가 OOM</b>입니다.</p>
+  <div class="sofar">Shape6D의 8M·7GFLOPs 설계는 <b>이 제약에 대한 합리적 대응</b>입니다. 다만 문서의 레이턴시 예산표(합계 450~500ms)가 "전부 추정"이라고만 표기되어 있고, <b>실측으로 대체하는 게이트(M0-2)가 M2 착수의 선결 조건으로 걸려 있지 않습니다.</b> 인코더 선정(M2-B)이 배포성을 1급 기준으로 삼는다면, 그 기준을 재는 자를 먼저 만들어야 합니다.</div>
+</div>
+
+
+<div class="crit">
+  <div class="h"><span class="sev">치명</span>B-7. 밀도 불일치는 학습형 기하 매칭의 <i>알려진</i> 붕괴 지점인데, 설계가 이를 겨냥해 검증되지 않습니다</div>
+  <p>Shape6D의 매칭은 구조적으로 <b>비대칭</b>입니다 — CAD 측 <code>dense_fo</code>는 42뷰 <b>dense</b> depth 렌더에서 나오고, 장면 측은 충전율 <b>~9.6%</b>의 희소 LiDAR입니다. 즉 <b>양측 밀도가 약 10배 어긋난 상태로 cross-attention을 겁니다.</b></p>
+  <p>이 구성이 왜 위험한지는 point cloud registration 문헌에 명확한 실증이 있습니다:</p>
+  <table style="margin-top:6px">
+    <thead><tr><th>실험</th><th class="c" style="width:200px">결과</th><th>함의</th></tr></thead>
+    <tbody>
+    <tr class="hi"><td><b>GCL</b> (ICCV 2023) — KITTI LiDAR 이격거리별 Registration Recall, [5,10]m → [40,50]m</td><td class="c">GeoTransformer <b>97.9% → 0.0%</b><br>Predator 99.3% → 26.7%<br>SpinNet 97.6% → 0.0%</td><td><b>"샘플 수에 강건" ≠ "희소 입력에 강건".</b> GeoTransformer는 correspondence 5000→250에서 −1.5pt로 거의 무적이지만, <b>실제 LiDAR 밀도 저하에서는 완전 붕괴</b>합니다</td></tr>
+    <tr class="hi"><td><b>Cross-PCR</b> (AAAI 2025) — 한쪽만 voxel 다운샘플 (= dense CAD vs sparse 관측)</td><td class="c">Predator 89.0% → <b>2.1%</b><br>GeoTrans 92.0% → <b>4.3%</b> (0.1m)</td><td><b>단 한 번의 5cm 다운샘플로 무너집니다.</b> Shape6D의 CAD↔관측 구성이 정확히 이 설정입니다</td></tr>
+    <tr><td><b>ECPC-ICP</b> (Sensors 2021) — 노변 LiDAR 차량 6D pose, 희소도별 성공률</td><td class="c">FPFH-ICP <b>14.75%</b><br>SHOT-ICP <b>40.48%</b><br>ECPC-ICP 95.50%</td><td>고전 local descriptor는 object-level LiDAR 희소도에서 사실상 실패. 희소도 S=0.5에서는 <b>차량당 약 6점</b></td></tr>
+    </tbody>
+  </table>
+  <p><b>공정하게 — 설계에 답이 아예 없지는 않습니다.</b> ① 인코더 <b>가중치 공유 + <code>domain_flag</code> 임베딩</b>으로 두 도메인을 같은 공간에 두려 하고, ② <b>유효마스크를 1급 입력 채널</b>로 넣었으며, ③ CAD 측을 완전 3D 포인트가 아니라 <b>뷰별 가시면(2.5D 부분 관측)</b>으로 맞췄고, ④ 초기 2레이어 <b>partial conv</b>로 저밀도에 대응합니다. 이는 문헌이 가리키는 방향(density-invariant 학습)과 일치하는 합리적 설계입니다.</p>
+  <div class="sofar"><b>문제는 검증 계획에 이 축이 없다는 것입니다.</b> M2-B 파일럿의 탈락 조건은 정확도·레이턴시·TRT 변환 가능성 3개뿐이고, <b>"장면 측 밀도를 낮췄을 때의 낙폭"은 판정 항목이 아닙니다.</b><br>
+  <b>권고:</b> M2-B에 <b>밀도 스윕 ablation을 1급 판정 항목으로 추가</b>하십시오 — 장면 측 유효 포인트를 {2000, 1000, 500, 250, 100, 50}으로 낮추며 각 인코더 후보의 낙폭 곡선을 그립니다. 이는 ①인코더 선정 기준이 되고, ②문헌에 없는 "객체당 점 개수 대 6D pose 정확도" 곡선이라 <b>그 자체로 논문화 가치가 있으며</b>, ③§6.1의 FreeZe 기준선이 실제로 쓸 수 있는지도 같은 실험에서 판별됩니다.</div>
+</div>
+
+<h2 id="s7"><span class="no">7</span>비판 C — 검증 체계의 붕괴 증거</h2>
+
+<div class="warnbox">
+  <b>먼저 — 이 절의 절반은 이미 알려진 것입니다.</b>
+  <a href="09_track0_calib_eval_report.html">09 문서</a>가 <code>free_viol</code>·<code>coverage</code>·<code>rmse</code>의 부호 반전을 이미 실증했고,
+  그 원인을 <b>CAD 완전성</b>으로 설명했습니다 — GSO는 완전 CAD라 "모델이 관측 앞을 침범 = 오포즈"가 성립하지만,
+  UAM의 SKID CAD는 <b>부분 CAD</b>라 정포즈여도 free-space를 위반합니다. 이는 08 §4.1 가설의 실증이며, 제 분석보다 근거가 구체적입니다.
+  <b>아래에서 새로 더하는 것은 09 표에 없는 두 특징(<code>inlier_ratio</code>, <code>log10_n_obs</code>)과, 그것이 시사하는 추가 메커니즘입니다.</b>
+</div>
+
+<h3>7.1 09가 보고하지 않은 두 계수 — 반전 폭이 가장 큰 것은 <code>inlier_ratio</code>입니다</h3>
+
+<p>S4 검증기는 10차원 특징을 로지스틱 회귀로 accept/reject 확률에 매핑합니다. 09는 <code>coverage</code>·<code>free_viol</code>·<code>rmse</code> 3개를 보고했는데, 저장된 <code>.npz</code>를 전부 로드하면 나머지 특징에서 더 큰 반전이 보입니다:</p>
+
+<table>
+<thead><tr><th style="width:150px">특징</th><th class="c" style="width:110px">설계 의도<br><span class="tiny">(_W0 휴리스틱)</span></th><th class="c" style="width:110px">GSO 합성<br><span class="tiny">calib_gso_only</span></th><th class="c" style="width:110px">UAM 실기<br><span class="tiny">calib_v1</span></th><th class="c" style="width:110px">세션분할<br><span class="tiny">calib_v1_sessionsplit</span></th><th>판정</th></tr></thead>
+<tbody>
+<tr class="hi"><td><code>inlier_ratio</code></td><td class="c n">+4.0</td><td class="c n">0.000</td><td class="c n"><b>−20.175</b></td><td class="c n"><b>−10.234</b></td><td><b class="r b">부호 반전</b> — 실기에서는 "정합 inlier가 많을수록 신뢰도 하락"</td></tr>
+<tr><td><code>rmse_over_tau</code></td><td class="c n">−2.0</td><td class="c n">−15.479</td><td class="c n">−23.208</td><td class="c n">−14.125</td><td class="r g">일관 (음수)</td></tr>
+<tr class="hi"><td><code>coverage</code></td><td class="c n">+2.0</td><td class="c n">+13.930</td><td class="c n"><b>−7.035</b></td><td class="c n"><b>−0.823</b></td><td><b class="r b">부호 반전</b></td></tr>
+<tr class="hi"><td><code>free_viol</code></td><td class="c n">−8.0</td><td class="c n">−13.414</td><td class="c n"><b>+1.897</b></td><td class="c n"><b>+0.798</b></td><td><b class="r b">부호 반전</b> — free-space 위반이 신뢰도를 <i>올림</i></td></tr>
+<tr><td><code>s2_depth</code></td><td class="c n">+2.0</td><td class="c n">+1.458</td><td class="c n">+4.623</td><td class="c n">+3.251</td><td class="r g">일관</td></tr>
+<tr><td><code>s2_sem</code></td><td class="c n">+0.5</td><td class="c n">0.000</td><td class="c n">0.000</td><td class="c n">0.000</td><td class="r w">생산자 부재 — 항상 0 (DINOv2 미구현)</td></tr>
+<tr><td><code>s3_match</code></td><td class="c n">+1.0</td><td class="c n">+5.344</td><td class="c n">+6.462</td><td class="c n">+7.650</td><td class="r g">일관</td></tr>
+<tr class="hi"><td><code>log10_n_obs</code></td><td class="c n">+0.5</td><td class="c n">−0.395</td><td class="c n"><b>+3.774</b></td><td class="c n"><b>+3.062</b></td><td class="r b">반전 + 실기에서 <b>지배적 가중</b></td></tr>
+<tr><td><code>border</code></td><td class="c n">−0.3</td><td class="c n">0.000</td><td class="c n">0.000</td><td class="c n">0.000</td><td class="r w">항상 0</td></tr>
+</tbody>
+</table>
+<p class="src">출처: <code>eval/external_test/calib_data/*.npz</code> 직접 로드 (2026-07-28).</p>
+
+<div class="crit">
+  <div class="h"><span class="sev">높음</span>C-1. CAD 완전성만으로는 <code>inlier_ratio</code> 반전이 설명되지 않습니다 — 라벨 프록시 가설</div>
+  <p>09의 <b>부분 CAD 설명은 <code>free_viol</code>과 <code>coverage</code>에 정확히 들어맞습니다</b> — 모델에 없는 부분이 관측되면 free-space 위반과 커버리지 손실이 동시에 발생하므로, 두 특징이 함께 무의미해지는 것이 자연스럽습니다.</p>
+  <p>그런데 <code>inlier_ratio</code>는 다릅니다. 부분 CAD라도 <b>모델에 존재하는 면에서의 정합 품질</b>은 여전히 유효한 신호여야 하는데,
+  세션 분할 후에도 <b>−10.2</b>로 강하게 음수입니다. 그리고 <code>log10_n_obs</code>가 설계 의도(+0.5)의 <b>6~7배</b>인 +3.06~+3.77로 올라와 있습니다.</p>
+  <p><b>추가 가설(검증 필요):</b> UAM 라벨이 포즈 정확도의 프록시로서 약할 수 있습니다.
+  <code>train/train_verifier_calib.py:32-51</code>에 따르면 라벨은 <b>로그된 SAM-6D 포즈와의 ‖Δt‖&lt;1m 양성 / &gt;2m 음성</b>이고,
+  참조가 없으면 <b>z&gt;9.5m·z&lt;2m를 음성</b>으로 붙입니다. 로그된 SAM-6D 포즈는 GT가 아니며(하네스 docstring도 "GT 아님 — 일치도 지표"로 명시),
+  <b>거리 기반 음성 규칙이 들어가 있어</b> 분류기가 "포즈가 맞는가" 대신 "<b>적당한 거리에서 조밀하게 관측했는가</b>"를 배우기 쉽습니다.
+  그 경우 근거리·고밀도 관측에서는 잔차 분포가 넓어져 <code>inlier_ratio</code>가 낮아지는데 라벨은 양성이므로, <b>가중치가 음으로 학습</b>됩니다 — 관측된 부호와 일치합니다.</p>
+  <div class="sofar"><b>판별은 간단합니다:</b> ① <code>log10_n_obs</code>를 제거하고 재학습해 holdout AUC 낙폭을 봅니다(거의 안 떨어지면 프록시 가설 기각, 크게 떨어지면 채택). ② z 기반 음성 규칙으로 붙인 행만 제외하고 재학습합니다. 각각 반나절이면 끝나며, <b>둘 다 09가 이미 지적한 "2차 특징 재설계"의 사전 진단으로 필요합니다.</b></div>
+</div>
+
+<div class="fair">
+  <div class="h">공정하게 — 09는 이 문제를 인지하고 정확한 한계선까지 그어 두었습니다</div>
+  09가 보고한 <b>"전 도메인 단일 운용점에서 FA&lt;1% 시 리콜 11% — 미달, 도메인별 임계로는 성립, 단일 모델은 2차 특징 필요"</b>는
+  위 반전 현상의 정확한 귀결입니다. 즉 <b>"단일 보정기로는 두 도메인을 못 덮는다"는 결론에 이미 도달해 있습니다.</b>
+  <code>calib_v1_sessionsplit</code>이 누수를 줄이자 반전 폭이 완화된 것(<code>coverage</code> −7.04→−0.82, <code>free_viol</code> +1.90→+0.80)도 자체 실험으로 확인된 사실입니다.
+  <b>제가 더하는 것은 "그 2차 특징을 설계하기 전에, 라벨 자체가 무엇을 재고 있는지 먼저 확인하라"는 순서 제안뿐입니다.</b>
+</div>
+
+
+<h2 id="s8"><span class="no">8</span>공정한 평가 — 설계가 실제로 앞선 지점</h2>
+
+<p>비판이 길었으므로, 문헌 대조에서 <b>Shape6D가 SOTA보다 앞서거나 SOTA에 없는</b> 항목을 명시합니다.</p>
+
+<div class="fair">
+  <div class="h">① 대칭 손실 설계는 주요 zero-shot 방법 전부보다 앞섭니다</div>
+  조사 결과, 학습형 novel-object 방법의 <b>손실 함수는 거의 예외 없이 대칭 비인지</b>입니다:
+  <b>SAM-6D</b>(단일 GT 포즈 최근접 대응 CE, 레포 전체에 <code>symmetr</code> 0회),
+  <b>FoundationPose</b>(ADD·측지거리 기준 triplet — ADD-S가 아님),
+  <b>Co-op</b>(GT 대비 5° 임계 BCE),
+  <b>GigaPose</b>(3D 점 동일성 InfoNCE — 대칭 등가 패치를 negative로 밀어냄).
+  MegaPose만이 분류 정식화로 회피했고, 그마저 "회귀형 coarse는 대칭 때문에 학습이 붕괴했다"고 보고합니다.
+  <b>Shape6D의 "coarse 해상도에서 샘플당 g* 단일 선택 + fine은 g*만" 설계는 이 문제를 정면으로 다루는 소수 사례이며, "포인트별 min은 강체 비일관 라벨이므로 금지"라는 단서까지 붙어 있는 것은 정확한 이해를 보여줍니다.</b>
+</div>
+
+<div class="fair">
+  <div class="h">② accept/reject 보정은 BOP가 측정하지 않는, 산업에 필수인 축입니다</div>
+  BOP는 AR만 재고 <b>"이 결과를 믿어도 되는가"를 묻지 않습니다.</b> 조사한 방법 중 명시적 accept/reject 보정을 가진 것은 없습니다
+  (FreeZe의 symmetry-aware refinement가 가장 근접하나 목적이 다름).
+  Shape6D의 <b>하드 가드(inlier≥25 / degenerate 금지) + 10-d 보정 + UNCERTAIN 구간</b>은 리더보드에서 점수를 받지 못하지만 실제 배포에서는 결정적입니다.
+  OpenCV BPC 2025에서 <b>지표 1위와 로봇 파지 1위가 뒤바뀐 사례</b>가 이 축의 중요성을 뒷받침합니다.
+</div>
+
+<div class="fair">
+  <div class="h">③ 희소 LiDAR 6D 포즈는 실제로 문헌 공백입니다 — 다만 공백의 경계를 정확히 그어야 합니다</div>
+  <p>§6.5·§6.7에서 검증 리스크로 지적한 것과 동전의 양면입니다. 확인된 사실:
+  BOP는 7회 챌린지·11개 트랙·십수 개 데이터셋 전부가 <b>구조광/액티브 스테레오 dense depth</b>이며 LiDAR 트랙이 0개입니다.
+  자율주행 3D detection은 <b>yaw 1자유도만</b> 추정하고(full SO(3)를 시도한 사실상 유일한 예외 Det6D조차 "6D 라벨을 주는 데이터셋이 없어" 합성 증강에 의존), CAD 피팅은 전부 이미지 주도이고 LiDAR는 보조 정규화항입니다.
+  <b>SAM-6D 논문에는 depth 노이즈·희소성 ablation이 아예 없습니다.</b></p>
+  <p><b>단, "아무도 안 했다"고 말하면 과장입니다.</b>
+  <b>PPF(Drost, CVPR 2010)는 희소성을 설계 목표로 명시</b>했고(원문: <i>"allows using much sparser object and scene point clouds"</i>), 직경의 3~5% 샘플링으로 동작하며 BOP 2017·2019 우승 + ITODD 3년간 1위였습니다.
+  <b>ECPC-ICP(Sensors 2021)</b>는 노변 LiDAR로 차량 6D pose를 하며 희소도 스윕까지 보고합니다(단일 카테고리·노면 구속·인프라 고정이라 일반화 불가).</p>
+  <p><b>따라서 정확한 공백은 이것입니다 — "실제 LiDAR 빔 패턴의 희소성·비등방성 하에서, CAD 기반 6D 포즈의 체계적 평가·벤치마크·전용 방법론".</b>
+  특히 <b>"객체당 점 개수 대 6D pose 정확도" 곡선을 그린 논문이 존재하지 않습니다.</b>
+  <b>UAM 실기 로그(410+242건)와 D2-a 밀도 실측을 이미 보유한 것은 이 공백을 메울 실질 자산이며, §6.7의 밀도 스윕 ablation이 그 곡선을 만드는 가장 짧은 경로입니다.</b></p>
+</div>
+
+<div class="fair">
+  <div class="h">⑥ N_f=1024라는 동작점은 문헌과 정확히 일치합니다</div>
+  MatchNorm(ECCV 2022)이 TUD-L/LINEMOD에서 <b>모델 1024점 / 관측 768점</b>으로 6D pose registration을 수행하는 등,
+  <b>객체 6D 포즈 정합의 표준 동작점은 ~10³점</b>입니다. Shape6D의 <code>N_f=1024</code> 고정과 <code>idx_model 1024</code>는 임의로 고른 값이 아니라 이 대역에 정확히 놓여 있습니다.
+  또한 Hinterstoisser et al.(ECCV 2016)은 <i>"자가 가림 때문에 가시 점은 보통 1000개 이하"</i>라고 보고합니다 —
+  <b>희소 LiDAR가 특별히 불리한 조건이 아니라, 6D 포즈 문제의 원래 동작 대역에 가깝다는 뜻입니다.</b>
+</div>
+
+<div class="fair">
+  <div class="h">④ "항상 동작하는 폴백"이 실제로 동작합니다</div>
+  v0-geo는 학습 없이 팔레트@3m·1200pt·σ5mm에서 <b>4.9mm / 0.71°</b>로 요구 스펙(10mm/1°)을 통과합니다.
+  대부분의 연구 프로젝트가 "학습이 끝나야 뭔가 보여줄 수 있는" 상태인 것과 달리,
+  <b>M2가 실패해도 배포 가능한 산출물이 이미 있습니다.</b> 이는 개발 전략 원칙 ①의 실현이며, 정당하게 평가받아야 할 성과입니다.
+</div>
+
+<div class="fair">
+  <div class="h">⑤ S0 전량 캐시로 온라인 오브젝트 측 연산을 0으로 만든 것은 실질적 기여입니다</div>
+  SAM-6D가 매 프레임 재계산하는 템플릿 forward·FPS·geo_embedding을 전부 오프라인으로 밀어낸 설계는
+  <b>~104M → ~8M 파라미터 축소분의 상당 부분</b>을 차지합니다.
+  참고로 ZeroPose 논문이 공개한 유일한 온보딩 비용 실측(42뷰 27초, 162뷰 104.5초)에 비추어 볼 때, 42뷰 선택은 BOP의 5분 온보딩 예산 안에 충분히 들어옵니다.
+</div>
+
+
+<h2 id="s9"><span class="no">9</span>권고 — 무엇을 먼저 바꿔야 하는가</h2>
+
+<p class="tiny">"신규" = 08·09 계획에 없던 항목 · "선행" = 08·09가 이미 계획했으나 <b>순서를 앞당기자</b>는 제안 · "보강" = 계획된 항목의 판정 기준을 바꾸자는 제안.</p>
+
+<table>
+<thead><tr><th class="c" style="width:44px">순위</th><th class="c" style="width:52px">구분</th><th style="width:265px">조치</th><th class="c" style="width:66px">비용</th><th>근거</th></tr></thead>
+<tbody>
+<tr class="hi"><td class="c"><b>1</b></td><td class="c"><b>신규</b></td><td><b>검증기 라벨이 무엇을 재는지 진단</b> — ① <code>log10_n_obs</code> 제거 재학습의 AUC 낙폭 ② z 기반 음성 규칙 행 제외 재학습</td><td class="c">0.5일</td><td>§7 C-1 — 09의 "2차 특징 재설계" <b>전에</b> 해야 함. 라벨이 거리 프록시면 특징을 아무리 고쳐도 안 됨</td></tr>
+<tr class="hi"><td class="c"><b>2</b></td><td class="c"><b>신규</b></td><td><b>M2-B에 밀도 스윕 ablation을 1급 판정 항목으로 추가</b> — 장면 측 유효점 {2000,1000,500,250,100,50}에서 후보별 낙폭 곡선</td><td class="c">2~3일</td><td>§6.7 — GeoTransformer가 LiDAR 밀도 저하에서 <b>RR 97.9%→0.0%</b>, Predator가 한 번의 다운샘플로 <b>89%→2.1%</b>. <b>Shape6D 구성이 정확히 이 설정</b>인데 판정 항목에 없음. 부수 효과로 문헌에 없는 곡선 확보</td></tr>
+<tr class="hi"><td class="c"><b>3</b></td><td class="c"><b>신규</b></td><td><b>M2-B 후보에 무학습 기준선 2종 추가</b> — (d) 동결 GeDi/DINOv2 + RANSAC + 기존 S4 ICP, (e) PPF(Drost/Vidal)</td><td class="c">3~5일</td><td>§6.1 — 갭이 메워지면 <b>Track 1이 "정확도 확보"에서 "증류"로 재정의됨.</b> PPF는 희소성을 설계 목표로 명시한 유일 계열(BOP 2017·2019 우승). <b>단 권고 2와 함께 측정해야 유효</b> — GeDi도 밀도 불일치에서 붕괴할 수 있음</td></tr>
+<tr><td class="c"><b>4</b></td><td class="c"><b>신규</b></td><td><b>config 주입 경로 구현 + 3개 불일치 해소</b> (<code>free_viol_max</code> 0.15 vs 0.05, <code>stride</code>, <code>icp_iters</code>)</td><td class="c">0.5일</td><td>§5 A-1 — 학습 하이퍼파라미터도 같은 죽은 yaml에 있음. <b>학습 시작 전 필수</b></td></tr>
+<tr><td class="c"><b>5</b></td><td class="c"><b>신규</b></td><td><b>E2E 골든 넘버 회귀 테스트</b> — 4.9mm/0.71° 실측치를 여유 20% 이내로 고정</td><td class="c">0.5일</td><td>§5 A-3 — 현재 2배 악화까지 통과. "PEM이 v0-geo를 이겼는가"를 판정할 기준선 보호</td></tr>
+<tr><td class="c"><b>6</b></td><td class="c">선행</td><td><b>ShapeNet(또는 Objaverse 서브셋) 데이터를 파일럿 전에 확보</b> — 08 §3.2의 "GSO-only vs GSO+ShapeNet 나란히 측정"은 <b>데이터가 있어야 성립</b>. 현재 디스크에는 GSO만 있음</td><td class="c">D4 결정<br>+ 수신</td><td>§6.4 — 데이터가 없으면 비교가 생략되고 GSO-only가 <b>측정 없이</b> 기정사실화됨</td></tr>
+<tr><td class="c"><b>7</b></td><td class="c">보강</td><td><b>ShapeNet 제외 비용을 UAM 셋에서도 측정</b> — BOP AR 낙폭만으로 ≤1pt 판정하지 말 것</td><td class="c">—</td><td>§6.4 — BOP 코어가 학습 분포와 가까우면 다양성 부족이 AR에 안 드러남</td></tr>
+<tr><td class="c"><b>8</b></td><td class="c">보강</td><td><b>BOP 게이트와 UAM 게이트 충돌 시 우선순위를 지금 정할 것</b>, 그리고 게이트를 절대 AR이 아니라 <b>v0-geo 대비 개선폭</b>으로 재정의</td><td class="c">결정</td><td>§6.3·§6.5 — 08 §3.1이 02의 "AR ≥ 68" 게이트를 변경 없이 승계했으나, SAM-6D는 현재 1위 대비 −14.1</td></tr>
+<tr><td class="c"><b>9</b></td><td class="c">선행</td><td><b>M0-2 Orin 실측을 M2-B 착수 조건으로</b> — 환산계수 3종(컴퓨트/메모리/launch)</td><td class="c">2~3일</td><td>§6.6 — 인코더 선정이 "배포성 1급"인데 잴 자가 없음. Orin NX는 FoundationPose조차 OOM</td></tr>
+<tr><td class="c"><b>10</b></td><td class="c"><b>신규</b></td><td><b>증강 분포 상한 확장</b> — <code>N_obj ~ U[32, 2000]</code> → 센서 레짐 2종 커버</td><td class="c">0.5일</td><td>§6.5 — Ruby128과 ML-X(80) 레짐이 약 10배 차이</td></tr>
+<tr><td class="c"><b>11</b></td><td class="c"><b>신규</b></td><td><b>TDF 점수에 템플릿 측 coverage 항 추가</b></td><td class="c">1일</td><td>§5 A-4 — 단방향 점수라 작은 점 뭉치가 만점. S3 입력을 오염시키는 경로</td></tr>
+</tbody>
+</table>
+
+<div class="note" style="margin-top:22px">
+  <b>한 문장 결론.</b>
+  Shape6D의 설계는 <b>대칭 손실·accept/reject·엣지 예산</b>에서 현 SOTA보다 앞서거나 SOTA가 다루지 않는 축을 정확히 짚고 있습니다.
+  그러나 <b>핵심 가설("기하가 외형보다 강하다")은 이미 남이 학습 없이 증명했고</b>, 그 사실이 M2의 정당화를 바꿉니다 —
+  M2는 정확도를 확보하는 프로젝트가 아니라 <b>동결 foundation 특징을 8M 파라미터로 증류해 Jetson 1초에 넣는 프로젝트</b>로 재정의되어야 합니다.
+  그리고 그 실험을 시작하기 전에, <b>결과를 판정할 검증기가 실제로 포즈 정확도를 재고 있는지부터 확인해야 합니다</b> —
+  09가 이미 "단일 보정기로는 두 도메인을 못 덮는다"에 도달했으므로, 2차 특징을 설계하기 <b>전에</b> 라벨 진단을 넣는 것이 순서입니다.
+</div>
+
+<p class="src" style="margin-top:30px; padding-top:14px; border-top:1px solid var(--line)">
+주요 참조 —
+<a href="https://arxiv.org/abs/2504.02812">BOP Challenge 2024</a> (CVPRW 2025 Best Paper) ·
+<a href="https://arxiv.org/abs/2312.00947">FreeZe</a> (ECCV 2024) ·
+<a href="https://arxiv.org/abs/2506.09784">FreeZeV2</a> (2025) ·
+<a href="https://arxiv.org/abs/2311.15707">SAM-6D</a> (CVPR 2024) ·
+<a href="https://arxiv.org/abs/2312.08344">FoundationPose</a> (CVPR 2024) ·
+<a href="https://arxiv.org/abs/2503.17731">Co-op</a> (CVPR 2025) ·
+<a href="https://arxiv.org/abs/2506.00599">XYZ-IBD</a> ·
+<a href="https://openaccess.thecvf.com/content_ICCV_2017_workshops/papers/w31/Drost_Introducing_MVTec_ITODD_ICCV_2017_paper.pdf">ITODD</a> (ICCVW 2017) ·
+<a href="https://bop.felk.cvut.cz/leaderboards/">BOP 리더보드</a> (2026-07-28 파싱) ·
+내부: <code>docs/03_implementation_design.html §6</code>, <code>docs/05_concept_review.html</code>, <code>eval/external_test/README.md</code>, <code>eval/external_test/calib_data/</code>
+</p>
+
+</div>
+</body>
+</html>

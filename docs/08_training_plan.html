@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shape6D — 학습 진행 계획 (v1.0)</title>
+<style>
+  :root {
+    --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb;
+    --accent:#0b5fff; --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00;
+    --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif; color:var(--ink); background:var(--bg); line-height:1.65; font-size:15px; }
+  .wrap { max-width:1080px; margin:0 auto; padding:40px 28px 80px; }
+  h1 { font-size:28px; margin:0 0 4px; letter-spacing:-0.5px; }
+  h2 { font-size:20px; margin:48px 0 12px; padding-top:18px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:16px; margin:26px 0 8px; }
+  p { margin:8px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:22px; }
+  table { width:100%; border-collapse:collapse; margin:12px 0 8px; font-size:12.8px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 10px; font-weight:600; }
+  td { padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.c, th.c { text-align:center; }
+  td.id { font-weight:700; white-space:nowrap; color:var(--shape); }
+  .r { font-weight:700; } .r.g { color:var(--good); } .r.b { color:var(--bad); }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:17px; letter-spacing:-0.3px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good { border-left:4px solid var(--good); }
+  .stat.bad { border-left:4px solid var(--bad); }
+  .stat.pur { border-left:4px solid var(--shape); }
+  .note { border:1.5px dashed var(--shape); border-radius:10px; background:var(--shape-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .warnbox { border:1.5px solid var(--bad); border-radius:10px; background:var(--bad-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .okbox { border:1.5px solid var(--good); border-radius:10px; background:var(--good-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  pre { background:#14161b; color:#d6dbe4; border-radius:10px; padding:12px 15px; font-size:11.8px; overflow-x:auto; }
+  code { background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:12px; }
+  .small { font-size:12.5px; color:var(--sub); }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .tag { display:inline-block; font-size:11px; font-weight:700; border-radius:5px; padding:1px 7px; margin-right:4px; vertical-align:1px; }
+  .tag.new { background:var(--bad-soft); color:var(--bad); }
+  .tag.keep { background:var(--good-soft); color:var(--good); }
+  .tag.mod { background:var(--shape-soft); color:var(--shape); }
+  @media (max-width:760px) { .hero { grid-template-columns:repeat(2,1fr); } }
+  @media print { .wrap { max-width:100%; } h2 { break-before:page; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Shape6D — 학습 진행 계획</h1>
+<p class="meta">v1.0 · 2026-07-23 · 전제 문서: <a href="02_development_plan.html">02(개발 계획)</a>·<a href="03_implementation_design.html">03(구현 정본)</a> ·
+근거 평가: <a href="04_synthetic_validation_report.html">04(합성)</a>·<a href="06_external_eval_visual_report.html">06(MegaPose 100샘플)</a>·<a href="07_uam_field_log_eval_report.html">07(UAM 실기 로그 70샘플)</a> ·
+자원: RTX PRO 6000 Blackwell 96GB ×1 (16코어/64GB/NVMe 2TB) ·
+이 문서는 02의 M2·M3 계획을 <b>평가 3종의 실측으로 구체화·개정</b>한 학습 실행 계획이다. 02와 충돌 시 이 문서가 우선.</p>
+
+<div class="hero">
+  <div class="stat pur"><b>Track 1 — PEM</b><span>S3 기하 주도 포즈망 본학습 (M2 승계, 증강 1종 추가)</span></div>
+  <div class="stat pur"><b>Track 2 — 검증기</b><span>S4 신뢰도 학습·보정 (M3-3 <b>전면 재설계</b> — 07 반영)</span></div>
+  <div class="stat good"><b>Track 0 — 무학습 픽스</b><span>학습 전 선행: 평면성 게이트·FOV 커버리지 (1주)</span></div>
+  <div class="stat bad"><b>결정 필요</b><span>D4 라이선스(본학습 전) · CAD 정비 방침(§7)</span></div>
+</div>
+
+<h2><span class="no">1</span>왜 이 학습인가 — 평가 3종이 확정한 갭</h2>
+
+<p>04(합성)→06(MegaPose)→07(UAM 실기)이 일관되게 보여준 것: <b>정합 스택(S2 TDF→coarse→ICP)은 무학습으로도 자산이다</b>
+(04: 4.9mm/0.71°, 06 모드 A: 성공 시 3.5mm/0.62°, 07 모드 A: 안착 97%). 학습이 메워야 할 갭은 정확히 세 곳이다.</p>
+
+<table>
+<tr><th style="width:22%">갭</th><th>실측 근거</th><th class="c" style="width:17%">처방</th><th class="c" style="width:13%">학습 여부</th></tr>
+<tr><td><b>G1. 후보 선택 실패</b><br>클러터가 게이트 통과</td><td>07: S1 정선택 49% (게시판·부스 평면 통과) · 06 모드 B: 5% (클러터 병합) — 양방향 취약</td><td class="c">평면성 게이트(Track 0) + M1 EViT-SAM 마스크 + DINOv2 의미 점수</td><td class="c r g">무학습<br>(사전학습 통합)</td></tr>
+<tr><td><b>G2. coarse 모호성</b><br>플립·90° 오포즈</td><td>06: 모호 실패 34% (뒷면 가림에서 뒤집힌 포즈가 가시면에 완벽 정합) — 기하 단독의 본질 한계</td><td class="c"><b>Track 1</b> — PEM 학습 (RGB 보조 branch + 강건화 증강)</td><td class="c r b">본학습</td></tr>
+<tr><td><b>G3. 판정 역전</b><br>검증기 신뢰도 붕괴</td><td>07: 정포즈 87% 기각(free-space 가드) + 오수락 95% (부분 CAD·대형 평면) · 06: 오수락 40% (도메인 이전 실패)</td><td class="c"><b>Track 2</b> — 검증기 특징 재설계 + 보정 학습</td><td class="c r b">보정 학습</td></tr>
+</table>
+
+<div class="note"><b>원칙 (02 §개발 전략 재확인)</b> — ① 학습 없는 개선을 먼저: Track 0과 M1으로 G1을 제거한 뒤 남는 갭에만 학습을 투입한다.
+② 측정이 결정한다: 모든 선정(인코더·증강 강도·가드 임계)은 하네스 수치로 결정. ③ UAM 70샘플 하네스(<code>run_uam_log.py</code>)를
+BOP·오염 프로토콜과 함께 <b>상시 회귀 3종 세트</b>로 승격한다 — 실기 분포에서의 낙폭을 매 단계 감시.</div>
+
+<h2><span class="no">2</span>Track 0 — 학습 전 선행 픽스 (1주, 학습 아님이지만 게이트)</h2>
+
+<p>목적: G1·G3의 <b>무학습으로 제거 가능한 부분을 먼저 제거</b>해, 학습이 메워야 할 잔여 갭을 정확히 잰다 (M1-6 "재학습이 정말 필요한 갭 확정"과 동일 철학).</p>
+
+<table>
+<tr><th style="width:12%">ID</th><th style="width:30%">작업</th><th>상세</th><th class="c" style="width:18%">기대 효과 (07 기준)</th></tr>
+<tr><td class="id">T0-1</td><td>S1 평면성 게이트</td><td>클러스터 공분산 최소 고유값 비(λ₃/λ₁)로 "부피 없는 평면" 배제 — 게시판·부스·바닥 스트립은 3D 부피가 없고 CAD는 볼륨체</td><td class="c">모드 B 오수락 35건 중 평면 유형(~90%) 제거</td></tr>
+<tr><td class="id">T0-2</td><td>FOV-aware 커버리지</td><td>가설 포즈의 모델 투영 중 시야 밖 비율을 커버리지 분모에 반영 — "화면 밖 모델"이 만점 받는 결함 봉인</td><td class="c">바닥 스트립 p=1.00 유형 차단</td></tr>
+<tr><td class="id">T0-3</td><td>UAM 70샘플 재평가</td><td>T0-1·2 적용 후 <code>run_uam_log.py --n 35</code> 재실행, 07 수치와 비교</td><td class="c">잔여 갭 수치 확정 → §3·§4 학습 목표에 반영</td></tr>
+</table>
+
+<h2><span class="no">3</span>Track 1 — Shape6D-PEM 본학습 (M2 승계·개정)</h2>
+
+<h3>3.1 목표와 통과 게이트 (02 승계 — 변경 없음)</h3>
+<table>
+<tr><th>모델</th><th>게이트</th></tr>
+<tr><td>Full (M2-C)</td><td>BOP AR ≥ 68 (SAM-6D −2.4pt 이내) <b>이면서</b> 재도장 프로토콜 낙폭 ≤ 3pt · <b>RGB 차단 테스트 낙폭 ≤ 5pt</b> (형상 의존 역전의 정량 증명)</td></tr>
+<tr><td>압축 (M2-D)</td><td>AR ≥ 67 · S3 FLOPs ≤ SAM-6D PEM 1/3 · Jetson S3 ≤ 250ms</td></tr>
+<tr><td><span class="tag new">신규</span>실기 회귀</td><td>UAM 70샘플: 모드 B 기체 안착률이 Track 0 재평가치 대비 하락하지 않을 것 (coarse를 PEM으로 교체한 상태로 측정)</td></tr>
+</table>
+
+<h3>3.2 데이터 — 소스·규모·저장 (M2-A1 구체화)</h3>
+<table>
+<tr><th style="width:20%">항목</th><th>계획</th></tr>
+<tr><td>소스</td><td>MegaPose-GSO (BOP 공식 <code>train_pbr_web</code>, ~1M장) + ShapeNetCore PBR (~1M장). SAM-6D <code>provider/training_dataset.py</code> 이식, 템플릿 로딩부는 "RGB 2뷰" → "CAD 포인트+노멀"로 교체</td></tr>
+<tr><td><b>D4 라이선스 결정</b></td><td class="r b">본학습(M2-C) 착수 전 확정 (03 §D4). <b>권고: 파일럿(M2-B)에서 GSO-only(CC-BY 4.0)와 GSO+ShapeNet을 나란히 측정</b>해 "ShapeNet 제외 비용"을 수치로 확보 → 낙폭 ≤1pt면 GSO-only 확정(라이선스 리스크 소멸), 초과 시 Objaverse 허용 서브셋 대체 검토</td></tr>
+<tr><td>저장</td><td>디스크 1.2~1.5TB — 학습 PC <code>/mnt/samsung2tb/datasets</code> 배치. 풀린 파일 방식 고정(재패킹 사본 여유 없음), ext4 inode 사전 확인, 다운로드 직후 시드별 무결성 체크섬</td></tr>
+<tr><td>전처리 규약</td><td>06에서 실증 확정한 규약 고정: <code>center = AABB 중심, scale = 0.2m/최장변</code> (GT 재투영 잔차 서브mm 검증됨) — 학습·추론 온보딩 동일 적용</td></tr>
+</table>
+
+<h3>3.3 증강 설계 — 5종 (M2-A2 4종 + 07 신규 1종)</h3>
+<table>
+<tr><th style="width:5%">#</th><th style="width:24%">증강</th><th>내용</th><th style="width:22%">시뮬 대상 · 근거</th></tr>
+<tr><td class="c">1</td><td><span class="tag keep">승계</span>희소 depth 시뮬</td><td>ML-X(80) 고정 각도 격자(δh 0.14°/δv 0.42°) 재샘플 + 거리 의존 밀도 + 드롭아웃. <b>구현 완료된 <code>harness.sparsify_fixed_grid</code>를 학습 증강으로 이식.</b> 물체 위 포인트 수를 실측 범위로 랜덤화 — <b>D2-a 실측 확보됨: 06 중앙 956pt(20cm급@1m) · 07 ~10,000pt(2.8m급@4–5m)</b> → 로그 균등 샘플 [300, 12,000]pt</td><td>희소·고정밀 LiDAR (D2) — 학습 분포를 "밀집·노이즈"에서 이동</td></tr>
+<tr><td class="c">2</td><td><span class="tag keep">승계</span>외형 랜덤화</td><td>재질·색·텍스처 무작위화 (RGB branch가 색을 신뢰하지 않도록)</td><td>재도장 시나리오 (A1)</td></tr>
+<tr><td class="c">3</td><td><span class="tag keep">승계</span>국소 범프·부착물</td><td>표면 국소 기하 변형 + 소형 부착물 (관측에는 있고 CAD에는 없는 소규모 불일치)</td><td>오염 (M0-3 프로토콜과 등가)</td></tr>
+<tr><td class="c">4</td><td><span class="tag keep">승계</span>modality dropout</td><td>RGB branch 확률적 완전 차단 p≈0.3 · depth 밀도 저하 dropout 대칭 적용</td><td>RGB 불신 조건에서도 동작 — G2 처방의 안전장치</td></tr>
+<tr><td class="c">5</td><td><span class="tag new">신규</span><b>대형 미모델 구조 증강</b></td><td>학습 crop의 물체에 <b>CAD에 없는 대형 인접·부착 구조</b>(막대·프레임·거치대류, 물체 크기의 30~150%)를 접촉 배치하고 GT 포즈는 유지 — 인코더·매칭이 "모델 외 포인트 무시"를 학습. 부착 확률 p≈0.4, 07 케이스(로터 마스트·전시 받침대)를 형상 사전으로 사용</td><td class="r b">07 최대 발견: 부분 CAD가 정합·검증을 동시에 무너뜨림. S3 강건화(여기)와 S4 판정(Track 2) 양쪽에서 대응</td></tr>
+</table>
+
+<h3>3.4 인코더 파일럿 (M2-B, 2주 — 선정 기준에 실측 반영)</h3>
+<p>02의 3후보 통제 비교를 그대로 실행하되, D2-a 실측이 확보됐으므로 선정 기준을 명확화한다:</p>
+<table>
+<tr><th>후보</th><th>가설</th><th>탈락 조건</th></tr>
+<tr><td>(a) image-grid conv <b>(우선 1)</b></td><td>XYZ+노멀+결측마스크 2D 격자 → 경량 conv. TRT 직행·최속</td><td>희소율 상단(300~1,000pt)에서 2D 이웃 근사 붕괴 시</td></tr>
+<tr><td>(b) PointNet++ lite (커스텀 op 제거판)</td><td>기하 표현력 기준점</td><td>(a) 대비 이득 &lt; 1pt인데 레이턴시 2배↑</td></tr>
+<tr><td>(c) sparse conv</td><td>표현력 상한 확인용</td><td>TRT/Jetson 경로 기한 내 미확보 시 즉시 제외</td></tr>
+</table>
+<p class="small">공통: 파일럿 평가 데이터에 <b>희소 패턴(#1)과 미모델 구조(#5)를 반드시 포함</b> — 07이 보여준 실기 분포에서의 순위가 클린 합성 순위와 다를 수 있음.
+가변 포인트 수 내성 [300, 12,000]이 1급 선정 기준. 장면/CAD 도메인 플래그 임베딩 공유안 vs 분리 인코더 비교 포함 (02 승계).
+파일럿은 10% 서브셋·동일 매칭부·동일 스케줄로 통제 — D4 비교런(GSO-only vs 혼합)을 여기에 끼워 함께 측정.</p>
+
+<h3>3.5 본학습·압축 실행 (M2-C·D 승계)</h3>
+<table>
+<tr><th style="width:16%">단계</th><th>내용</th><th class="c" style="width:14%">기간</th></tr>
+<tr><td>M2-C 본학습</td><td>선정 인코더 + SAM-6D 동일 용량 매칭부(256d·3블록·2048pt) 전체 데이터 1회. CAD 직접 온보딩 검증(실패 시 depth 렌더 템플릿 폴백). coarse 가설 2000/100 + top-k(3) 출력. 대칭 GT loss는 M2-A3 확인 후 필요 시 대칭군 최소 오차로 교체(가정 금지)</td><td class="c">3~4주 GPU 상주</td></tr>
+<tr><td>M2-D 압축</td><td>자체 teacher distill: 256→192→128d, 블록 3→2, fine 2048→1024pt 순차 축소, 격자마다 AR-레이턴시 곡선 기록 → 절충점 데이터로 확정. 매칭부 ONNX→TRT FP16</td><td class="c">2~3주</td></tr>
+</table>
+<p class="small">자원: Blackwell 96GB 1장으로 파일럿+본학습 1회+압축 실행 가능(D3). 스윕(E2·E4)은 서브셋 한정. 본학습이 병목이면 해당 런만 클라우드 버스트.</p>
+
+<h2><span class="no">4</span>Track 2 — S4 검증기 학습·보정 (M3-3 전면 재설계)</h2>
+
+<div class="warnbox"><b>재설계 사유</b> — 02의 M3-3은 "inlier·잔차·S2 점수 → 로지스틱 보정, 보정 셋 = BOP val + 오염 프로토콜"이었다.
+07은 이 설계의 두 가정이 실기에서 깨짐을 보였다: ① free-space 위반을 하드 가드로 쓰는 것은 <b>CAD=실물 완전 일치 가정</b>이라
+부분 CAD에서 정포즈를 역기각한다(87%). ② BOP·오염 보정 셋에는 <b>대형 평면 오포즈·부분 CAD 유형이 없어</b> 실기 오수락(95%)을
+분리하지 못한다. 06의 오수락 40%(가려진 뒷면 플립)와 합치면, 보정 셋의 도메인 구성이 곧 검증기 성능이다.</div>
+
+<h3>4.1 특징 재설계 — 하드 가드의 특징화</h3>
+<table>
+<tr><th style="width:26%">변경</th><th>내용</th></tr>
+<tr><td><span class="tag mod">개정</span>free-space 하드 가드 → 특징 3분해</td><td>단일 위반율 임계(&gt;0.15 즉시 REJECT) 폐지. 위반의 <b>공간 분포를 특징화</b>해 보정기에 입력:
+(i) 위반율 총량 (ii) 위반 클러스터의 국소성 — 부착물(로터·받침대)은 <b>국소·연속 영역</b>, 오포즈는 <b>광역 분산</b> (iii) 미모델 영역 마스크 밖 위반율.
+하드 가드는 극단값(예 &gt;0.5)에만 잔류</td></tr>
+<tr><td><span class="tag new">신규</span>미모델 영역 마스크</td><td>S0 온보딩 시 "CAD 신뢰 영역"을 선언하는 인터페이스(방향성 콘/바운딩 영역, 수동 JSON — M1-2 대칭 오버라이드와 동일 패턴).
+선언 영역 밖 위반은 감쇠. 부분 CAD를 <b>운용상 정상 케이스</b>로 승격</td></tr>
+<tr><td><span class="tag keep">승계</span>FOV-aware 커버리지</td><td>Track 0 T0-2 결과를 특징으로 흡수</td></tr>
+<tr><td><span class="tag keep">승계</span>기존 특징</td><td>inlier ratio·p2pl 잔차 통계·커버리지·S2 점수·가설 마진 + 대칭군 등가 평가(오reject 방지)</td></tr>
+</table>
+
+<h3>4.2 보정 학습 데이터 — 오포즈 카탈로그 4도메인</h3>
+<table>
+<tr><th style="width:24%">도메인</th><th>구성</th><th class="c" style="width:18%">출처 · 규모</th></tr>
+<tr><td>① 클린·오염 합성 <span class="tag keep">승계</span></td><td>BOP val + M0-3 오염 프로토콜 — 정포즈/무작위 오포즈 쌍</td><td class="c">기존 계획</td></tr>
+<tr><td>② 가려진 뒷면 플립 <span class="tag new">신규</span></td><td>근사대칭 등가 오포즈(플립·90°)가 가시면에 정합하는 케이스 — 06에서 34% 실패·40% 오수락을 만든 유형. MegaPose 하네스로 대량 생성 가능(정포즈에 대칭 등가 변환 적용 후 ICP 수렴시켜 라벨링)</td><td class="c">06 하네스 재사용, ~수천 쌍</td></tr>
+<tr><td>③ 대형 평면 오포즈 <span class="tag new">신규</span></td><td>장면의 벽·바닥·게시판 평면에 CAD가 정합한 오포즈 — 07 오수락 95%의 유형. 합성 장면의 배경 평면에 강제 정합시켜 생성</td><td class="c">렌더 파이프라인 확장</td></tr>
+<tr><td>④ 부분 CAD 정포즈 <span class="tag new">신규</span></td><td>증강 #5(미모델 구조)가 붙은 장면의 <b>정포즈</b> — "위반이 있어도 ACCEPT해야 하는" 양성 샘플. + <b>UAM 실기 로그</b>: 07의 70샘플(오버레이 라벨 가능) → essential 잔여 187샘플 확장, 기체 안착 여부 반자동 라벨(클러스터 중심 대조 + 육안 확인)</td><td class="c">합성 + 실기 ~250샘플</td></tr>
+</table>
+
+<h3>4.3 학습 방법과 게이트</h3>
+<p>1차: 확장 특징 위 <b>로지스틱 보정</b>(02 승계 — 해석 가능·과적합 안전·소데이터 적합). 도메인 ①~④ 층화 샘플링으로 학습,
+도메인별 hold-out ROC 분해. 로지스틱이 도메인 ③·④를 분리 못 하면 2차로 소형 MLP(수백 파라미터) 승격 — 순서 고정, 건너뛰기 금지.</p>
+<div class="okbox"><b>게이트 (M3-4 승계 + 실기 추가)</b> — 오수락률 &lt; 1% @ 리콜 손실 ≤ 5% (시나리오별 분해: 클린/오염/재도장/결측/<b>부분CAD/평면클러터</b>) ·
+UAM 70샘플에서 "기체 안착 정포즈 ACCEPT율" ≥ 80% (07: 13%) <b>동시에</b> 오수락 0/35 유지 · S4 전체 ≤ 60ms.</div>
+
+<h2><span class="no">5</span>검증 루프 — 매 단계 회귀 3종</h2>
+<table>
+<tr><th>회귀</th><th>측정</th><th class="c">주기</th></tr>
+<tr><td>BOP (M0-1 하네스)</td><td>unseen AR (T-LESS·ITODD 개별 추적) — 목표 ≥ 67</td><td class="c">스테이지 교체·학습 체크포인트마다</td></tr>
+<tr><td>오염·재도장 (M0-3)</td><td>AR 낙폭 ≤ 3pt — 형상 우선의 존재 증명</td><td class="c">동일</td></tr>
+<tr><td><span class="tag new">신규</span>UAM 실기 70샘플 (<code>run_uam_log.py</code>)</td><td>모드 B 기체 안착률·ACCEPT 정합률·오수락 건수·프레임 시간 — 실기 분포 낙폭 감시</td><td class="c">Track 0 직후 기준선 재설정 → 이후 동일</td></tr>
+</table>
+
+<h2><span class="no">6</span>일정 — 병행 구조 (총 ~10주)</h2>
+<table>
+<tr><th class="c" style="width:10%">주차</th><th>Track 0·1 (S1~S3)</th><th>Track 2 (S4)</th></tr>
+<tr><td class="c">W1</td><td>T0-1·2 구현 + T0-3 재평가 (기준선 재설정)</td><td>특징 재설계 구현 (4.1) — v0-geo 출력 위에서</td></tr>
+<tr><td class="c">W1~2</td><td>M2-A 데이터 파이프라인: 다운로드(~1.5TB)·provider 이식·증강 #1~5 구현</td><td>오포즈 카탈로그 생성기 (도메인 ②③④) + UAM 라벨링</td></tr>
+<tr><td class="c">W3~4</td><td>M2-B 인코더 파일럿 3런 + D4 비교런 → <b>인코더·데이터 확정</b></td><td>보정 1차 학습·ROC 분해 → UAM 게이트 검증</td></tr>
+<tr><td class="c">W5~8</td><td>M2-C 본학습 (GPU 상주) — 중간 체크포인트마다 회귀 3종</td><td>M3-1·2 (GPU p2pl ICP·렌더 잔차) 병행, PEM top-k 출력과 접합</td></tr>
+<tr><td class="c">W8~10</td><td>M2-D 압축·TRT — AR-레이턴시 곡선</td><td>최종 ROC 리포트 (M3-4) · 통합 재평가</td></tr>
+</table>
+<p class="small">M1(EViT-SAM·DINOv2 통합, 무학습)은 이 계획의 학습 트랙과 독립적으로 W1~4에 병행 가능 — G1의 나머지 절반을 담당.
+Jetson 실기 프로파일링은 보드 확보 시 M4로 이월(D1), 그 전까지 환산 계수 운용(M0-2).</p>
+
+<h2><span class="no">7</span>리스크·결정 항목</h2>
+<table>
+<tr><th style="width:22%">항목</th><th>내용 · 기한</th></tr>
+<tr><td class="r b">D4 학습 데이터 라이선스</td><td>ShapeNetCore 비상업 리스크. <b>M2-C 착수 전(W4 말) 확정</b> — 파일럿 비교런 수치로 결정 (§3.2). 낙폭 ≤1pt → GSO-only</td></tr>
+<tr><td class="r b">CAD 정비 방침</td><td>운용 시 CAD가 실물과 일치하는가? 옵션: (a) 실물 반영 CAD 확보(로터·거치 구조 포함) (b) 부분 CAD 전제 + 미모델 마스크 운용(§4.1). <b>둘 다 준비하되 (b)를 기본 경로로</b> — 현장 CAD는 항상 불완전하다는 것이 07의 교훈. 고객 CAD 수급 절차는 별도 결정</td></tr>
+<tr><td>GT 평가셋 부재</td><td>실기 10mm/1° 검증은 현재 불가능(참조가 SAM-6D 로그 ~0.5m 오프셋). 태깅 평가셋(마커/토탈스테이션) 구축은 학습과 독립 과제로 병행 제안 — 최소 1장면 20샘플이면 정밀도 주장 가능</td></tr>
+<tr><td>디스크 여유</td><td>데이터 1.2~1.5TB + 체크포인트 후 여유 ~300GB (D3-a) — ShapeNet 서브셋 축소 옵션 상비, 외장 백업</td></tr>
+<tr><td>파일럿-본학습 순위 역전</td><td>10% 서브셋 순위가 전체에서 뒤집힐 위험 — 파일럿 상위 2후보는 30% 시점 중간 평가로 이중 확인 후 잔여 예산 투입</td></tr>
+</table>
+
+<h2><span class="no">8</span>요약 — 한 장</h2>
+<div class="note">
+<b>순서</b>: ① 무학습 픽스로 바닥 올리고 기준선 재설정(W1) → ② 데이터·증강 5종 준비(W1~2, 신규: 미모델 구조 증강) →
+③ 인코더 파일럿 + D4 결정(W3~4) → ④ PEM 본학습·압축(W5~10) — 그동안 병행으로 ⑤ 검증기 특징 재설계 + 오포즈 카탈로그 4도메인 보정 학습.<br>
+<b>학습의 성공 정의</b>: BOP AR ≥ 68/67(압축) · 재도장 낙폭 ≤ 3pt · RGB 차단 낙폭 ≤ 5pt · 오수락 &lt; 1%@리콜손실 ≤ 5% ·
+<b>UAM 실기에서 정포즈 ACCEPT ≥ 80% + 오수락 0 유지</b>.<br>
+<b>이 계획이 02와 다른 곳</b>: 증강 #5(대형 미모델 구조) 추가 · M3-3 보정을 오포즈 카탈로그 4도메인으로 전면 재설계 ·
+UAM 실기 회귀 상시화 · D4를 파일럿 비교런으로 결정 · D2-a 실측치 [300, 12,000]pt 반영.
+</div>
+
+</div>
+</body>
+</html>
