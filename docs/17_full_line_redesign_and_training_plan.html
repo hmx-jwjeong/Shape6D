@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전체 입출력 라인 재구성 v3 — SAM-6D 승계 · 3라운드 비판 · 학습 계획</title>
+<style>
+  :root { --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --panel:#f6f8fb; --accent:#0b5fff;
+          --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e3;
+          --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+         color:var(--ink); background:#fff; line-height:1.7; font-size:15px; }
+  .wrap { max-width:1150px; margin:0 auto; padding:44px 28px 110px; }
+  h1 { font-size:25px; margin:0 0 6px; letter-spacing:-0.5px; line-height:1.35; }
+  h2 { font-size:19px; margin:52px 0 12px; padding-top:16px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:26px 0 8px; }
+  p { margin:9px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  .abs { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:16px 20px; margin:18px 0 26px; font-size:14px; }
+  .abs b.t { display:block; font-size:15px; margin-bottom:6px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.4px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 9px; font-weight:600; }
+  th.c, td.c { text-align:center; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.me td { background:var(--shape-soft); } tr.me td:first-child { border-left:3px solid var(--shape); font-weight:700; }
+  tr.hi td { background:var(--bad-soft); } tr.hi td:first-child { border-left:3px solid var(--bad); }
+  tr.ok td { background:var(--good-soft); } tr.ok td:first-child { border-left:3px solid var(--good); }
+  tr.wa td { background:var(--warn-soft); }
+  .cap { font-size:12.3px; color:var(--sub); margin:4px 0 20px; }
+  .cap b { color:var(--ink); }
+  figure { margin:22px 0 8px; }
+  figure img { width:100%; border:1px solid var(--line); border-radius:8px; display:block; }
+  code { font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace; font-size:12.3px;
+         background:var(--panel); padding:1px 5px; border-radius:4px; }
+  pre { background:#12151b; color:#e6e9ef; padding:13px 16px; border-radius:9px; overflow-x:auto;
+        font-size:12.2px; line-height:1.6; margin:10px 0; }
+  .crit { border:1px solid var(--line); border-left:4px solid var(--bad); background:var(--bad-soft);
+          border-radius:8px; padding:13px 17px; margin:16px 0; font-size:13.6px; }
+  .crit .h { font-weight:800; color:var(--bad); margin-bottom:5px; font-size:14.5px; }
+  .crit .h .sev { font-size:11px; background:var(--bad); color:#fff; padding:1px 7px; border-radius:20px;
+                  margin-right:8px; vertical-align:2px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.6px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; font-size:14px; }
+  .box { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.6px; }
+  .note { border:1.5px dashed var(--shape); background:var(--shape-soft); border-radius:10px;
+          padding:11px 16px; margin:14px 0; font-size:13.3px; }
+  .warnbox { border:1.5px dashed var(--warn); background:var(--warn-soft); border-radius:10px;
+             padding:11px 16px; margin:14px 0; font-size:13.3px; }
+  .decision { border:2px solid var(--good); border-radius:12px; background:var(--good-soft);
+              padding:14px 18px; margin:18px 0 8px; }
+  .decision .t { font-weight:800; color:var(--good); font-size:15px; margin-bottom:6px; }
+  ul, ol { margin:8px 0; padding-left:22px; } li { margin:5px 0; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 20px;
+         margin:18px 0 6px; font-size:13.3px; column-count:2; column-gap:30px; }
+  .toc a { display:block; padding:2px 0; break-inside:avoid; }
+  .tiny { font-size:11.8px; color:var(--sub); }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:18px 0 6px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:19px; letter-spacing:-0.5px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good b { color:var(--good); } .stat.bad b { color:var(--bad); } .stat.warn b { color:var(--warn); }
+  .vtag { font-size:11px; font-weight:800; padding:1px 8px; border-radius:20px; margin-right:6px; }
+  .v0 { background:var(--bad-soft); color:var(--bad); }
+  .v3 { background:var(--good-soft); color:var(--good); }
+  @media (max-width:820px){ .toc{column-count:1;} .hero{grid-template-columns:repeat(2,1fr);} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>전체 입출력 라인 재구성 v3<br>— SAM-6D 승계 · 기하 주도 역전 · 3라운드 비판 검토 · 학습 계획</h1>
+<div class="meta">v1.0 · 2026-07-29 · 승계 원본: SAM-6D (CVPR 2024) + <a href="03_implementation_design.html">03 §6</a> 개조 6건 · 실측 근거: <a href="13_backbone_pilot_report.html">13</a>·<a href="14_encoder_pilot_paper.html">14</a>·<a href="15_network_and_training_scope.html">15</a>·<a href="16_pretraining_comparison.html">16</a> · SOTA 대조: <a href="10_network_design_and_critique.html">10</a>·<a href="11_sota_approach_comparison.html">11</a></div>
+
+<div class="abs">
+<b class="t">요약</b>
+출발 제안(v0)은 <b>"SAM 3로 분할 → CAD와 기하 유사도로 선별 → DINOv3 기반 네트워크로 자세 추정"</b>이었다.
+이를 3라운드 비판(배포·예산 → 제로샷 정식화 → 학습·검증 체계)에 통과시킨 결과가 v3다.<br><br>
+<b>살아남은 것</b>: 기하 주도 역전(전제 그대로), SAM 3(단 <b>오프라인 데이터 엔진·PC 앵커</b>로), 기하 유사도 게이트(coverage 항 추가 + <b>GeDi 증류 디스크립터</b> 신설), DINOv3(단 <b>S2 판별 ViT-S + 오프라인 교사</b>로).<br>
+<b>기각된 것</b>: SAM 3 온라인 탑재(840M — Orin NX 불가), DINOv3를 자세 네트워크 백본으로(예산 4.64 vs 3.5 GMACs 초과 + 격자 14² vs 56² + <b>기하 주도 전제와 자기모순</b>), 인코더 단독 학습(제로샷 불성립 — 실측 0.99→0.147).<br>
+<b>확정된 것</b>: 자세 본체는 SAM-6D의 2단 점 매칭 구조 승계(개조 6건) — <b>매칭 디코더 5.5M이 제로샷의 필요조건</b>임이 이번 세션에서 실증됐기 때문. 학습은 Phase 0(위생)–A(최소 매칭 파일럿)–B(본학습)–C(증류·보정) 4단계, 총 ~10주.
+</div>
+
+<div class="hero">
+  <div class="stat bad"><b>840M</b><span>SAM 3 파라미터 — 엣지 온라인 기각 근거</span></div>
+  <div class="stat bad"><b>4.64 &gt; 3.5</b><span>ViT-S GMACs vs S3 전체 예산 — DINOv3 백본 기각</span></div>
+  <div class="stat bad"><b>0.99 → 0.15</b><span>매칭부 없는 학습의 제로샷 붕괴 (실측)</span></div>
+  <div class="stat good"><b>~8M</b><span>확정 온라인 예산 (인코더 2.4M + 매칭 5.5M)</span></div>
+</div>
+
+<div class="toc">
+<a href="#s1">1. 고정 전제와 측정된 제약</a>
+<a href="#s2">2. v0 — 출발 제안의 명문화</a>
+<a href="#s3">3. 비판 R1 — 배포·예산이 먼저 자른다</a>
+<a href="#s4">4. 비판 R2 — 제로샷 정식화가 다음을 자른다</a>
+<a href="#s5">5. 비판 R3 — 학습·데이터·검증 체계</a>
+<a href="#s6">6. 최종 명세 v3 — 전체 입출력 라인</a>
+<a href="#s7">7. 네트워크 명세 — 종류·입출력·파라미터</a>
+<a href="#s8">8. SOTA 선택지 대조</a>
+<a href="#s9">9. 학습 계획 — Phase 0/A/B/C</a>
+<a href="#s10">10. 리스크 · 결정 대기 · 검토 이력</a>
+</div>
+
+<h2 id="s1"><span class="no">1</span>고정 전제와 측정된 제약</h2>
+
+<table>
+<tr><th style="width:22%">항목</th><th style="width:44%">값</th><th>출처</th></tr>
+<tr><td>요구 스펙</td><td>위치 <b>10mm</b> · 회전 <b>≤1°</b> @ 상시 3m (커버 2~5m)</td><td>확정 전제 (README)</td></tr>
+<tr><td>플랫폼</td><td>Jetson <b>Orin NX</b>, 전체 <b>&lt;1s</b> (03 §8 예산 450~500ms — 전부 추정)</td><td>03 §8 · M0-2 실측이 선결</td></tr>
+<tr><td>전제 A1</td><td>외형(도장·오염) <b>불신</b> — 기하가 주도, RGB는 보조</td><td>확정 전제</td></tr>
+<tr><td>입력 밀도</td><td>프레임 유효율 <b>9.6%</b> · 물체 crop <b>16.9%</b> · 물체당 관측 <b>수백 pt</b></td><td>UAM 실측 (13 §3)</td></tr>
+<tr class="hi"><td>S3 연산 예산</td><td><b>~7 GFLOPs = 3.5 GMACs</b> (인스턴스 B=3 배치 포함)</td><td>03 §6.6 — <b>ViT-S/16 하나가 4.64 GMACs</b>로 이미 초과 (12 §1)</td></tr>
+<tr class="hi"><td>제로샷 조건</td><td>매칭(비교기) 정식화 없이는 <b>미학습 물체에서 원리적 불성립</b> — top-1 0.993→0.147, ICP 수렴반경(≤30°) 진입 98.8%→<b>5.8%</b></td><td><b>15 §4 실측</b> (인코더 3종 모두 동일)</td></tr>
+<tr><td>학습 자원</td><td>RTX PRO 6000 Blackwell 96GB <b>×1</b> · MegaPose-GSO 508GB 수신 완료(1,030종)</td><td>확정 전제 · 로더 검증 772 samples/s</td></tr>
+<tr><td>폴백</td><td><b>v0-geo</b> (무학습 전체 사슬) — 4.9mm / 0.71° 합성 통과</td><td>README · 영구 유지</td></tr>
+</table>
+
+<h2 id="s2"><span class="no">2</span>v0 — 출발 제안의 명문화</h2>
+
+<div class="box">
+<b>v0 (제안 원문 요지)</b> — 입력은 CAD + 이미지 + 깊이로 SAM-6D와 동일하되 <b>기하 정보 메인</b>으로 추정:<br>
+① <b>SAM 3</b>(Segment Anything 3)로 세그먼트 후보 생성 →
+② 타깃 CAD와 <b>기하적 특징 유사도</b>가 확인되는 물체 선별 →
+③ 임계 이상 물체에 <b>DINOv3 기반</b> 자세 추정 네트워크 적용.
+</div>
+
+<p>이 제안의 골격은 현 설계(S1 제안 → S2 판별 → S3 포즈)와 <b>동형</b>이다. 즉 v0는 새 파이프라인이 아니라 <b>기존 5단 구조의 구성요소 교체 제안</b>으로 읽는 것이 정확하며, 그렇게 읽어야 어느 교체가 타당한지 요소별로 판정할 수 있다. 다만 v0에는 명문화 시점에 이미 드러나는 <b>내부 긴장 1건</b>이 있다:</p>
+
+<div class="warnbox"><b>v0의 내부 긴장.</b> 첫 문장은 "기하 정보 메인"인데, ③의 자세 네트워크를 <b>DINOv3</b>(RGB 웹이미지 17억 장으로 학습된 시각 foundation)로 두면 <b>추정의 주도권이 다시 RGB로 넘어간다.</b> 재도장·오염에 강해야 한다는 A1 전제와 정면 충돌한다. 이 긴장의 해소가 R1의 첫 과제다.</div>
+
+<h2 id="s3"><span class="no">3</span>비판 R1 — 배포·예산이 먼저 자른다</h2>
+
+<div class="crit">
+<div class="h"><span class="sev">R1-1</span>SAM 3 온라인 탑재는 성립하지 않는다 — 840M, H200에서 30ms</div>
+SAM 3(2025-11 공개)는 <b>~840M 파라미터</b>(Perception Encoder 비전 450M + 텍스트 300M + 검출·추적 100M)이고, 공식 수치가 <b>H200 GPU에서 이미지당 ~30ms</b>다. 16GB급 VRAM을 요구하는 <b>서버급 모델</b>이다.
+Orin NX는 FoundationPose(수백 M급)조차 엔진 빌드가 OOM인 플랫폼이다(10 §6.6). <b>온라인 S1에 SAM 3을 놓는 선택지는 계산이 끝나기 전에 기각된다.</b><br>
+또한 SAM 3의 신기능인 <b>concept prompt(텍스트·예시 기반)는 의미론적 = 외형 계열 신호</b>다. 재도장에 대한 강건성은 국소 특징보다 오히려 나을 수 있으나(개념 수준이므로), RGB가 죽으면 함께 죽는다 — A1 체계에서 <b>주 시드가 될 수 없고 보조만 가능</b>하다.
+</div>
+
+<div class="crit">
+<div class="h"><span class="sev">R1-2</span>DINOv3를 자세 네트워크 백본으로 — 세 가지 측정이 모두 기각한다</div>
+① <b>예산</b>: DINOv3 최소 모델 ViT-S/16이 224 입력에서 <b>4.64 GMACs</b> — S3 <b>전체</b> 예산 3.5 GMACs를 단독 초과, 인스턴스 3배치면 4배(12 §1 계산·13 §2 실측 검증).<br>
+② <b>격자</b>: ViT-S/16 출력은 14×14 — 설계가 요구하는 <code>geo56</code>(56×56, 1024점 <code>grid_sample</code>)보다 16배 성겨서 점별 대응의 변별이 사라진다(12 §4-①).<br>
+③ <b>실측</b>: 절단 ConvNeXt(DINOv3 증류판) 초기화조차, 예산에 맞춰 stage1·2만 가져오면 ImageNet 대비 이득이 확인되지 않았다(13 §4.2c — 단일 CAD 한계는 있으나 <b>긍정 증거가 없다</b>). 그리고 무엇보다 <b>기하 주도 전제와 자기모순</b>이다(§2).
+</div>
+
+<div class="fair"><div class="h">R1 반영 — v1 결정 3건</div>
+<b>①</b> 엣지 S1 = <b>EfficientViT-SAM 계열(동결, 포인트 프롬프트)</b> — 설계 M1 그대로. <b>SAM 3의 정식 자리는 오프라인이다</b>: (i) 개발 PC 평가 앵커(상한 품질 확인) (ii) <b>데이터 엔진</b>(SAM 2의 model-in-the-loop 방법론, 16 §6) — 단 대상이 제한된다: <b>UAM 평가셋의 참조 주석 강화(평가용)</b>와 <b>향후 현장(배포지) 수집분의 약라벨 루프</b>. UAM 로그를 학습·보정에 넣는 용도가 아니다(§5.5 정책). (iii) 장기적으로 엣지 분할기의 증류 교사 후보.<br>
+<b>②</b> DINOv3의 자리는 두 곳으로 분리 — <b>S2 판별의 의미 점수</b>(ViT-S/16 CLS, 동결·온라인 — 해상도 불필요라 격자 감점 없음, 03 §5의 "semantic은 ViT-S로 축소" 방침과 정합) + <b>Phase C 증류 교사</b>(ViT-L, 오프라인). <b>S3 백본은 아니다.</b><br>
+<b>③</b> S3 인코더는 소형 기하 인코더 유지(후보 재선정은 Phase A) — DINOv3와의 관계는 "백본"이 아니라 "교사"다.
+</div>
+
+<h2 id="s4"><span class="no">4</span>비판 R2 — 제로샷 정식화가 다음을 자른다</h2>
+
+<div class="crit">
+<div class="h"><span class="sev">R2-1</span>어떤 인코더를 골라도, 매칭부가 없으면 제로샷은 불성립 — 이번 세션의 핵심 실측</div>
+<a href="15_network_and_training_scope.html">15 §4</a>: 동일 인코더·동일 과제에서 물체를 1종→750종으로 늘리고 <b>미학습 194종</b>으로 검증하자 top-1 0.993 → <b>0.147</b>, ICP 수렴반경(≤30°) 진입률 98.8% → <b>5.8~7.3%</b>. 인코더 3종(스크래치/ImageNet/DINOv3)이 전부 같았다 — <b>인코더의 문제가 아니라 정식화의 문제</b>다.<br>
+원리: 미학습 물체의 정준 좌표계는 관측만으로 알 수 없다. SOTA 전부(SAM-6D·MegaPose·FoundationPose·Co-op·FreeZe)가 <b>"관측 ↔ CAD 템플릿" 두 입력의 비교기</b>를 학습하는 이유가 이것이다(16 §3).
+<b>따라서 자세 본체는 SAM-6D의 2단 점 매칭 구조를 승계하는 것이 유일하게 정당한 선택</b>이며, v0의 "개선할 부분만 개선" 원칙과도 맞는다 — 03 §6.0의 개조 6건(특징 주도권 역전 · 오브젝트 측 전량 캐시 · 커스텀 CUDA 제거 · 용량 축소 · top-3+NMS · TRT 비호환 분리)이 그 개선 목록이다.
+</div>
+
+<div class="crit">
+<div class="h"><span class="sev">R2-2</span>대칭 모호성은 백본 선택으로 풀리지 않는다</div>
+14 Fig 3: 최악 실패는 전부 180° 뷰 혼동이고, 혼동쌍의 렌더가 <b>육안으로 동일</b>했다. UAM 실기 평가의 실패 34%도 같은 유형(07). 이는 입력에 정보가 없는 경우라 <b>어떤 인코더/백본도 원리적으로 못 푼다</b>(10 §6.2).<br>
+해소 수단은 네트워크 밖에 있다: <b>학습단</b> — 대칭군 g* 단일선택 손실(모순 그라디언트 제거, SOTA 대부분이 없는 우리 우위 — 10 §8-①). <b>추론단</b> — top-3 가설을 S4로 넘겨 <b>free-space 물리 증거</b>로 판별(FreeZe SAR의 무학습 치환 — 11 §4.3) + 직립 프라이어.
+</div>
+
+<div class="crit">
+<div class="h"><span class="sev">R2-3</span>CAD(조밀 렌더) ↔ 장면(희소 LiDAR)의 밀도 10배 비대칭</div>
+학습형 기하 매칭은 밀도 불일치에서 붕괴한 전례가 명확하다(GeoTransformer RR 97.9→0.0%, Predator 89→2.1% — 10 §6.7). 설계의 대응(가중치 공유 + domain_flag + CAD 측 2.5D 부분 관측 + partial conv)은 문헌 방향과 일치하나 <b>미검증</b>이다.
+→ Phase A·B의 판정 항목에 <b>밀도 스윕을 1급</b>으로 넣는다(10 권고 2). 밀도 스윕 하네스는 파일럿에서 확보됐다(단 §5.5에 따라 학습 희소화는 합성 패턴으로 — 실기 마스크는 평가 쪽 검증에만).
+</div>
+
+<div class="fair"><div class="h">R2 반영 — v2 결정 4건</div>
+<b>①</b> 자세 본체 = SAM-6D 승계 2단 점 매칭(coarse 2블록 → fine 2블록, H=192, bg_token, top-3+NMS) — "DINOv3 기반 네트워크" 문구를 이것으로 대체.
+<b>②</b> 오브젝트 측 특징은 <b>S0 캐시 필수</b> — 비용 절감이 아니라 제로샷의 필요조건(15 §4의 역설적 확증).
+<b>③</b> 대칭은 g* 손실(학습) + top-3 → S4 free-space(추론)의 2중 처리.
+<b>④</b> 인코더 선정은 <b>대응 정식화 파일럿(Phase A)에서 재실행</b> — 13·14의 순위는 분류 정식화라 무효.
+</div>
+
+<h2 id="s5"><span class="no">5</span>비판 R3 — 학습·데이터·검증 체계</h2>
+
+<table>
+<tr><th style="width:6%">#</th><th style="width:26%">지적</th><th>내용 → v3 반영</th></tr>
+<tr><td>R3-1</td><td><b>파일럿 방법론 함정 2건 (자체 실증)</b></td><td>8에폭 축소 파일럿이 순위를 <b>정반대</b>로 냈고(ConvNeXt layer_scale 1e-6), 사전학습 가중치는 고LR에서 붕괴(lr 1e-3 장기 스케줄에서 MAE 90.7°). → <b>수렴 확인 의무 + 후보별 lr 정책</b>(사전학습 3e-4 / 스크래치 1e-3)을 학습 규약으로 명문화 (13 §4.1·§6.2)</td></tr>
+<tr><td>R3-2</td><td><b>UAM 실기에는 GT가 없다</b></td><td>로그된 SAM-6D 포즈는 GT가 아니고, 검증기 라벨이 "거리 프록시"를 배웠을 위험이 진단 대기(10 §7 C-1). → 포즈 학습 라벨은 <b>MegaPose GT만</b>. <b>UAM은 전면 평가 전용</b>(§5.5 정책) — 보정셋도 UAM이 아니라 <b>자체 희소 합성 + sparsified-BOP</b>로 적합(05 간과점 #4의 3단 중 1·2단). 09의 UAM-적합 calib_v1 계열은 <b>진단 실험으로만 유효</b>하며 프로덕션 보정기로 승격 불가. 검증기 재보정 전 <b>라벨 진단 선행</b> (10 권고 1)</td></tr>
+<tr><td>R3-3</td><td><b>라이선스 3건</b></td><td>DINOv3(연구 동의 완료·<b>상업 약관 미검토</b>), ShapeNet(D4 보류 — 현재 디스크에 GSO만), SAM 3(라이선스 확인 필요). → 기본 경로는 전부 <b>비의존</b>으로 설계: 학습 GSO-only + 다양성 비용을 UAM 셋에서 측정(10 권고 6·7), S2 의미 점수 폴백 = DINOv2-S(Apache-2.0), 데이터 엔진은 내부 도구라 리스크 낮음(확인은 필요)</td></tr>
+<tr><td>R3-4</td><td><b>인프라 위생 미결 4건</b></td><td>config 미주입(A-1: <code>free_viol_max</code> 0.05/0.15 발산), E2E 골든 테스트 부재(A-3), TDF 단방향 점수(A-4), <b>보정 계수를 런타임이 로드하지 않음</b>(A-2). → 전부 <b>Phase 0</b>으로 승격 — 학습 시작 전 필수 (10 권고 4·5·11)</td></tr>
+<tr><td>R3-5</td><td><b>게이트가 2년 전 기준</b></td><td>"BOP AR ≥ 68"은 dense depth·구식 기준선(10 §6.3·§6.5). → 게이트를 <b>Δ(v0-geo 대비) + UAM 실기 성공률 + ICP 수렴반경(≤30°) 진입률 + 밀도 스윕 곡선 + Orin 실측 지연</b>으로 재정의. BOP·UAM 충돌 시 <b>UAM 우선</b>을 지금 확정(제안 — 합의 필요)</td></tr>
+<tr><td>R3-6</td><td><b>SOTA 재현은 불가능하고 목표도 아니다</b></td><td>MegaPose 32×V100, Co-op 8×A100 6.5일 vs 우리 1 GPU(16 §5). → M2의 정체성은 "정확도 경쟁"이 아니라 <b>증류·경량화</b>(10 §9) — Phase C가 그 실행이다</td></tr>
+</table>
+
+<div class="crit">
+<div class="h"><span class="sev">R3-7</span>§5.5 UAM 로그 사용 원칙 — 평가 전용 (이번 라운드에서 교정된 자기 오염 3건)</div>
+UAM 전시장 로그는 <b>테스트 셋</b>이다. 학습·적합 경로에 넣는 순간 그 위에서 잰 모든 평가가 무효가 된다. 본 문서 v1.0 초안과 선행 파일럿에는 이 원칙을 어긴 지점이 <b>3건</b> 있었고, 전부 교정한다:<br>
+① <b>학습 희소화에 실기 마스크 156종 사용</b>(14 §2.1, 17 초안 Phase B) — 테스트 도메인 입력의 직접 유출. → <b>센서 스펙 기반 합성 희소화로 대체</b>: ML-X(80) 격자(δh·δv 파라미터화·σ3mm) + scanline + Ruby128 레짐. 실기 통계(유효율 9.6% 등)는 합성기의 <b>사후 검증</b>에만 사용(설계 입력 아님).<br>
+② <b>SAM 3 데이터 엔진으로 S2 임계·S4 보정셋 갱신</b>(17 초안) — 테스트 셋 위 적합. → 엔진의 대상을 <b>평가 주석 강화 + 향후 현장 수집분</b>으로 한정.<br>
+③ <b>09의 calib_v1(UAM 적합)</b> — 부호 반전 진단 실험으로는 유효하나, <b>프로덕션 보정기로는 사용 불가</b>. 보정은 합성+sparsified-BOP로 적합하고 UAM은 홀드아웃 평가만.<br>
+<span class="tiny">허용: 평가·리포트, 참조 주석 강화(평가용), 합성 증강의 통계적 사후 검증. 금지: 학습 입력(마스크·crop·이미지), 보정기·임계 적합, 증강 파라미터의 직접 적합. 센서 특성화는 UAM이 아니라 <b>D2-a 실측(실기종)</b>이 정본 경로다.</span>
+</div>
+
+<h2 id="s6"><span class="no">6</span>최종 명세 v3 — 전체 입출력 라인</h2>
+
+<figure><img src="assets_17/figP_full_line.png" alt="전체 입출력 라인 v3"></figure>
+<div class="cap"><b>Fig P.</b> 재구성 v3 전체 라인. 색 = 학습됨(초록) / 동결 NN(파랑) / 비학습 알고리즘(회색) / 오프라인(보라) / 회귀·보정 적합(주황). SAM 3은 하단 오프라인 영역(데이터 엔진)에만 정식 배치된다. PEM 내부 상세는 <a href="15_network_and_training_scope.html">15 Fig A</a> 참조.</div>
+
+<h3>6.1 스테이지별 입출력 계약</h3>
+<table>
+<tr><th style="width:6%">단계</th><th style="width:26%">입력</th><th style="width:26%">출력</th><th style="width:22%">핵심 연산</th><th>실패 시</th></tr>
+<tr><td><b>S0</b><br><span class="tiny">오프라인</span></td><td>CAD 메시 (스케일 확정)</td><td>마스터 16384pt · 42뷰 depth 템플릿 · TDF LUT · <code>sym_rots</code> · <b>인코더 특징 캐시</b>(dense_fo 2048×256 등, ~30MB/물체)</td><td>표면 샘플 → splat 렌더 → 2-pass 캐시(인코더 확정 후 특징 추가 굽기)</td><td>온보딩 거부 (대칭 검출 승인 게이트)</td></tr>
+<tr><td><b>S1</b></td><td><code>sparse_depth</code> [800,1280] f32 + RGB</td><td>마스크 후보 {m_i} + 클러스터 {c_i}</td><td>평면 제거 → voxel BFS → 포인트 프롬프트 → <b>EfficientViT-SAM(동결)</b></td><td>프롬프트 0개 → 완화 재클러스터 → grid fallback(40개 제한) → <code>no_foreground</code> 정직 반환</td></tr>
+<tr><td><b>S2</b></td><td>{m_i, c_i} + S0 캐시(TDF·크기·디스크립터)</td><td>top-3 인스턴스 + 점수 벡터 (s_size, s_depth, s_gsem, [s_sem])</td><td>① 크기 게이트 ② TDF 정합+<b>coverage</b> ③ <b>GeDi 증류 디스크립터 cos</b> ④ (보조) DINOv3 ViT-S CLS — 보정 임계</td><td>전부 임계 미달 → 검출 없음 보고</td></tr>
+<tr><td><b>S3</b></td><td>인스턴스 crop → <code>geo_maps</code>(3,10,224,224) + <code>rgb</code>(3,3,224,224) + <code>pts/uv/fps_idx/valid_count</code> + <b>S0 캐시 로드</b></td><td>가설 3개 — hyp0(fine 정련+score), hyp1..2(coarse) — 비대칭 규약</td><td>기하 인코더+RGB 보조 → dense_fm → <b>매칭 디코더</b>(coarse→SVD→NMS→fine)</td><td>매칭 저신뢰 → coarse 가설만 S4로</td></tr>
+<tr><td><b>S4</b></td><td>가설 3 + frame_obs(프레임 전역 free-space)</td><td><b>accept / reject / UNCERTAIN</b> + 보정 확률 + 10-d 특징(판정 사유)</td><td>계층화 ICP(전 가설 저해상 → 상위 풀스케줄) → 스플랫 잔차·free-space → <b>로지스틱 보정(calib 로드)</b> + 하드 가드</td><td>UNCERTAIN → 재시도 정책(iter·τ 확대) → 재관측 요청</td></tr>
+</table>
+
+<h3>6.2 인코더–디코더 매핑 (질문의 용어로)</h3>
+<table>
+<tr><th style="width:16%">역할</th><th style="width:30%">v3 확정</th><th style="width:28%">학습 여부</th><th>선정 근거 / 미결</th></tr>
+<tr class="ok"><td><b>인코더 (장면)</b></td><td>소형 기하 인코더 — 기본안 <b>절단 ConvNeXt-T</b>(partial-conv stem mid24 + 1×1 lateral FPN, 1.33M/1.73 GMACs) vs ResNet18-lite w80 vs PointNet++ lite vs sparse conv</td><td><b>학습</b> (SGD)</td><td>예산·격자 실측 통과(13 §2). <b>최종 선정은 Phase A</b>(대응 정식화 + 밀도 스윕 + 팔레트 CAD + TRT/Orin)</td></tr>
+<tr class="ok"><td><b>인코더 (CAD)</b></td><td><b>동일 인코더 가중치 공유</b> — 42뷰 depth 렌더 통과(domain_flag=0), 결과는 S0 캐시</td><td>학습(공유) → 추론 시 캐시</td><td>cross-attention 동일 임베딩 공간의 구조적 보장 (03 §6.4)</td></tr>
+<tr class="ok"><td><b>인코더 (RGB 보조)</b></td><td>MBConv 0.4M + modality dropout p=0.3 + <code>e_norgb</code></td><td><b>학습</b></td><td>RGB 결측을 학습된 정규 상태로 — TRT 그래프 단일 유지 (03 §6.3)</td></tr>
+<tr class="ok"><td><b>디코더 (매칭)</b></td><td>coarse: 197토큰 cross-attn 2블록(H=192, heads4, RPE) → 2000/100 가중 SVD → <b>top-3 + pose-NMS</b> · fine: 1024pt linear attention(focusing 3) + bg_token, hyp0만</td><td><b>학습</b> — 5.5M, 본체</td><td>SAM-6D 승계 + 개조 6건. <b>포즈 판독은 비학습</b>(soft 대응 → SVD)</td></tr>
+<tr><td>판별 인코더 (S2)</td><td>GeDi→<b>PointNet-lite 증류 디스크립터</b>(0.35M, TRT-safe) + (보조) DINOv3 ViT-S/16 CLS(동결)</td><td>증류 학습 / 동결</td><td>dGeDi(170×, AR 62.2) 선례. <b>PTv3 학생은 TRT 불가라 제외</b> — 우리 학생은 PointNet-lite (12 §3)</td></tr>
+<tr><td>분할기 (S1)</td><td>EfficientViT-SAM 계열 (M1 확정분)</td><td><b>동결</b></td><td>SAM 3은 오프라인 전용 (R1-1)</td></tr>
+</table>
+
+<h2 id="s7"><span class="no">7</span>네트워크 명세 — 종류 · 입출력 연결 · 파라미터</h2>
+
+<table>
+<tr><th style="width:17%">모듈</th><th style="width:13%">종류</th><th style="width:24%">입력 → 출력</th><th class="c" style="width:9%">파라미터</th><th class="c" style="width:9%">학습</th><th>손실 / 규약</th></tr>
+<tr><td>기하 인코더</td><td>CNN (grid-conv)</td><td>(B,10,224,224) → geo56 (B,256,56,56)</td><td class="n">~1.3–2.0M</td><td class="c">SGD</td><td>말단 손실에서 역전파. 초기 2층 partial conv, stem 첫 폭 24 (예산 실측 13 §2)</td></tr>
+<tr><td>RGB 보조</td><td>CNN (MBConv)</td><td>(B,3,224,224) → F_rgb → <code>f_rgb_eff</code></td><td class="n">0.4M</td><td class="c">SGD</td><td>dropout p=0.3으로 flag=0 샘플링 — RGB 없음이 정규 상태</td></tr>
+<tr><td>융합</td><td>Linear</td><td>concat(grid_sample(geo56,uv), f_rgb_eff) 320 → 256 = dense_fm (B,1024,256)</td><td class="n">0.08M</td><td class="c">SGD</td><td>N_f=1024 고정 (TRT 정적 shape)</td></tr>
+<tr class="me"><td><b>coarse 매칭</b></td><td>cross-attention ×2블록</td><td>dense_fm(196 FPS) ⊕ sparse_fo(196, 캐시) + bg → 유사도 (197×197)</td><td class="n" rowspan="2"><b>합 5.5M</b></td><td class="c">SGD</td><td><b>대칭군 g* 단일선택 CE</b>(양방향) + 배경 빈 CE + 층별 deep supervision. softmax/CE는 fp32 고정</td></tr>
+<tr class="me"><td><b>fine 매칭</b></td><td>linear attention ×2블록</td><td>1025/2049 토큰(pe_fo 캐시) → 유사도 → fine (R,t)+score</td><td class="c">SGD</td><td>g* 라벨 하나로만. QueryAndGroup → 거리행렬+TopK (커스텀 op 0)</td></tr>
+<tr><td>가설 판독</td><td><b>비학습</b> (SVD·NMS)</td><td>유사도 → 2000/100 가중 SVD → top-3, NMS(geodesic 30°/Δt 0.05D)</td><td class="n">0</td><td class="c">—</td><td>엔진 밖 후처리 (CPU µs급)</td></tr>
+<tr><td>S2 디스크립터</td><td>PointNet-lite</td><td>클러스터 pts → f_obs (64-d) · CAD 측은 캐시</td><td class="n">0.35M</td><td class="c">증류</td><td>교사 GeDi 특징 회귀 (Phase C) — 그 전엔 TDF+coverage만</td></tr>
+<tr><td>S2 의미(보조)</td><td>ViT-S/16 (동결)</td><td>rgb crop → CLS 384-d → cos(템플릿 캐시)</td><td class="n">21M(동결)</td><td class="c">✕</td><td>DINOv3(라이선스 통과 시) / 폴백 DINOv2-S. RGB 결측 시 항 제외</td></tr>
+<tr><td>S4 보정기</td><td>로지스틱 회귀</td><td>10-d 특징 → accept 확률</td><td class="n">11</td><td class="c">적합</td><td>도메인별 보정 + 하드 가드. <b>라벨 진단 선행</b> (R3-2)</td></tr>
+</table>
+<div class="cap"><b>Table.</b> v3 네트워크 명세. 온라인 학습분 합계 <b>~8M</b>(설계 유지). 정밀도: bf16 autocast + fp32 master, 매칭 softmax/CE·loss fp32. TRT 비호환 op(SVD·searchsorted)는 엔진 밖.</div>
+
+<h2 id="s8"><span class="no">8</span>SOTA 선택지 대조 — 같은 결정을 남들은 어떻게 했나</h2>
+
+<table>
+<tr><th style="width:13%">설계 축</th><th style="width:17%">SAM-6D</th><th style="width:17%">MegaPose / FoundationPose</th><th style="width:17%">Co-op</th><th style="width:14%">FreeZe</th><th>Shape6D v3</th></tr>
+<tr><td>제안 시드</td><td>SAM 전체 분할 → 전 마스크 판별</td><td>외부 검출기</td><td>외부 검출기</td><td>CNOS 계열</td><td class="c" style="background:var(--good-soft)"><b>LiDAR 클러스터 프롬프트</b> — 기하가 시드 (분할 수 자체를 줄임)</td></tr>
+<tr><td>판별 신호</td><td>DINOv2 semantic+appearance (외형 2/3)</td><td>—</td><td>—</td><td>시각+기하 융합</td><td class="c" style="background:var(--good-soft)"><b>기하 주도</b>: 크기+TDF+coverage+GeDi증류, 의미는 보조</td></tr>
+<tr><td>자세 정식화</td><td>2단 점 매칭 (3D-3D)</td><td>render&amp;compare 반복</td><td>패치 대응 → PnP (재투영)</td><td>특징 RANSAC (3D-3D)</td><td class="c" style="background:var(--good-soft)">SAM-6D 승계 3D-3D — <b>z 정밀도가 스펙(10mm@3m)이라 재투영 계열 기각</b> (11 §1)</td></tr>
+<tr><td>대칭</td><td>없음</td><td>분류 회피 / 없음</td><td>없음</td><td>SAR (시각 특징)</td><td class="c" style="background:var(--good-soft)">g* 손실 + free-space 증거 — <b>시각 대신 물리로</b></td></tr>
+<tr><td>검증·신뢰도</td><td>단일 점수</td><td>랭킹</td><td>선택모델 랭킹</td><td>feature-aware 점수</td><td class="c" style="background:var(--good-soft)"><b>보정된 accept/reject/UNCERTAIN</b> — SOTA에 없는 축 (10 §8-②)</td></tr>
+<tr><td>온라인 규모</td><td>~104M</td><td>수백 M</td><td>~0.9B</td><td>~1.1B (동결)</td><td class="c" style="background:var(--good-soft)"><b>~8M</b> — Orin NX 1s가 요구하는 유일 대역</td></tr>
+</table>
+
+<h2 id="s9"><span class="no">9</span>학습 계획 — Phase 0 / A / B / C</h2>
+
+<h3>Phase 0 — 위생 (1주, 학습 없음 · 선결 조건)</h3>
+<table>
+<tr><th style="width:34%">항목</th><th class="c" style="width:10%">비용</th><th>근거</th></tr>
+<tr><td>config 주입 경로 구현 + 발산 3건 해소</td><td class="c">0.5일</td><td>A-1 — 학습 하이퍼파라미터가 같은 죽은 yaml에 있음</td></tr>
+<tr><td>E2E 골든 넘버 회귀 테스트 (4.9mm/0.71° ±20%)</td><td class="c">0.5일</td><td>A-3 — "PEM이 v0-geo를 이겼는가" 판정 기준선 보호</td></tr>
+<tr><td>TDF coverage 항 추가</td><td class="c">1일</td><td>A-4 — S3 입력 오염 경로 차단</td></tr>
+<tr><td>S4 보정 로드 배선 + <b>검증기 라벨 진단 2종</b></td><td class="c">1일</td><td>A-2 + 10 권고 1 — 재보정 전에 라벨이 뭘 재는지부터</td></tr>
+<tr><td><b>M0-2 Orin NX 환산계수 실측</b> (컴퓨트/메모리/launch)</td><td class="c">2~3일</td><td>10 권고 9 — 인코더 선정의 "배포성 1급"을 잴 자</td></tr>
+</table>
+
+<h3>Phase A — 최소 매칭 파일럿 + 인코더 재선정 (2주)</h3>
+<div class="box">
+<b>구현(2~3일)</b>: 최소 매칭부 = 장면 dense_fm ⊕ CAD 캐시 특징 → coarse cross-attn <b>1블록</b> → soft 대응 → 가중 SVD. 과제는 <b>포즈 회귀(측지+병진 오차)</b> — 뷰 분류 전면 폐기 (15 §6).<br>
+<b>후보(6런 + 기준선 2)</b>: a0 ResNet18-lite w80 / a1 절단 ConvNeXt-T(ImageNet) / a1d(DINOv3) / b PointNet++ lite / c sparse conv(상한 확인) + <b>무학습 기준선</b> (d) GeDi+RANSAC+S4 ICP, (e) PPF (10 권고 3).<br>
+<b>데이터</b>: MegaPose-GSO 물체 분할 750/194(구축 완료) + <b>센서 스펙 기반 합성 희소화</b>(ML-X 격자·scanline·Ruby128 — §5.5에 따라 실기 마스크 미사용) · <b>팔레트형 CAD를 평가에 필수 포함</b>(grid-conv 탈락 조건 — 03 §1).<br>
+<b>규약</b>: 수렴 확인 의무 + 후보별 lr(사전학습 3e-4 / 스크래치 1e-3) + 시드 3종 (R3-1).<br>
+<b>게이트 G-A(제안)</b>: 미학습 194종에서 <b>≤30° 진입률</b>이 (d) 무학습 기준선을 상회 + 밀도 낙폭 곡선 확보 + TRT 엔진 빌드 성공 + Orin 환산 예산 내. <b>산출: 인코더 1종 확정.</b>
+</div>
+
+<h3>Phase B — PEM 본학습 (4~5주)</h3>
+<table>
+<tr><th style="width:18%">항목</th><th>내용</th></tr>
+<tr><td>모델</td><td>확정 인코더 + coarse 2블록 + fine 2블록 (전체 ~8M) · bf16 + fp32(softmax/CE) · activation checkpointing</td></tr>
+<tr><td>데이터</td><td>GSO-only ~104만 샘플 계획 (08 §3) · 증강 5종(08) + <b>fixed_grid 패턴·N_obj 레짐 2종 확장</b>(05 #6·10 권고 10) · CAD 측 2뷰 gradient 통과(활성화 ~3배 — bs64, OOM 경계 03 §9)</td></tr>
+<tr><td>손실</td><td>g* 단일선택 CE(coarse 해상도 선택, fine은 g* 하나) + 배경 빈 CE + deep supervision · <b>g* 비항등 선택률 로깅</b>(대칭 loss 작동 감시)</td></tr>
+<tr><td>평가 훅</td><td>500 iter val(증강 태그 분해) · 10k BOP-미니(GT 마스크로 S3 절연) · 25k <b>오염 + RGB 차단 + 희소도 스윕 N∈{32,100,300,1000,2000}</b></td></tr>
+<tr><td>일정</td><td>파일럿 1런(10% 서브셋) ~6h → A/B 10~12런 3~4일 → 본학습 ~4일/런 (벽시계 ×1.5 각오)</td></tr>
+<tr><td><b>게이트 G-B</b></td><td>① <b>Δ(v0-geo) &gt; 0</b> — 팔레트 합성 스위트 ② UAM 70샘플 성공률 ≥ v0-geo ③ ≤30° 진입률·밀도 곡선이 Phase A 승자 유지 ④ <b>BOP·UAM 충돌 시 UAM 우선</b> (R3-5, 합의 필요)</td></tr>
+</table>
+
+<h3>Phase C — 증류 · 보정 · 배포 (2~3주)</h3>
+<table>
+<tr><th style="width:24%">항목</th><th>내용</th></tr>
+<tr><td>유사도행렬 증류</td><td>교사 후보 3종 ablation: <b>DINOv3 ViT-L</b> vs <b>CroCo v2</b>(Co-op 근거 — 대응 태스크 적합 가설, 12 §9-7) vs <b>GeDi</b>(기하). 256-d 유사도 공간을 유지한 이유가 이 정렬 (03 §6.5) · 블록 3→2 축소분 보전이 목적</td></tr>
+<tr><td>S2 디스크립터 증류</td><td>GeDi → PointNet-lite 0.35M (dGeDi 방식, 학생만 교체) → s_gsem 활성화</td></tr>
+<tr><td>검증기 재보정</td><td>라벨 진단(Phase 0) 결과 반영 → <b>자체 희소 합성 + sparsified-BOP로 적합</b>(§5.5 — UAM 미사용), 도메인별 보정기 + <code>calibrator_version</code> 기록 · <b>UAM 70샘플은 보정기의 홀드아웃 평가로만</b></td></tr>
+<tr><td>배포</td><td>TRT 엔진 3분할(인코더/coarse/fine) B=3 정적 빌드 → <b>Orin NX 실측 E2E</b></td></tr>
+<tr><td><b>게이트 G-C</b></td><td>E2E &lt;1s 실측 · FA&lt;1%에서 리콜(도메인별) 09 기준 상회 · UNCERTAIN 재시도 경로 검증</td></tr>
+</table>
+
+<div class="decision">
+<div class="t">일정 총괄 (~10주 — 08 프레임 정합)</div>
+Phase 0 (1주) → A (2주) → B (4~5주) → C (2~3주). 병렬 트랙: 데이터 엔진은 Phase A부터 가동하되 <b>평가 주석·향후 현장분 한정</b>(§5.5). <b>어느 게이트가 실패해도 v0-geo가 배포 가능한 폴백으로 상존</b> — 프로젝트가 0이 되는 경로는 없다.
+</div>
+
+<h2 id="s10"><span class="no">10</span>리스크 · 결정 대기 · 검토 이력</h2>
+
+<table>
+<tr><th style="width:6%">#</th><th style="width:30%">리스크 / 결정</th><th style="width:10%">유형</th><th>내용</th></tr>
+<tr><td>D-1</td><td>ShapeNet/Objaverse 확보</td><td>결정 대기</td><td>08 §3.2의 "나란히 측정"은 데이터가 있어야 성립. 낙폭 판정은 UAM 셋 포함 (10 권고 6·7)</td></tr>
+<tr><td>D-2</td><td>DINOv3·SAM 3 상업 약관</td><td>결정 대기</td><td>연구 사용은 확보. 배포·데이터 엔진 산출물의 파생 조건 검토 — D4와 묶어 처리</td></tr>
+<tr><td>D-3</td><td>BOP vs UAM 게이트 우선순위</td><td>합의 필요</td><td>본 문서 제안: <b>UAM 우선</b> (BPC 2025에서 지표 1위≠파지 1위 실증 — 10 §6.5)</td></tr>
+<tr><td>D-4</td><td>CroCo 교사 채택 여부</td><td>Phase C 판정</td><td>Co-op의 선택이 근거. ablation으로 결정 — 사전 확정하지 않음</td></tr>
+<tr class="hi"><td>R-1</td><td><b>매칭부 최초 구현 리스크</b></td><td>기술</td><td>현재 nn.Module 0개 — Phase A의 최소 매칭부가 첫 구현. SAM-6D 코드가 참조 구현으로 존재하는 것이 완충</td></tr>
+<tr class="hi"><td>R-2</td><td>밀도 비대칭 붕괴</td><td>기술</td><td>문헌상 최대 리스크(10 §6.7). Phase A 밀도 스윕이 조기 경보 — 붕괴 시 후보 (b)/(c)로 전환</td></tr>
+<tr><td>R-3</td><td>1s 예산 미달</td><td>배포</td><td>M0-2 실측(Phase 0)이 조기 판정. 미달 시 계층화 ICP·해상도 축소의 순으로 삭감 (05 #1)</td></tr>
+</table>
+
+<h3>검토 이력 — v0 → v3에서 바뀐 것</h3>
+<table>
+<tr><th style="width:20%">구성요소</th><th style="width:26%"><span class="vtag v0">v0</span>출발 제안</th><th style="width:30%"><span class="vtag v3">v3</span>확정</th><th>바꾼 근거</th></tr>
+<tr><td>S1 분할</td><td>SAM 3 온라인</td><td>EfficientViT-SAM(엣지) + <b>SAM 3은 오프라인 데이터 엔진·PC 앵커</b></td><td>R1-1: 840M·H200 30ms — 서버급</td></tr>
+<tr><td>S2 선별</td><td>기하 유사도 (방법 미정)</td><td>크기 + TDF+<b>coverage</b> + <b>GeDi증류 디스크립터</b> + (보조) ViT-S CLS, 보정 임계</td><td>A-4 실측 · dGeDi 선례 · TRT 제약(PTv3 제외)</td></tr>
+<tr><td>S3 자세</td><td>"DINOv3 기반 네트워크"</td><td><b>SAM-6D 승계 2단 점 매칭</b>(개조 6건) + 소형 기하 인코더. DINOv3는 <b>교사·S2 판별로 재배치</b></td><td>R1-2(예산·격자·전제 모순) + R2-1(비교기 실증)</td></tr>
+<tr><td>대칭</td><td>—</td><td>g* 손실 + top-3 → S4 free-space</td><td>R2-2: 백본으로 못 푸는 문제</td></tr>
+<tr><td>학습</td><td>—</td><td>Phase 0/A/B/C · 대응 정식화 · 수렴/lr 규약 · Δ(v0-geo)+UAM+≤30° 게이트</td><td>R3 전체 + 15 §6</td></tr>
+<tr><td>UAM 로그 역할</td><td>(초안) 데이터 엔진으로 보정셋 갱신 + 학습 희소화 마스크</td><td><b>전면 평가 전용</b> — 학습·보정·튜닝 금지, 합성 희소화·합성 보정셋으로 대체</td><td>R3-7 (사용자 지적 반영)</td></tr>
+</table>
+
+<div class="box"><b>한 문장.</b> v0의 세 구성요소는 전부 살아남았다 — 단 <b>제자리로 옮겨서</b>: SAM 3은 온라인이 아니라 <b>데이터 엔진</b>으로, DINOv3는 자세 백본이 아니라 <b>판별과 교사</b>로, 기하 유사도는 구호가 아니라 <b>coverage+증류 디스크립터의 측정 가능한 게이트</b>로. 자세 본체는 SAM-6D의 매칭 구조를 승계한다 — 그것이 제로샷의 필요조건임을 이번 세션이 실측으로 보였기 때문이다.</div>
+
+<p class="tiny" style="margin-top:26px">외부 출처 — <a href="https://ai.meta.com/research/publications/sam-3-segment-anything-with-concepts/">SAM 3 (Meta, 2025-11)</a> · <a href="https://docs.ultralytics.com/models/sam-3">SAM 3 스펙 정리</a> · <a href="https://arxiv.org/abs/2212.06870">MegaPose</a> · <a href="https://nvlabs.github.io/FoundationPose/">FoundationPose</a> · <a href="https://arxiv.org/abs/2503.17731">Co-op</a> · <a href="https://arxiv.org/abs/2312.00947">FreeZe</a> · <a href="https://arxiv.org/abs/2503.15106">dGeDi</a><br>
+내부 — <a href="03_implementation_design.html">03 §6·§8·§9</a> · <a href="08_training_plan.html">08</a> · <a href="10_network_design_and_critique.html">10</a> · <a href="11_sota_approach_comparison.html">11</a> · <a href="12_backbone_survey_dino.html">12</a> · <a href="13_backbone_pilot_report.html">13</a> · <a href="14_encoder_pilot_paper.html">14</a> · <a href="15_network_and_training_scope.html">15</a> · <a href="16_pretraining_comparison.html">16</a></p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shape6D-PEM 구조와 현재 학습 범위 — 영향 예측 분석</title>
+<style>
+  :root { --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --panel:#f6f8fb; --accent:#0b5fff;
+          --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e3;
+          --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+         color:var(--ink); background:#fff; line-height:1.7; font-size:15px; }
+  .wrap { max-width:1120px; margin:0 auto; padding:44px 28px 110px; }
+  h1 { font-size:26px; margin:0 0 6px; letter-spacing:-0.5px; line-height:1.35; }
+  h2 { font-size:19px; margin:52px 0 12px; padding-top:16px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:26px 0 8px; }
+  p { margin:9px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  .abs { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:16px 20px; margin:18px 0 26px; font-size:14px; }
+  .abs b.t { display:block; font-size:15px; margin-bottom:6px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.6px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 9px; font-weight:600; }
+  th.c, td.c { text-align:center; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.on td { background:var(--good-soft); } tr.on td:first-child { border-left:3px solid var(--good); font-weight:700; }
+  tr.off td { background:var(--bad-soft); } tr.off td:first-child { border-left:3px solid var(--bad); }
+  tr.me td { background:var(--shape-soft); } tr.me td:first-child { border-left:3px solid var(--shape); }
+  .cap { font-size:12.3px; color:var(--sub); margin:4px 0 22px; }
+  .cap b { color:var(--ink); }
+  figure { margin:22px 0 8px; }
+  figure img { width:100%; border:1px solid var(--line); border-radius:8px; display:block; }
+  code { font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace; font-size:12.3px;
+         background:var(--panel); padding:1px 5px; border-radius:4px; }
+  .crit { border:1px solid var(--line); border-left:4px solid var(--bad); background:var(--bad-soft);
+          border-radius:8px; padding:13px 17px; margin:16px 0; font-size:13.6px; }
+  .crit .h { font-weight:800; color:var(--bad); margin-bottom:5px; font-size:14.5px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.6px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; font-size:14px; }
+  .box { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.6px; }
+  .warnbox { border:1.5px dashed var(--warn); background:var(--warn-soft); border-radius:10px;
+             padding:11px 16px; margin:14px 0; font-size:13.3px; }
+  ul, ol { margin:8px 0; padding-left:22px; } li { margin:5px 0; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 20px;
+         margin:18px 0 6px; font-size:13.3px; column-count:2; column-gap:30px; }
+  .toc a { display:block; padding:2px 0; break-inside:avoid; }
+  .tiny { font-size:11.8px; color:var(--sub); }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:18px 0 6px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:19px; letter-spacing:-0.5px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good b { color:var(--good); } .stat.bad b { color:var(--bad); } .stat.warn b { color:var(--warn); }
+  @media (max-width:820px){ .toc{column-count:1;} .hero{grid-template-columns:repeat(2,1fr);} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Shape6D-PEM 구조와 현재 학습 범위<br>— 무엇이 튜닝되고 있으며, 어떤 영향이 있는가</h1>
+<div class="meta">v1.0 · 2026-07-29 · 대상: <a href="03_implementation_design.html">03 §6</a>(PEM 정본) · 실측 근거: <a href="14_encoder_pilot_paper.html">14</a>(단일 CAD 파일럿) + 본 문서 §4(MegaPose 제로샷 실측)</div>
+
+<div class="abs">
+<b class="t">요약</b>
+설계된 Shape6D-PEM은 온라인 <b>~8M 파라미터</b>이고, 그중 <b>매칭부가 5.5M(69%)</b>이다.
+현재 파일럿이 갱신하는 것은 <b>기하 인코더 1.33M — 전체의 약 17%</b>뿐이며, <b>매칭부는 코드가 존재하지 않는다</b>(레포 전체 <code>nn.Module</code> 0개).<br><br>
+그런데 <b>PEM은 매칭 네트워크</b>다 — 포즈는 장면 특징과 CAD 특징의 <b>대응</b>에서 나온다.
+파일럿은 CAD 측을 제거하고 "42뷰 분류"로 대체했는데, 이는 물체가 하나일 때만 성립한다(네트워크가 그 물체를 외워 암묵적 템플릿 역할을 하므로).
+<b>미학습 물체에서는 원리적으로 불가능하다</b> — 처음 보는 물체의 정준 좌표계를 관측만으로 알 방법이 없다.<br><br>
+이를 MegaPose-GSO로 실측했다: 단일 CAD에서 <b>top-1 0.993</b>이던 같은 모델이, 학습 750종 / 미학습 194종 조건에서 <b>0.147</b>로 떨어진다(우연 0.024).
+<b>즉 지금의 학습은 "인코더 후보 간 상대 순위"에 대한 약한 증거일 뿐, 제로샷 성능의 예측치가 아니다.</b>
+</div>
+
+<div class="hero">
+  <div class="stat"><b>8M</b><span>설계 온라인 파라미터 (인코더 2.4M + 매칭 5.5M)</span></div>
+  <div class="stat good"><b>1.33M</b><span>지금 갱신되는 파라미터 — 전체의 17%</span></div>
+  <div class="stat bad"><b>0개</b><span>구현된 매칭 모듈 (nn.Module 0개)</span></div>
+  <div class="stat bad"><b>98.8% → 5.8%</b><span>ICP 수렴 반경(≤30°) 진입률<br>단일 CAD → 미학습 물체</span></div>
+</div>
+
+<div class="toc">
+<a href="#s1">1. 설계 전체 구조</a>
+<a href="#s2">2. 데이터가 흐르는 경로</a>
+<a href="#s3">3. 지금 학습되는 범위 — 파라미터 회계</a>
+<a href="#s4">4. 실증 — 매칭부가 없으면 제로샷이 성립하지 않는다</a>
+<a href="#s5">5. 영향 예측 분석 6건</a>
+<a href="#s6">6. 권고 — 다음 파일럿의 최소 요건</a>
+</div>
+
+<h2 id="s1"><span class="no">1</span>설계 전체 구조</h2>
+
+<figure><img src="assets_15/figA_architecture.png" alt="Shape6D-PEM 전체 구조"></figure>
+<div class="cap"><b>Fig A.</b> Shape6D-PEM 설계 전체(03 §6 정본). 세 영역으로 나뉜다 — <b>보라</b>: S0 온보딩(오프라인, 온라인 비용 0), <b>파랑</b>: 장면 측 인코딩, <b>주황</b>: 매칭부. 오브젝트 측 특징은 전량 캐시에서 로드되므로(태그 A) 매 프레임 재계산이 없다. 이 구조가 SAM-6D 104M → 8M 축소분의 상당 부분을 만든다.</div>
+
+<h2 id="s2"><span class="no">2</span>데이터가 흐르는 경로</h2>
+
+<table>
+<tr><th style="width:7%">단계</th><th style="width:23%">연산</th><th style="width:26%">텐서 변환</th><th>역할</th></tr>
+<tr><td>입력</td><td>마스크 bbox → 정사각 crop → 224 리사이즈</td><td><code>rgb (B,3,224,224)</code><br><code>geo_maps (B,10,224,224)</code></td><td>geo 10채널 = XYZ(3)+노멀(3)+<b>유효마스크(1)</b>+정규화깊이(1)+flags(2). 유효마스크가 1급 채널인 것이 희소 대응의 요체</td></tr>
+<tr><td>인코딩</td><td>기하 인코더 (필터: 3×3 conv + partial conv 초기 2층)</td><td>→ <code>geo56 (B,256,56,56)</code></td><td>stride-4 조밀 특징맵. 유효밀도 1~2%에 대응해 <code>y = conv(x⊙m)·k²C/(conv_ones(m)+ε)</code></td></tr>
+<tr><td>보조</td><td>RGB branch (MBConv) + modality dropout</td><td>→ <code>f_rgb_eff</code></td><td>RGB 결측을 <b>예외가 아니라 학습된 정규 상태</b>로. 추론 그래프가 갈라지지 않아 TRT 정적 유지</td></tr>
+<tr><td>융합</td><td><code>grid_sample(geo56, uv)</code> ⊕ f_rgb_eff → Linear(320→256)</td><td>→ <code>dense_fm (B,1024,256)</code></td><td>1024개 관측점 각각의 특징 벡터. <b>여기까지가 인코더의 일</b></td></tr>
+<tr><td>coarse</td><td>197토큰 cross-attention 2블록, H=192, heads 4, RPE</td><td>장면 196 ↔ CAD 196 (+bg)</td><td><b>양측 특징의 유사도 행렬</b>을 만든다. 유사도 공간은 256 유지(teacher distill 정렬용)</td></tr>
+<tr><td>가설</td><td>nproposal 2000/100 → 가중 SVD → top-3 + pose-NMS</td><td>→ <code>(R,t) ×3</code></td><td>대칭 물체의 다중 해를 S4로 넘긴다. 엔진 밖 후처리(3×3 행렬, CPU µs급)</td></tr>
+<tr><td>fine</td><td>1024pt linear attention(focusing 3), bg_token 유지</td><td>hyp0만 정련</td><td>bg_token은 배경 혼입의 배출구 — 제거하면 배경점이 억지로 대응된다</td></tr>
+<tr><td>출력</td><td>비대칭 3가설</td><td>hyp0=fine+score, hyp1..2=coarse</td><td>S4가 free-space 증거로 최종 판정</td></tr>
+</table>
+
+<div class="box"><b>핵심 관찰 — PEM은 분류기가 아니라 비교기(comparator)다.</b> 위 표에서 <b>coarse 단계부터가 진짜 PEM</b>이고, 그 입력은 <b>장면 특징 + CAD 특징 두 개</b>다. 포즈는 두 집합의 <b>대응</b>에서 SVD로 유도된다. 인코더는 그 대응을 가능하게 하는 <b>특징 추출기</b>일 뿐이며, 단독으로는 포즈를 만들지 않는다.</div>
+
+<h2 id="s3"><span class="no">3</span>지금 학습되는 범위 — 파라미터 회계</h2>
+
+<figure><img src="assets_15/figB_trained_scope.png" alt="현재 학습 범위"></figure>
+<div class="cap"><b>Fig B.</b> 같은 구조에서 <b>현재 파일럿이 갱신하는 블록만 진하게</b> 표시. 회색 점선은 <b>코드가 존재하지 않는</b> 부분이다. 매칭부 자리에는 파일럿 전용 임시 헤드(빨강)가 들어가 있으며, 이 헤드는 실제 PEM에 존재하지 않고 학습 후 폐기된다.</div>
+
+<table>
+<tr><th style="width:24%">모듈</th><th class="c" style="width:13%">설계 파라미터</th><th class="c" style="width:13%">현재 파일럿</th><th class="c" style="width:11%">M2 본학습</th><th>비고</th></tr>
+<tr class="on"><td>기하 인코더</td><td class="n">2.0M (후보 a)</td><td class="c"><b>갱신 1.33M</b></td><td class="c">갱신</td><td>파일럿의 유일한 실질 학습 대상</td></tr>
+<tr class="off"><td>RGB 보조 branch</td><td class="n">0.4M</td><td class="c">미구현</td><td class="c">갱신</td><td>modality dropout·게이트·<code>e_norgb</code> 전부 미검증</td></tr>
+<tr class="off"><td>CAD 측 인코더 경로</td><td class="c">가중치 공유</td><td class="c"><b>경로 미사용</b></td><td class="c">갱신</td><td>42뷰 depth 렌더 → 동일 인코더. <b>도메인 갭 흡수 능력 미측정</b></td></tr>
+<tr class="off"><td>coarse 매칭</td><td class="n" rowspan="2">합 5.5M</td><td class="c">미구현</td><td class="c">갱신</td><td>RPE·bg_token·유사도 행렬</td></tr>
+<tr class="off"><td>fine 매칭</td><td class="c">미구현</td><td class="c">갱신</td><td>linear attention·거리행렬 top-k</td></tr>
+<tr class="off"><td>대칭 손실 g*</td><td class="c">파라미터 없음</td><td class="c">미작동</td><td class="c">작동</td><td>손실 설계 — 학습 신호에만 영향</td></tr>
+<tr class="me"><td>파일럿 임시 헤드</td><td class="c">설계에 없음</td><td class="c">갱신 0.28M</td><td class="c">—</td><td>GAP→Linear(256→42) + 1×1→8×8풀→MLP. <b>학습 후 폐기</b></td></tr>
+<tr><td><b>합계</b></td><td class="n"><b>~8M</b></td><td class="n"><b>1.61M (인코더 1.33M)</b></td><td class="n">~8M</td><td>인코더만 보면 전체의 <b>17%</b></td></tr>
+</table>
+
+<h2 id="s4"><span class="no">4</span>실증 — 매칭부가 없으면 제로샷이 성립하지 않는다</h2>
+
+<p>위 §2의 관찰이 실제로 결과를 좌우하는지 확인하기 위해, <b>같은 인코더·같은 과제·같은 헤드</b>를 두 데이터에서 학습했다.</p>
+
+<table>
+<tr><th style="width:21%">조건</th><th class="c" style="width:11%">학습 물체</th><th class="c" style="width:13%">검증 물체</th><th class="c" style="width:10%">뷰 top-1</th><th class="c" style="width:10%">회전 p50</th><th class="c" style="width:10%">회전 p90</th><th class="c" style="width:11%">≤30° 비율</th><th>해석</th></tr>
+<tr class="on"><td>단일 CAD (문서 14)</td><td class="c">SKID 1종</td><td class="c">동일 1종</td><td class="n">0.9930</td><td class="n">2.6°</td><td class="n">7.5°</td><td class="n"><b>98.8%</b></td><td>물체를 외운 상태 = 암묵적 템플릿</td></tr>
+<tr class="off"><td><b>MegaPose-GSO</b> · a0</td><td class="c">750종</td><td class="c"><b>194종 (교집합 0)</b></td><td class="n"><b>0.1471</b></td><td class="n"><b>120.6°</b></td><td class="n">173.8°</td><td class="n"><b>5.8%</b></td><td>우연 0.024 대비 6배지만 <b>사실상 실패</b></td></tr>
+<tr class="off"><td>동 · a1 (ImageNet)</td><td class="c">750종</td><td class="c">194종</td><td class="n">0.1404</td><td class="n">119.7°</td><td class="n">172.8°</td><td class="n">6.2%</td><td rowspan="2"><b>인코더를 바꿔도 같다</b> — 인코더가 아니라 <b>과제의 문제</b>임을 뒷받침</td></tr>
+<tr class="off"><td>동 · a1d (DINOv3)</td><td class="c">750종</td><td class="c">194종</td><td class="n">0.1689</td><td class="n">118.5°</td><td class="n">174.4°</td><td class="n">7.3%</td></tr>
+</table>
+<div class="cap"><b>Table.</b> 64,000 학습 / 8,400 검증, 20에폭, ML-X 격자 희소화(<code>sparsify_fixed_grid</code>, σ=3mm), 물체당 433pt 중앙값.<br>
+<b>가장 결정적인 열은 「≤30° 비율」이다</b> — coarse의 임무는 정확한 포즈가 아니라 <b>후속 ICP의 수렴 반경 안에 넣는 것</b>이기 때문이다. 단일 CAD에서 98.8%였던 이 값이 미학습 물체에서는 <b>5.8~7.3%</b>다. 즉 <b>93% 이상이 ICP로도 회복 불가능</b>하며, 회전 p90은 173~174°로 사실상 최대 오차다.</div>
+
+<div class="crit">
+<div class="h">이것은 학습 실패가 아니라 <b>과제 정의의 오류</b>다</div>
+42뷰 라벨은 <b>각 물체 고유의 정준 모델 좌표계</b>에서 정의된다. 학습에 한 번도 안 나온 물체라면, 관측만 보고 그 물체의 정준 좌표계가 어디인지 알 방법이 <b>입력에 존재하지 않는다</b>. 0.147은 데이터셋 사전정보(중력 방향·GSO의 up축 관례)를 주워 담은 값이다.<br><br>
+<b>실제 제로샷 방법들이 전부 CAD 템플릿을 입력으로 두는 이유가 이것이다</b> — SAM-6D·MegaPose·Co-op·FreeZe 모두 "관측 ↔ 렌더된 템플릿"을 비교한다. 우리 설계도 그렇게 되어 있다(Fig A의 태그 A). <b>파일럿은 그 절반을 지웠고, 그래서 제로샷 조건에서 무너졌다.</b>
+</div>
+
+<div class="fair"><div class="h">거꾸로, 이것은 설계가 옳다는 증거이기도 하다</div>
+"오브젝트 측 특징을 S0에 캐시해 매 프레임 비교한다"는 구조는 <b>비용 절감 장치가 아니라 제로샷의 필요조건</b>이었음이 확인됐다. 캐시가 없으면 성능이 느려지는 게 아니라 <b>과제 자체가 풀리지 않는다.</b></div>
+
+<h2 id="s5"><span class="no">5</span>영향 예측 분석</h2>
+
+<table>
+<tr><th style="width:5%">#</th><th style="width:22%">항목</th><th style="width:9%">예상 영향</th><th>분석</th></tr>
+<tr><td>①</td><td><b>목적함수 불일치</b><br>분류 vs 대응</td><td class="c" style="color:var(--bad)"><b>높음</b></td><td>파일럿 헤드는 <b>GAP</b>으로 전역 평균을 낸다 — 즉 인코더는 "점들 사이를 구별하라"는 요구를 <b>한 번도 받지 않는다</b>. 반면 PEM은 점별 국소 특징으로 대응을 만든다. <b>전역 판별에 좋은 특징이 점별 대응에도 좋다는 보장이 없으므로, 파일럿의 후보 순위가 매칭 과제로 전이된다는 근거가 약하다.</b></td></tr>
+<tr><td>②</td><td>가중치 공유 미검증</td><td class="c" style="color:var(--bad)"><b>높음</b></td><td>설계상 같은 인코더가 <b>장면(희소 LiDAR)</b>과 <b>CAD(42뷰 조밀 depth 렌더)</b>를 모두 처리해야 하고, 두 도메인은 밀도가 약 10배 다르다(10 §6.7). 파일럿은 장면 측만 학습했으므로 <b>이 이중 부담이 인코더 용량에 미치는 영향이 전혀 반영되지 않았다</b> — 파일럿에서 충분했던 1.33M이 본학습에서 부족할 수 있다.</td></tr>
+<tr><td>③</td><td>대칭 손실 미작동</td><td class="c" style="color:var(--warn)">중간</td><td>문서 14 Fig 3에서 <b>최악 실패가 전부 180° 플립</b>이었고 예측·GT 렌더가 육안 구분 불가였다. 그것을 다루도록 설계된 <b>g* 단일선택 손실</b>은 파일럿에서 작동하지 않는다. 즉 <b>파일럿은 대칭 물체에서의 실제 거동을 재지 못한다</b>.</td></tr>
+<tr><td>④</td><td>배경 혼입 경로</td><td class="c" style="color:var(--warn)">중간</td><td>파일럿 입력은 <b>깨끗한 물체 crop</b>이다. 실제로는 S1 클러스터가 배경·인접 물체를 섞어 넣고, 그것을 <code>bg_token</code>이 배출한다. 배경 강건성은 미검증이며, 이는 인코더 선정에 영향을 줄 수 있다(희소 + 오염은 다른 문제다).</td></tr>
+<tr><td>⑤</td><td>학습 메모리 3배</td><td class="c" style="color:var(--warn)">중간</td><td>03 §9 검증[상-7] — 본학습에서는 <b>CAD 측 2뷰가 gradient 포함으로 인코더를 통과</b>해 활성화가 장면 측의 ~3배가 되고 bs64가 OOM 경계다. 파일럿은 bs 96~192로 여유롭게 돌았으므로 <b>이 제약을 경험하지 않았다</b>. 인코더를 키우는 선택은 파일럿보다 본학습에서 훨씬 비싸다.</td></tr>
+<tr><td>⑥</td><td>전이 가능한 것</td><td class="c" style="color:var(--good)">있음</td><td>파일럿이 남기는 실질 자산: <b>(a)</b> 예산·격자·TRT 적합성 실측(13 §2 — 렌더 결함과 무관하게 유효) <b>(b)</b> stem 점유율 실측(13 §3) <b>(c)</b> 희소 강건성이 인코더 선정의 판별축이라는 방법론 <b>(d)</b> 데이터 파이프라인·희소화·라벨 분해 코드. <b>인코더 가중치 자체는 폐기 대상</b>이다(헤드가 다르고 목적함수가 다르므로).</td></tr>
+</table>
+
+<div class="warnbox">
+<b>종합 예측.</b> 현재 학습으로 <b>M2 본학습의 성능을 예측할 수는 없다.</b> 예측 가능한 것은 배포 제약(파라미터·연산·격자·TRT)뿐이고, 정확도 축은 매칭부가 붙어야 의미를 갖는다.<br>
+가장 큰 리스크는 ①이다 — <b>파일럿에서 이긴 인코더가 매칭에서도 이긴다는 보장이 없는데, 우리는 그 가정 위에서 후보를 고르려 하고 있다.</b>
+</div>
+
+<h2 id="s6"><span class="no">6</span>권고 — 다음 파일럿의 최소 요건</h2>
+
+<p>인코더 선정이 의미를 가지려면, 프록시 과제가 <b>대응 정식화</b>여야 한다. 전체 PEM을 구현할 필요는 없고 <b>최소 매칭부</b>면 된다.</p>
+
+<table>
+<tr><th style="width:6%">순위</th><th style="width:26%">조치</th><th class="c" style="width:10%">비용</th><th>근거</th></tr>
+<tr class="on"><td>1</td><td><b>최소 매칭부 구현</b> — CAD 측 특징(캐시) + 장면 특징 → cross-attention 1블록 → soft 대응 → 가중 SVD</td><td class="c">2~3일</td><td>§4 — 이것 없이는 제로샷 과제가 성립하지 않는다. 대칭 손실 없이 시작해도 무방(먼저 대응이 되는지부터)</td></tr>
+<tr class="on"><td>2</td><td>과제를 <b>포즈 회귀(측지 오차)</b>로 전환 — 뷰 분류 폐기</td><td class="c">동반</td><td>①의 목적함수 불일치 제거. 지표도 top-1이 아니라 <b>회전·병진 오차</b>로 직결</td></tr>
+<tr><td>3</td><td>CAD 측을 실제로 태워 <b>가중치 공유·도메인 갭</b>을 함께 학습</td><td class="c">동반</td><td>②. 활성화 3배 문제도 이때 실측된다</td></tr>
+<tr><td>4</td><td>인코더 후보 재비교 (a0 / ConvNeXt·DINOv3 / PointNet++ / sparse conv)</td><td class="c">4~6런</td><td>13·14의 순위는 <b>①이 해소된 뒤에 재확인</b>해야 한다</td></tr>
+<tr><td>5</td><td>대칭 손실 g* 추가 후 재측정</td><td class="c">1~2일</td><td>③ — 플립이 실제로 줄어드는지가 이 손실의 존재 이유</td></tr>
+</table>
+
+<div class="box"><b>한 문장.</b> 지금 학습되는 것은 <b>8M 중 1.33M(17%)의 특징 추출기</b>이고, 제로샷을 가능하게 하는 <b>비교기(5.5M)는 한 줄도 존재하지 않으며</b>, 그 결과 제로샷 조건에서 과제가 성립하지 않음을 실측으로 확인했다. 다음 파일럿은 <b>최소 매칭부를 반드시 포함</b>해야 한다.</div>
+
+<p class="tiny" style="margin-top:26px">재현: <code>build_megapose.py</code>(샤드 → 학습셋, 물체 단위 분할) · <code>train_megapose.py</code>(학습·평가) · <code>fig_arch.py</code>(구조도) — 세션 스크래치패드.<br>
+내부: <a href="03_implementation_design.html">03 §6·§9</a> · <a href="10_network_design_and_critique.html">10 §2·§6.7</a> · <a href="14_encoder_pilot_paper.html">14</a> · <a href="16_pretraining_comparison.html">16</a></p>
+
+</div>
+</body>
+</html>

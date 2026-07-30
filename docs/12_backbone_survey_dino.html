@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>백본 선정 서베이 — DINO 계열 (v1.0)</title>
+<style>
+  :root {
+    --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb;
+    --accent:#0b5fff; --accent-soft:#e8f0ff; --good:#0a7d43; --good-soft:#e6f5ec;
+    --warn:#a05a00; --warn-soft:#fdf3e3; --bad:#b4232a; --bad-soft:#fdecec;
+    --shape:#6d28d9; --shape-soft:#f1eafd;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif; color:var(--ink); background:var(--bg); line-height:1.65; font-size:15px; }
+  .wrap { max-width:1180px; margin:0 auto; padding:40px 28px 100px; }
+  h1 { font-size:28px; margin:0 0 4px; letter-spacing:-0.5px; }
+  h2 { font-size:20px; margin:56px 0 12px; padding-top:18px; border-top:2px solid var(--ink); letter-spacing:-0.3px; }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:26px 0 8px; }
+  h4 { font-size:14px; margin:18px 0 6px; color:var(--sub); }
+  p { margin:8px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:22px; }
+  table { width:100%; border-collapse:collapse; margin:12px 0 8px; font-size:12.4px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 9px; font-weight:600; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.c, th.c { text-align:center; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.pick td { background:var(--good-soft); }
+  tr.pick td:first-child { border-left:3px solid var(--good); font-weight:700; }
+  tr.hi td { background:var(--bad-soft); }
+  tr.me td { background:var(--shape-soft); }
+  tr.me td:first-child { border-left:3px solid var(--shape); font-weight:700; }
+  .r { font-weight:700; } .r.g { color:var(--good); } .r.w { color:var(--warn); } .r.b { color:var(--bad); }
+  code, .mono { font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace; font-size:12.4px; background:var(--panel); padding:1px 5px; border-radius:4px; }
+  pre { background:#12151b; color:#e6e9ef; padding:13px 16px; border-radius:9px; overflow-x:auto; font-size:12.3px; line-height:1.55; margin:10px 0; }
+  pre .c { color:#7f8996; } pre .k { color:#79b8ff; } pre .s { color:#9ecbff; } pre .hl { color:#ffab70; font-weight:600; }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0 4px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:20px; letter-spacing:-0.5px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.bad b { color:var(--bad); } .stat.good b { color:var(--good); } .stat.warn b { color:var(--warn); }
+  .box { border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:8px; padding:12px 16px; margin:12px 0; font-size:13.5px; background:var(--panel); }
+  .box b.t { display:block; font-size:14px; margin-bottom:4px; }
+  .crit { border:1px solid var(--line); border-left:4px solid var(--bad); background:var(--bad-soft); border-radius:8px; padding:13px 17px; margin:16px 0; }
+  .crit .h { font-weight:800; font-size:14.5px; color:var(--bad); margin-bottom:6px; }
+  .crit .h .sev { font-size:11px; background:var(--bad); color:#fff; padding:1px 7px; border-radius:20px; margin-right:8px; vertical-align:2px; letter-spacing:0.3px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft); border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.4px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; font-size:14px; }
+  .note { border:1.5px dashed var(--shape); border-radius:10px; background:var(--shape-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .warnbox { border:1.5px dashed var(--warn); border-radius:10px; background:var(--warn-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .decision { border:2px solid var(--good); border-radius:12px; background:var(--good-soft); padding:16px 20px; margin:20px 0 8px; }
+  .decision .t { font-weight:800; color:var(--good); font-size:16px; margin-bottom:6px; }
+  ul, ol { margin:8px 0 8px; padding-left:22px; } li { margin:4px 0; }
+  .src { font-size:11.5px; color:var(--sub); }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 20px; margin:20px 0; font-size:13.3px; column-count:2; column-gap:30px; }
+  .toc a { display:block; padding:2px 0; break-inside:avoid; }
+  .tiny { font-size:11.8px; color:var(--sub); }
+  .three { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:16px 0; }
+  .card { border:1px solid var(--line); border-radius:10px; padding:13px 15px; background:var(--panel); font-size:13px; }
+  .card .t { font-weight:800; font-size:14.5px; margin-bottom:5px; }
+  .card.a { border-top:3px solid var(--good); } .card.b { border-top:3px solid var(--accent); } .card.c { border-top:3px solid var(--shape); }
+  .lic { font-size:11px; padding:1px 6px; border-radius:20px; font-weight:700; }
+  .lic.ok { background:var(--good-soft); color:var(--good); }
+  .lic.chk { background:var(--warn-soft); color:var(--warn); }
+  .lic.no { background:var(--bad-soft); color:var(--bad); }
+  @media (max-width:900px){ .hero{grid-template-columns:repeat(2,1fr);} .toc{column-count:1;} .three{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>백본 선정 서베이 — DINO 계열</h1>
+<div class="meta">v1.0 · 2026-07-28 · 대상: <code>docs/03_implementation_design.html §6.2·§6.3</code>(기하 인코더 3후보 · RGB 보조 branch) · <a href="08_training_plan.html">08 §E2</a>("distilled DINOv2-S와 비교 예정")의 선정 근거 문서<br>
+연관: <a href="10_network_design_and_critique.html">10 §6.1·§6.7·권고 2·3·9</a>(무학습 기준선 · 밀도 스윕 · Orin 실측) · <a href="11_sota_approach_comparison.html">11</a>(SOTA 대조)</div>
+
+<div class="box">
+<b class="t">이 문서의 범위</b>
+"우리 백본을 DINO 계열에서 고르자"는 요청에 대한 <b>선정 근거 자료</b>입니다. 결론을 먼저 말하면 — <b>DINO 계열은 채택하되, 온라인 추론 경로에 ViT를 직접 태우는 선택지는 예산상 성립하지 않습니다.</b> 실제 선택지는 <b>어느 자리에 · 어떤 형태로(직접/절단/증류)</b>이며, 그 판정은 아직 측정되지 않았습니다. 이 문서는 후보·감점요인·판정 실험을 정의하고 <b>1순위 권고</b>를 냅니다. 코드 변경은 포함하지 않습니다.
+</div>
+
+<div class="toc">
+<a href="#s1">1. 무엇을 고르는 문제인가 — 백본이 들어갈 5개 자리</a>
+<a href="#s2">2. DINO 계열 지형 (2026-07)</a>
+<a href="#s3">3. 후보 스펙표 — 파라미터·연산·격자·라이선스</a>
+<a href="#s4">4. Shape6D 고유 제약이 만드는 감점 요인 7건</a>
+<a href="#s5">5. 6D 포즈 문헌에서의 실제 사용례</a>
+<a href="#s6">6. 자리별 적합성 매트릭스</a>
+<a href="#s7">7. 권고 — 3층 구조와 1순위</a>
+<a href="#s8">8. 판정 실험 E-BB 설계</a>
+<a href="#s9">9. 미확인 항목 · 결정 대기</a>
+</div>
+
+<div class="hero">
+  <div class="stat bad"><b>4.64</b><span>GMACs — DINOv3 ViT-S/16 @224 (1인스턴스)</span></div>
+  <div class="stat warn"><b>3.5</b><span>GMACs — S3 <b>전체</b> 예산 (7 GFLOPs)</span></div>
+  <div class="stat"><b>14×14</b><span>ViT-S/16의 출력 격자 — 설계 요구는 56×56</span></div>
+  <div class="stat good"><b>stride 4</b><span>ConvNeXt가 직접 주는 해상도 — 설계와 일치</span></div>
+</div>
+
+<h2 id="s1"><span class="no">1</span>무엇을 고르는 문제인가 — 백본이 들어갈 5개 자리</h2>
+
+<p>"백본"이라는 한 단어가 Shape6D에서는 <b>요구조건이 전혀 다른 5개 자리</b>를 가리킵니다. 하나의 모델로 전부 덮는 것은 불가능하므로, 먼저 자리를 분해합니다.</p>
+
+<table>
+<tr><th style="width:5%">자리</th><th style="width:17%">역할</th><th style="width:17%">현 설계 / 상태</th><th style="width:24%">요구조건</th><th class="c" style="width:9%">온/오프</th><th>호출 빈도</th></tr>
+<tr><td><b>A</b></td><td>S2 판별 — 의미 점수<br><code>s2_sem</code> 생산자</td><td class="r b">부재 (DINOv2 미구현)<br><span class="tiny">검증기 특징이 항상 0 — 10 §7 표</span></td><td>인스턴스↔CAD 템플릿 동일성 판정. <b>패치/CLS 수준이면 충분</b>, 서브픽셀 불필요</td><td class="c">온라인</td><td>인스턴스 k=3<br>(템플릿 측은 캐시)</td></tr>
+<tr><td><b>B</b></td><td>S3 RGB 보조 branch</td><td>MBConv 0.4M<br>+ modality dropout p=0.3</td><td>1024개 uv점 <code>grid_sample</code>용 <b>per-pixel</b> 특징. 기하와 융합(320→256)</td><td class="c">온라인</td><td>인스턴스 k=3</td></tr>
+<tr><td><b>C</b></td><td>S3 기하 인코더<br>(<code>geo_maps</code> 10ch)</td><td>후보 (a)ResNet18-lite+FPN 2.0M / (b)PointNet++ lite / (c)sparse conv</td><td><b>stride-4, 56×56 출력</b> · 유효율 1~10% 대응(partial conv) · <b>CAD측 42뷰 depth와 가중치 공유</b> · TRT 정적 shape</td><td class="c">온라인</td><td>장면측 k=3<br>CAD측 오프라인</td></tr>
+<tr><td><b>D</b></td><td>증류 교사</td><td class="r b">없음</td><td>품질 최우선. 속도·크기 무관</td><td class="c">오프라인</td><td>학습 시 1회</td></tr>
+<tr><td><b>E</b></td><td>온보딩 보조<br>(대칭·부위 라벨 등)</td><td>기하 알고리즘만 사용</td><td>물체당 1회, 5분 예산 내</td><td class="c">오프라인</td><td>물체당 1회</td></tr>
+</table>
+
+<div class="crit">
+<div class="h"><span class="sev">전제</span>예산이 먼저 답을 좁힙니다</div>
+S3 전체 목표는 <b>~7 GFLOPs = 3.5 GMACs</b>(10 §2.7)입니다. 그런데 <b>DINOv3 ViT-S/16 하나가 4.64 GMACs</b>이고, 인스턴스 B=3 배치면 <b>13.9 GMACs — 예산의 4배</b>입니다.<br>
+따라서 <b>자리 B·C에 DINO ViT를 직접 태우는 선택지는 계산상 이미 탈락</b>입니다. 남는 실질 선택지는 세 가지뿐입니다 — ① <b>ConvNeXt 계열을 절단해 쓰기</b>, ② <b>증류 교사로만 쓰기</b>, ③ <b>자리 A에만 제한적으로 온라인 탑재</b>.
+</div>
+
+<h2 id="s2"><span class="no">2</span>DINO 계열 지형 (2026-07 기준)</h2>
+
+<table>
+<tr><th style="width:14%">계보</th><th style="width:10%">시점</th><th style="width:30%">핵심</th><th>Shape6D 관점의 함의</th></tr>
+<tr><td>DINO v1</td><td>2021</td><td>ViT self-distillation, patch 16/8</td><td>역사적. 후속에 전면 열세 — 후보 제외</td></tr>
+<tr><td><b>DINOv2</b></td><td>2023</td><td>LVD-142M · ViT-S/B/L/g <b>patch 14</b> · dense 특징의 사실상 표준</td><td><b>라이선스 Apache-2.0으로 무위험.</b> 6D pose 문헌 대부분의 채택 대상(§5). patch 14는 224에서 16×16 격자 — 연산이 patch-16 대비 +33%</td></tr>
+<tr><td>+ registers</td><td>2024</td><td>high-norm artifact 제거 → dense task 개선 (ICLR24)</td><td>우리는 <b>per-pixel 특징을 uv로 샘플</b>하므로 artifact가 직접 손해. register 유무는 1급 선택 기준</td></tr>
+<tr><td><b>DINOv3</b></td><td>2025-08</td><td>LVD-1689M(17억) · ViT-7B 교사 → 증류 · <b>patch 16 · register 4개 기본 내장</b> · RoPE · gram anchoring<br>ViT: S 21M / S+ 29M / B 86M / L 300M / H+ 840M / 7B<br><b>ConvNeXt(증류): T 29M / S 50M / B 89M / L 198M</b><br>+ 위성 사전학습(SAT-493M) 2종</td><td><b>기술적으로 DINOv2 상위호환</b> — 더 싸고(patch16) register 내장이고 dense 품질이 높음. <b>ConvNeXt 증류판의 존재가 우리에게 결정적</b>(§4-①). 단 <b>DINOv3 License</b>(Meta 자체 약관) — 법무 검토 필요</td></tr>
+<tr><td>RADIO / C-RADIO</td><td>2024~2026</td><td>NVIDIA 다교사 응집 증류(DINOv2+CLIP+SAM). E-RADIO는 엣지 지향. v2.5는 해상도 모드 전이·교사 불균형 해결</td><td>NVIDIA Open Model License(상업 가능) · <b>TensorRT 스택과 같은 벤더</b>. 우리 타깃이 Jetson이라 배포 관점 유리. 다만 여전히 ViT 규모</td></tr>
+<tr><td><b>Sonata</b><br>(3D 대응물)</td><td>CVPR25 Highlight</td><td>PointTransformerV3에 <b>DINO식 자기증류</b>를 3D로 이식. 140k point cloud. "geometric shortcut" 회피가 핵심 기여</td><td><b>"기하 측 DINO"에 가장 가까운 것.</b> 다만 PTv3는 serialization + 커스텀 attention → <b>TRT 경로 미확보</b>(후보 (c) sparse conv와 동급 리스크)</td></tr>
+<tr><td><b>dGeDi</b><br>(3D 증류)</td><td>2025</td><td>GeDi(교사) → <b>PTv3</b>(학생) 증류. <b>170× 빠름</b>(≈50 FPS) · BOP AR <b>62.2</b> (GT seg, GeDi 59.8 대비 +2.4) · 4k점</td><td><b>10 권고 3의 무학습 기준선을 실행 가능하게 만드는 결과.</b> 단 저자들도 <b>희소 포인트는 다루지 않음</b> — 권고 2 밀도 스윕과 반드시 동시 측정</td></tr>
+<tr><td>omnivorous DINO</td><td>2026</td><td>비RGB 모달리티를 <b>colorization 전처리</b>로 같은 인코더에 입력</td><td>depth/normal 맵을 DINO에 먹이는 <b>간접 근거</b>. 자리 C의 도메인 격차(§4-③)에 대한 유일한 문헌적 실마리</td></tr>
+</table>
+
+<h2 id="s3"><span class="no">3</span>후보 스펙표</h2>
+
+<p>연산량은 224×224 기준 <b>GMACs</b>(≒GFLOPs/2)입니다. ViT는 표준 MLP 4× 가정으로 자체 계산했고(gated MLP 변형은 다소 과대추정), ConvNeXt는 원 논문 값입니다.</p>
+
+<table>
+<tr><th style="width:20%">후보</th><th class="c" style="width:8%">Params</th><th class="c" style="width:8%">GMACs<br>@224</th><th class="c" style="width:10%">출력 격자<br>(@224)</th><th class="c" style="width:8%">특징 dim</th><th class="c" style="width:8%">register</th><th class="c" style="width:10%">라이선스</th><th class="c" style="width:8%">TRT</th><th>비고</th></tr>
+<tr class="hi"><td>DINOv2 ViT-S/14</td><td class="n">22.1M</td><td class="n">6.17</td><td class="c">16×16</td><td class="c">384</td><td class="c">별도 ckpt</td><td class="c"><span class="lic ok">Apache-2.0</span></td><td class="c">○</td><td>라이선스 무위험. patch14로 비쌈</td></tr>
+<tr class="hi"><td>DINOv2 ViT-L/14</td><td class="n">300M</td><td class="n">82.2</td><td class="c">16×16</td><td class="c">1024</td><td class="c">별도 ckpt</td><td class="c"><span class="lic ok">Apache-2.0</span></td><td class="c">○</td><td>문헌 표준 교사(CNOS·FoundPose·SAM-6D ISM)</td></tr>
+<tr class="hi"><td>DINOv2 ViT-g/14</td><td class="n">1.1B</td><td class="n">~200+</td><td class="c">16×16</td><td class="c">1536</td><td class="c">별도 ckpt</td><td class="c"><span class="lic ok">Apache-2.0</span></td><td class="c">△</td><td>FreeZe 채택. 오프라인 전용</td></tr>
+<tr><td>DINOv3 ViT-S/16</td><td class="n">21M</td><td class="n">4.64</td><td class="c">14×14</td><td class="c">384</td><td class="c">4 (기본)</td><td class="c"><span class="lic chk">DINOv3 Lic.</span></td><td class="c">○</td><td>자리 A의 유일한 온라인 ViT 후보</td></tr>
+<tr><td>DINOv3 ViT-S+/16</td><td class="n">29M</td><td class="n">~6</td><td class="c">14×14</td><td class="c">—</td><td class="c">4</td><td class="c"><span class="lic chk">DINOv3 Lic.</span></td><td class="c">○</td><td>S와 B 사이 — 이득 대비 비용 미상</td></tr>
+<tr><td>DINOv3 ViT-B/16</td><td class="n">86M</td><td class="n">17.8</td><td class="c">14×14</td><td class="c">768</td><td class="c">4</td><td class="c"><span class="lic chk">DINOv3 Lic.</span></td><td class="c">○</td><td>온라인 불가. 교사 후보</td></tr>
+<tr><td>DINOv3 ViT-L/16</td><td class="n">300M</td><td class="n">62.7</td><td class="c">14×14</td><td class="c">1024</td><td class="c">4</td><td class="c"><span class="lic chk">DINOv3 Lic.</span></td><td class="c">○</td><td><b>자리 D(교사) 1순위</b></td></tr>
+<tr class="pick"><td><b>DINOv3 ConvNeXt-T</b></td><td class="n">29M</td><td class="n">4.5</td><td class="c"><b>56×56 (stride 4)</b><br>+28·14·7 계층</td><td class="c">96/192/<br>384/768</td><td class="c">N/A</td><td class="c"><span class="lic chk">DINOv3 Lic.</span></td><td class="c"><b>◎</b></td><td><b>출력 격자가 설계 요구와 정확히 일치.</b> 절단 사용 가능</td></tr>
+<tr><td>DINOv3 ConvNeXt-S / B</td><td class="n">50M / 89M</td><td class="n">8.7 / 15.4</td><td class="c">56×56</td><td class="c">—</td><td class="c">N/A</td><td class="c"><span class="lic chk">DINOv3 Lic.</span></td><td class="c">◎</td><td>온라인 예산 초과. 교사 후보</td></tr>
+<tr><td>C-RADIOv2-L</td><td class="n">~300M</td><td class="n">~60</td><td class="c">16×16</td><td class="c">—</td><td class="c">○</td><td class="c"><span class="lic chk">NVIDIA OML</span></td><td class="c">◎</td><td>다교사 응집. NVIDIA 스택 정합</td></tr>
+<tr><td>Sonata (PTv3)</td><td class="n">~108M</td><td class="c">—</td><td class="c">voxel</td><td class="c">—</td><td class="c">N/A</td><td class="c"><span class="lic chk">확인 필요</span></td><td class="c"><b>✕</b></td><td>기하 측 DINO. TRT 경로 미확보</td></tr>
+<tr><td>dGeDi (PTv3)</td><td class="n">~수십M</td><td class="c">—</td><td class="c">voxel</td><td class="c">—</td><td class="c">N/A</td><td class="c"><span class="lic chk">확인 필요</span></td><td class="c"><b>✕</b></td><td>무학습 기준선·교사 전용</td></tr>
+<tr class="me"><td>현 설계 (a)<br>ResNet18-lite+FPN</td><td class="n">2.0M</td><td class="n">1.6</td><td class="c">56×56</td><td class="c">256</td><td class="c">N/A</td><td class="c"><span class="lic ok">자체</span></td><td class="c">◎</td><td>스크래치 학습 — <b>사전학습 이득 0</b></td></tr>
+<tr class="me"><td>현 설계 RGB branch<br>MBConv</td><td class="n">0.4M</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">N/A</td><td class="c"><span class="lic ok">자체</span></td><td class="c">◎</td><td>08 E2에서 "distilled DINOv2-S와 비교" 예정</td></tr>
+</table>
+
+<div class="note">
+<b>DINOv2 vs DINOv3 — 기술과 법이 반대 방향을 가리킵니다.</b><br>
+기술적으로 DINOv3가 전면 우위입니다: patch 16이라 <b>같은 해상도에서 25% 싸고</b>(ViT-S 4.64 vs 6.17 GMACs), <b>register가 기본 내장</b>이라 dense 특징 artifact가 적고, 17억 장 사전학습에 <b>ConvNeXt 증류판까지 제공</b>합니다.<br>
+반면 라이선스는 DINOv2가 <b>Apache-2.0</b>으로 무위험이고, DINOv3는 <b>Meta 자체 DINOv3 License</b>입니다. 이 프로젝트에는 이미 <b>D4(ShapeNetCore 비상업 리스크)</b>가 미결로 있으므로, <b>DINOv3 License 검토를 D4에 묶어 함께 처리</b>하는 것이 맞습니다. 검토가 늦어지면 DINOv2가 폴백이며, 그 경우 잃는 것은 (i) ConvNeXt 증류판 (ii) register 내장 (iii) patch16의 25% 절감입니다.
+</div>
+
+<h2 id="s4"><span class="no">4</span>Shape6D 고유 제약이 만드는 감점 요인 7건</h2>
+
+<p>일반 벤치마크에서 DINO 계열이 강하다는 사실은 <b>우리 자리에서 강하다는 것을 의미하지 않습니다.</b> 아래 7개가 이 프로젝트에서만 발생하는 감점 요인입니다.</p>
+
+<table>
+<tr><th style="width:4%">#</th><th style="width:18%">요인</th><th style="width:38%">내용</th><th>누가 얼마나 감점되는가</th></tr>
+<tr class="hi"><td>①</td><td><b>출력 격자 불일치</b></td><td>설계는 <code>geo56</code>(stride-4, 56×56)에서 1024개 uv를 <code>grid_sample</code>합니다. <b>ViT-S/16 @224는 14×14</b> — 우리 요구보다 16배 성깁니다. 1024점을 14×14(196칸)에서 뽑으면 <b>평균 5.2점이 같은 패치를 공유</b>해 fine 매칭의 변별이 사라집니다. 448 입력으로 28×28을 만들면 GMACs가 4.64→22.5로 폭증합니다.</td><td><b>ViT 전체 치명</b>(자리 B·C).<br>ConvNeXt는 <b>감점 0</b> — stride 4/8/16/32 계층 출력을 그대로 줍니다</td></tr>
+<tr class="hi"><td>②</td><td><b>희소성</b></td><td>장면측 유효율은 UAM 실측 <b>~9.6%</b>, 설계 상정 하한은 1~2%입니다. ViT의 patch-embed는 16×16 창당 유효 3~25px — <b>패치 대부분이 거의 빈 값</b>이고, ViT에는 정규화 경로가 patch-embed 한 층뿐이라 개조 여지가 적습니다. conv 계열은 초기 2레이어를 <b>partial conv</b>로 교체하는 기존 설계가 그대로 적용됩니다.</td><td>ViT 큼 · ConvNeXt 중간<br>(개조 가능) · PTv3 미상</td></tr>
+<tr><td>③</td><td><b>도메인 격차</b></td><td>DINO 계열은 <b>RGB 전용 사전학습</b>입니다. 자리 C의 입력은 <code>geo_maps</code> 10채널(XYZ·노멀·유효마스크·정규화깊이·flags)입니다. 사전학습 이득이 이 도메인에서 유지된다는 <b>직접 증거가 없습니다</b>. omnivorous DINO(2026)가 colorization 전처리로 가능성을 보였을 뿐입니다.</td><td><b>자리 C의 1급 미검증 리스크</b><br>자리 A·B는 RGB이므로 무관</td></tr>
+<tr><td>④</td><td><b>가중치 공유 요구</b></td><td>cross-attention이 성립하려면 CAD측(42뷰 depth 렌더)과 장면측이 <b>같은 인코더</b>를 타야 합니다(03 §6.4). DINO를 자리 C에 쓰면 CAD측도 DINO를 타야 하는데, 이는 오프라인이라 비용은 0입니다. <b>제약이 아니라 조건</b>입니다.</td><td>감점 아님 — 단 절단·개조를 양측에 동일 적용해야</td></tr>
+<tr><td>⑤</td><td><b>TRT 배포성</b></td><td>ConvNeXt(depthwise 7×7 · LN · GELU)는 TRT 완전 지원. ViT는 지원되나 <b>DLA 불가</b>(JetPack 6.2 기준)로 GPU 전용. <b>PTv3(Sonata·dGeDi)는 serialization + 커스텀 attention</b>으로 후보 (c) sparse conv와 동급의 미확보 리스크입니다.</td><td>ConvNeXt ◎ · ViT ○ · PTv3 ✕</td></tr>
+<tr class="hi"><td>⑥</td><td><b>연산 예산</b></td><td>S3 전체가 3.5 GMACs인데 ViT-S 하나가 4.64, 인스턴스 3개면 13.9입니다. ConvNeXt-T도 4.5로 <b>단독으로 예산 초과</b>입니다.</td><td><b>전 후보 온라인 직접 탑재 불가</b> — 절단·증류가 전제</td></tr>
+<tr><td>⑦</td><td><b>라이선스</b></td><td>D4(ShapeNetCore 비상업) 미결 상태. DINOv3 License·NVIDIA OML은 <b>상업 허용으로 알려져 있으나 약관 확인 필요</b>. DINOv2만 Apache-2.0으로 확정 안전.</td><td>DINOv3·RADIO <b>검토 대기</b></td></tr>
+</table>
+
+<div class="fair">
+<div class="h">①과 ⑤가 결합해 만드는 결론</div>
+<b>우리 설계에서 DINO 계열을 쓴다면 ViT가 아니라 ConvNeXt입니다.</b> 이유는 품질이 아니라 <b>구조</b>입니다 — 우리는 stride-4의 조밀한 특징맵을 요구하는데 ViT는 원리적으로 그것을 주지 않고, ConvNeXt는 그것이 기본 출력입니다. 그리고 DINOv3가 <b>ViT-7B로부터 증류한 ConvNeXt(T/S/B/L)를 공개</b>했다는 사실이, "DINO 품질을 conv 구조로 받는" 경로를 처음으로 열어 놓았습니다.
+</div>
+
+<h2 id="s5"><span class="no">5</span>6D 포즈 문헌에서의 실제 사용례</h2>
+
+<table>
+<tr><th style="width:16%">방법</th><th style="width:20%">채택 백본</th><th style="width:22%">쓰는 방식</th><th>우리에게 주는 함의</th></tr>
+<tr><td>CNOS (ICCV23 R6D)</td><td>DINOv2 ViT-L/14</td><td>SAM 마스크 + <b>CLS 토큰</b>으로 템플릿 매칭</td><td><b>자리 A의 정확한 선례.</b> CLS 수준이면 충분하다는 실증</td></tr>
+<tr><td>SAM-6D ISM</td><td>DINOv2 ViT-L/14</td><td>semantic + appearance + geometric 점수 융합</td><td><code>s2_sem</code> 설계의 원본. 현재 미구현</td></tr>
+<tr><td>FoundPose (ECCV24)</td><td>DINOv2 (중간 레이어 패치)</td><td>패치 디스크립터 kNN 매칭 → 대응 → PnP. <b>마지막 레이어가 아니라 중간 레이어</b></td><td>레이어 선택이 성능 축 — 우리 증류에서도 <b>교사 레이어 선택이 하이퍼파라미터</b></td></tr>
+<tr><td>FreeZe (ECCV24)</td><td>DINOv2 <b>ViT-g/14</b> → PCA 64</td><td>기하(GeDi 64) + 시각(64) 융합 128-d. <b>ViT-g가 ViT-L보다 +2.8 AR</b></td><td>시각 특징은 <b>크기가 곧 품질</b> — 우리 예산에서는 증류로만 접근 가능</td></tr>
+<tr><td>Co-op (CVPR25)</td><td class="r w">DINO 아님 — CroCo ViT-L</td><td>크로스뷰 완성 사전학습이 <b>대응 태스크에 더 적합</b>하다는 선택</td><td><b>주의:</b> DINO가 6D pose의 유일 선택지가 아닙니다. 대응 기반이면 CroCo 계열이 더 맞을 수 있음</td></tr>
+<tr><td>dGeDi (2025)</td><td>GeDi → PTv3 증류</td><td>170× 가속, AR 62.2 (GT seg)</td><td><b>기하 측 증류의 성공 선례</b> — 10 §9의 "증류 프로젝트로 재정의"를 뒷받침</td></tr>
+</table>
+
+<div class="warnbox"><b>⚠ 반례를 기록해 둡니다.</b> Co-op은 BOP 상위권이면서 <b>DINO를 쓰지 않습니다</b>(CroCo). 그리고 DINOv3가 항상 DINOv2보다 낫지도 않습니다 — 커스텀 데이터셋에서 DINOv3 교체 후 <b>분할 성능이 떨어진 사례</b>가 보고되어 있습니다. <b>"최신 = 우리에게 최적"이 아니며, 이것이 §8 실험이 필요한 이유입니다.</b></div>
+
+<h2 id="s6"><span class="no">6</span>자리별 적합성 매트릭스</h2>
+
+<table>
+<tr><th style="width:22%">후보</th><th class="c">A · S2 판별</th><th class="c">B · RGB 보조</th><th class="c">C · 기하 인코더</th><th class="c">D · 교사</th><th>판정</th></tr>
+<tr><td>DINOv3 ViT-L/16</td><td class="c">✕ 예산</td><td class="c">✕ 예산·격자</td><td class="c">✕</td><td class="c"><b class="r g">◎</b></td><td><b>자리 D 1순위</b></td></tr>
+<tr><td>DINOv3 ViT-S/16</td><td class="c"><b class="r w">△</b> 실측 후</td><td class="c">✕ 격자</td><td class="c">✕ 격자·희소</td><td class="c">△</td><td>자리 A 후보 (측정 조건부)</td></tr>
+<tr class="pick"><td><b>DINOv3 ConvNeXt-T</b><br><span class="tiny">(절단: stem+stage1~2)</span></td><td class="c">○</td><td class="c"><b class="r g">◎</b></td><td class="c"><b class="r w">◎*</b></td><td class="c">○</td><td><b>자리 B·C 1순위 후보</b><br>*도메인 격차(§4-③) 미검증</td></tr>
+<tr><td>DINOv2 ViT-S/14</td><td class="c">△</td><td class="c">✕</td><td class="c">✕</td><td class="c">△</td><td>DINOv3 라이선스 불가 시 폴백</td></tr>
+<tr><td>C-RADIOv2-L</td><td class="c">✕ 예산</td><td class="c">✕</td><td class="c">✕</td><td class="c">○</td><td>교사 대안 (NVIDIA 스택 정합)</td></tr>
+<tr><td>Sonata / dGeDi (PTv3)</td><td class="c">✕</td><td class="c">N/A</td><td class="c">✕ TRT</td><td class="c"><b class="r g">◎</b></td><td><b>기하 측 교사·무학습 기준선</b></td></tr>
+<tr class="me"><td>현 설계 (스크래치)</td><td class="c">—</td><td class="c">○</td><td class="c">○</td><td class="c">—</td><td>대조군(control) — <b>반드시 유지</b></td></tr>
+</table>
+
+<h2 id="s7"><span class="no">7</span>권고 — 3층 구조와 1순위</h2>
+
+<div class="crit">
+<div class="h"><span class="sev">기각</span>아래 1순위 권고는 실측으로 기각됐습니다 — <a href="13_backbone_pilot_report.html">13 §4.2c</a></div>
+<b>진짜 DINOv3 ConvNeXt-T 가중치로 재측정한 결과, 정본 (a) 대비 −0.0007 ± 0.0012(시드 3종)로 동률이었습니다.</b> ImageNet 가중치는 +0.024를 냈으나 DINOv3는 그보다 −0.025 낮아 이득이 소멸합니다. <b>"절단 후 직접 사용" 경로는 기각합니다.</b> 아래 원안과 하향 근거는 경과 기록으로 남깁니다.<br><br>
+통제 비교 결과(60에폭 수렴 기준): <b>사전학습 순수 기여 a1−a2 = +0.186</b>으로 유효하나, <b>ConvNeXt 구조 자체가 a2−a0 = −0.166</b>으로 그 대부분을 상쇄해 <b>순 이득은 +0.024 ± 0.003(시드 3종)</b>에 그쳤습니다. 각 MAE는 19.0° vs 19.1°로 사실상 동일합니다.<br>
+<b>측정이 지지하는 구성은 "절단 후 직접 사용"이 아니라 "ConvNeXt를 오프라인 교사로 두고 학생은 a0 구조(ResNet18-lite)"인 특징 증류</b>입니다 — 구조 페널티를 피하면서 사전학습 이득만 취합니다. 아래 §7 3층 구조의 <b>"오프라인 교사" 칸</b>이 실제 1순위입니다.<br>
+단 밀도 25%에서 <b>+0.079(상대 +20%)</b>로 3배 이상 커집니다 — <b>희소 구간에서 이득이 큽니다</b> — 최종 판정은 100% 밀도가 아니라 <b>운용 밀도 구간에서</b> 내려야 합니다.
+</div>
+
+<div class="decision">
+<div class="t">1순위 권고 <span class="tiny" style="font-weight:400">(v1.0 원안 — 위 개정 상자와 함께 읽을 것)</span></div>
+S3 기하 인코더 후보 (a)를 <b>"ResNet18-lite+FPN, 스크래치"</b> 단일안에서,<br>
+<b>(a1) DINOv3 ConvNeXt-Tiny의 stem+stage1~2를 사전학습 가중치로 초기화 + partial-conv 개조</b>를 <b>병렬 후보로 추가</b>하십시오.<br>
+<span class="tiny" style="color:var(--ink)">그리고 사전학습 이득을 분리 측정하기 위해 <b>(a2) 동일 구조 · 스크래치 초기화</b>를 반드시 함께 돌립니다. (a1)−(a2)가 <b>"DINO를 쓸 이유"의 유일한 직접 증거</b>입니다.<br>
+<b>단 §7.1을 반드시 함께 읽으십시오</b> — 이는 <b>후보 추가가 아니라 (a) 내부의 초기화 변종</b>이며, 예산 안에 들어오는 대신 ① 경량 FPN ② stem 교체 ③ 사전학습분 92% 폐기라는 조건이 붙습니다.</span>
+</div>
+
+<h3>7.1 수치 검증 — 정본 예산에 실제로 들어오는가</h3>
+<p>ConvNeXt-T 표준 구성(depths 3/3/9/3 · dims 96/192/384/768 · stem 4×4 s4)에서 <code>stem+stage1+stage2</code>만 남기고 224 입력 기준으로 계산한 결과입니다. <span class="tiny">(DINOv3 ConvNeXt-T가 표준 구성이라는 가정 — 공개 파라미터 29M이 표준 28.6M과 정합하나 <b>체크포인트 다운로드 시 config 검증 필요</b>, §9-8)</span></p>
+<table>
+<tr><th style="width:44%">구성</th><th class="c" style="width:14%">Params</th><th class="c" style="width:14%">GMACs @224</th><th>판정</th></tr>
+<tr><td>절단 백본 (stem + stage1 + stage2)</td><td class="n">1.234M</td><td class="n">1.526</td><td>—</td></tr>
+<tr class="pick"><td>+ FPN <b>1×1 lateral만</b> (56²×256 출력)</td><td class="n">1.308M</td><td class="n"><b>1.642</b></td><td class="r g">예산 내</td></tr>
+<tr><td>+ FPN depthwise 3×3 smooth 추가</td><td class="n">1.311M</td><td class="n">1.649</td><td class="r g">예산 내</td></tr>
+<tr class="hi"><td>+ FPN full 3×3 256→256</td><td class="n">1.898M</td><td class="n">3.491</td><td class="r b">2배 초과</td></tr>
+<tr class="me"><td><b>정본 예산</b> (03 §6.2 인코더분)</td><td class="n">2.400M</td><td class="n">1.600</td><td>기준</td></tr>
+<tr class="me"><td>현 후보 (a) ResNet18-lite+FPN</td><td class="n">2.000M</td><td class="n">1.600</td><td>대조군</td></tr>
+</table>
+
+<div class="crit">
+<div class="h"><span class="sev">설계 제약</span>세 가지 조건이 붙습니다</div>
+<b>① FPN을 full 3×3으로 짜면 즉시 탈락.</b> 56²에서 3×3 256→256 하나가 <b>1.97 GMACs</b>로 백본보다 비쌉니다. <b>1×1 lateral + (선택) depthwise 3×3</b>으로 고정해야 합니다 — 명문화 대상 값.<br><br>
+<b>② stem은 버려야 합니다 — 다만 교체만으로는 부족합니다(실측 갱신).</b> ConvNeXt의 4×4 <b>비중첩</b> patchify stem은 희소 입력에서 구조적으로 나쁩니다. <b>v1.0에서는 iid 이항분포로 추정했으나, UAM 실기 로그 156건 직접 측정 결과 그 추정이 크게 빗나갔습니다:</b>
+<table style="margin-top:6px">
+<tr><th style="width:30%">항목 (물체 crop@224, n=156)</th><th class="c" style="width:14%">p10</th><th class="c" style="width:14%">p50</th><th class="c" style="width:14%">p90</th><th>비고</th></tr>
+<tr><td>프레임 전체 depth 유효율</td><td class="c">0.0953</td><td class="c">0.0958</td><td class="c">0.0963</td><td>기존 문서값 9.6%와 일치</td></tr>
+<tr><td><b>물체 crop 유효율</b></td><td class="c">0.152</td><td class="c"><b>0.169</b></td><td class="c">0.189</td><td class="r g">물체 위가 프레임 전체보다 조밀 — 유리한 방향</td></tr>
+<tr><td>4×4 stem 셀당 유효 px</td><td class="c">2.43</td><td class="c">2.71</td><td class="c">3.03</td><td>—</td></tr>
+<tr class="hi"><td><b>4×4 비중첩 stem 공백 셀</b></td><td class="c">0.557</td><td class="c"><b>0.583</b></td><td class="c">0.620</td><td class="r b">iid 예측 5.3% → <b>실측 58.3% (11.1배)</b></td></tr>
+<tr class="hi"><td><b>중첩 3×3 s2 ×2 공백 셀</b></td><td class="c">0.479</td><td class="c"><b>0.507</b></td><td class="c">0.550</td><td class="r w">교체 이득 <b>7.6%p뿐</b></td></tr>
+</table>
+<b>이항 가정이 무너지는 이유는 LiDAR가 고정 격자·스캔라인이라 유효 픽셀이 행 방향으로 뭉치기 때문</b>입니다. 균일 분포였다면 셀당 2.7px가 고르게 퍼져 공백이 드물지만, 실제로는 줄무늬라 <b>셀의 절반 이상이 통째로 빕니다.</b><br>
+따라서 stem 교체(중첩 partial conv)는 <b>여전히 필요하되 충분하지 않습니다</b> — 58.3%→50.7%로 7.6%p만 회복합니다. 잃는 사전학습 가중치가 5k(유지분의 0.4%)라 교체 비용은 사실상 0이므로 <b>하는 것이 맞지만, 이것을 희소성 대책으로 계상하면 안 됩니다.</b><br>
+<span class="tiny">출처: 실측 스크립트 <code>measure_stem_occupancy.py</code> · UAM robot_log 156건(퇴화 포즈 z∉[1.5,8]m 배제) · CAD 포즈 투영 bbox → 정사각 crop → 224 nearest 리사이즈(03 §6.1 규약).</span><br><br>
+<b>③ 사전학습 가중치의 92%를 버립니다.</b> stage3+4에 <b>26.6M / 29M</b>이 들어 있습니다. DINOv3의 의미 특징이 사는 깊은 층을 통째로 버리고 1.2M의 저·중수준 필터만 가져옵니다. <s>a1−a2가 ≈0으로 나올 가능성이 실재합니다 — "저비용·저기대이득" 실험으로 위치시키는 것이 정확합니다.</s><br>
+<b style="color:var(--warn)">↑ 이 예측은 절반만 맞았습니다(<a href="13_backbone_pilot_report.html">13 §4.2</a>).</b> 60에폭 수렴 기준 통제 비교에서 <b>a1 − a2 = +0.186 top-1</b> — 사전학습 자체는 <b>크게 유효</b>했고, stem을 교체했으므로 이 이득은 전적으로 stage1·2 블록에서 나옵니다. <b>RGB로 학습한 저·중수준 필터가 depth/노멀 맵으로 전이된다</b>는 뜻이며, §4-③이 "직접 증거 없음"으로 남긴 항목의 첫 자체 증거입니다.<br>
+<b>그러나 "저기대이득"이라는 결론 자체는 다른 이유로 맞았습니다</b> — 예측한 메커니즘(92% 폐기)이 아니라 <b>ConvNeXt 구조 페널티(a2−a0 = −0.166)</b> 때문이며, 순 이득은 <b>+0.020</b>에 그쳤습니다. 단 ImageNet 대리이며 DINOv3 고유 이득은 여전히 미측정입니다.
+</div>
+
+<div class="fair"><div class="h">④ 실측으로 추가된 조건 — stem 교체가 예산을 넘깁니다</div>
+<a href="13_backbone_pilot_report.html">13 §2</a>: 절단 백본 실측은 <b>1.323M / 1.682 GMACs</b>로 위 계산과 2% 이내 일치했으나, <b>중첩 partial stem을 붙이면 1.819 GMACs(예산 +13.7%)</b>가 됩니다. 첫 conv 폭을 48→<b>24로 줄이면 1.726(+7.9%)</b>. 예산을 지키려면 이 축소가 필수이며, 문서 v1.0에는 없던 조건입니다.<br>
+같은 실측에서 <b>a0 w=80(1.367M / 1.774 GMACs)</b>이 절단 ConvNeXt와 3% 이내로 정합해 <b>용량 통제 비교쌍</b>이 확보됐습니다. 부수적으로 <b>03 §6.2의 (a) 사양 "2.0M / 1.6 GMACs"는 재현 불가</b>임이 드러났습니다 — "lite"의 폭·블록 수가 명시되지 않아 w=80이면 파라미터 미달, w=96이면 GMACs 57% 초과입니다. <b>사양 확정이 필요합니다.</b>
+</div>
+
+<div class="crit">
+<div class="h"><span class="sev">치명</span>이것은 후보 (a)를 구제하지 않습니다</div>
+<a href="03_implementation_design.html">03 §1</a>이 이미 명시하고 있습니다 — <b>"포켓 = 깊이 불연속 덩어리. 팔레트는 grid-conv 인코더 (a)의 탈락 조건('crop 내 심한 깊이 불연속에서 2D≈3D 근사 붕괴')에 해당하는 대표 형상"</b>.<br>
+ConvNeXt-T도 image-grid conv이므로 <b>이 탈락 조건을 그대로 상속합니다.</b> 즉 DINOv3 ConvNeXt-T는 새 후보 계열이 아니라 <b>후보 (a) 내부의 초기화 변종</b>이며, (a)가 팔레트 포켓에서 무너지면 a1도 같이 무너집니다.<br>
+<b>따라서 a1은 (b) PointNet++ · (c) sparse conv · (d) 무학습 기준선을 대체할 수 없습니다.</b> 후보 다양성은 여전히 그쪽이 담당하며, E-BB에서 a1을 추가한다고 다른 후보를 줄이면 안 됩니다.
+</div>
+
+<div class="note"><b>DINO의 제자리는 자리 C가 아닙니다.</b> 03 §5는 이미 <code>s2_sem</code>을 <b>"semantic은 ViT-S로 축소·강등"</b>으로 명시해 두었습니다. 의미 특징이 실제로 필요한 자리는 <b>자리 A</b>이고, 그곳은 해상도가 필요 없어 ViT가 맞는 자리이기도 합니다(§4-①의 격자 감점이 적용되지 않음). <b>자리 C의 a1은 "공짜에 가까우니 해본다"이고, 자리 A가 "DINO를 쓰는 본래 이유"입니다.</b></div>
+
+<h4>왜 이 조합인가</h4>
+<ul>
+<li><b>구조가 맞습니다</b> — ConvNeXt의 stride-4 출력이 설계의 <code>geo56</code> 요구와 정확히 일치합니다(§4-①). ViT로는 이 자리가 성립하지 않습니다.</li>
+<li><b>절단이 예산을 맞춥니다</b> — 우리는 stride-16/32의 고수준 의미가 필요 없고 stride-4~8이 주력입니다. stage3~4를 잘라내면 파라미터·연산이 크게 줄면서 사전학습 가중치는 유지됩니다.</li>
+<li><b>TRT 완전 호환</b>(§4-⑤) — 후보 선정의 1급 기준인 배포성에서 감점이 없습니다.</li>
+<li><b>다양성 부족을 부분 보상</b> — 10 §6.4가 지적한 "학습 물체 1,030종은 SOTA의 1/50"에 대해, 17억 장 사전학습된 초기화는 <b>데이터 부족의 부분 대체재</b>입니다. ShapeNet 확보(권고 6)와 <b>독립적으로</b> 시도할 수 있다는 점에서 리스크 분산 효과가 있습니다.</li>
+</ul>
+
+<h4>3층 구조</h4>
+<div class="three">
+  <div class="card a"><div class="t">온라인 (엣지)</div>
+  DINO를 <b>직접 태우지 않습니다</b>.<br>
+  · 자리 C: <b>ConvNeXt-T 절단 + partial conv</b><br>
+  · 자리 B: 현 MBConv 0.4M 유지, <b>교사만 DINOv3로 갱신</b><br>
+  · 자리 A: ViT-S/16을 <b>Orin 실측(M0-2) 통과 시에만</b> 검토. 대안은 ConvNeXt-T CLS + 캐시 템플릿 코사인(CNOS 방식)</div>
+  <div class="card b"><div class="t">오프라인 (교사)</div>
+  · 시각: <b>DINOv3 ViT-L/16</b> (대안 C-RADIOv2-L)<br>
+  · 기하: <b>dGeDi / Sonata(PTv3)</b><br>
+  · 교사 <b>레이어 선택</b>을 하이퍼파라미터로 명시(FoundPose 선례 — 마지막이 아닌 중간 레이어)</div>
+  <div class="card c"><div class="t">기준선 (대조군)</div>
+  · 현 스크래치 설계 — <b>제거 금지</b><br>
+  · 무학습: dGeDi + RANSAC + 기존 S4 ICP (10 권고 3)<br>
+  · v0-geo — 영구 폴백</div>
+</div>
+
+<h4>08 §E2 갱신 제안</h4>
+<p>08 학습계획의 <b>"RGB branch를 distilled DINOv2-S와 비교"</b>는 두 가지를 갱신해야 합니다: ① 대상을 <b>DINOv2-S → DINOv3</b>로(라이선스 통과 시), ② 비교 대상을 "distilled DINOv2-S"라는 <b>모호한 대상에서 "DINOv3 ViT-L 교사 → 현 0.4M MBConv 학생 증류"라는 구체적 구성</b>으로. 전자는 우리가 배포할 수 없는 크기이고, 후자가 실제 배포 형상입니다.</p>
+
+<h2 id="s8"><span class="no">8</span>판정 실험 E-BB 설계</h2>
+
+<p>10 권고 2(밀도 스윕)·3(무학습 기준선)·9(Orin 실측)와 <b>같은 파일럿에 묶습니다</b> — 별도 실험으로 쪼개면 세 번 학습하게 됩니다.</p>
+
+<table>
+<tr><th style="width:8%">코드</th><th style="width:30%">후보</th><th style="width:12%">자리</th><th>이 후보가 답하는 질문</th></tr>
+<tr class="me"><td><b>a0</b></td><td>ResNet18-lite+FPN, 스크래치 <b>[대조군]</b></td><td>C</td><td>현 정본의 실제 성능 — 모든 비교의 기준</td></tr>
+<tr class="pick"><td><b>a1</b></td><td>DINOv3 ConvNeXt-T <code>stem+s1+s2</code> 절단, <b>사전학습 초기화</b><br><span class="tiny">+ 중첩 partial-conv stem 교체 + 1×1 lateral FPN (§7.1 조건 ①②)<br>1.31M / 1.64 GMACs</span></td><td>C<br><span class="tiny">(a)의 변종</span></td><td>DINO 사전학습이 우리 자리에서 이득인가</td></tr>
+<tr class="pick"><td><b>a2</b></td><td>동일 구조, <b>스크래치 초기화</b></td><td>C</td><td><b>a1−a2 = 사전학습의 순수 기여</b> (구조 이득과 분리). §7.1-③에 따라 <b>≈0일 가능성 실재</b> — 그 결과도 유효한 답</td></tr>
+<tr><td>b</td><td>PointNet++ lite</td><td>C</td><td>기존 03 §6.2 후보 (b)</td></tr>
+<tr><td>c</td><td>sparse conv (SubMConv3d)</td><td>C</td><td>기존 후보 (c) — 표현력 상한</td></tr>
+<tr><td>d</td><td><b>dGeDi + RANSAC + S4 ICP (무학습)</b></td><td>—</td><td>10 권고 3 — <b>학습이 필요한가</b></td></tr>
+<tr><td>e</td><td>RGB branch: 현 MBConv vs DINOv3 ViT-L 증류</td><td>B</td><td>RGB 보조 branch의 증류 이득</td></tr>
+</table>
+
+<h4>판정 축 4개 — 전부 1급</h4>
+<table>
+<tr><th style="width:16%">축</th><th style="width:30%">측정</th><th>탈락/판정 기준</th></tr>
+<tr><td>정확도</td><td>BOP AR + <b>UAM 실기 70샘플</b></td><td>10 권고 8대로 절대 AR이 아니라 <b>v0-geo 대비 개선폭</b>. 두 게이트 충돌 시 우선순위는 사전 결정 사항</td></tr>
+<tr><td><b>밀도 강건성</b></td><td>장면측 유효점 {2000,1000,500,250,100,50} 낙폭 곡선</td><td>10 권고 2. <b>후보 e·d 포함 전 후보에 적용</b> — GeDi 계열이 희소에서 무너지는지도 같은 실험에서 판별</td></tr>
+<tr><td>레이턴시</td><td><b>Orin NX 실측</b> (M0-2 환산계수 3종)</td><td>10 권고 9. 현재 우리 레이턴시 수치는 <b>전부 추정</b>이며, 서베이 중 확인한 공개 Jetson ViT 벤치마크도 Orin <b>Nano/AGX</b> 위주라 <b>NX 직접 근거가 없습니다</b></td></tr>
+<tr><td>TRT 변환</td><td>정적 shape 엔진 빌드 성공 + OOM 여부</td><td>PTv3 계열은 여기서 탈락 예상. Orin NX는 FoundationPose조차 OOM(10 §6.6)</td></tr>
+</table>
+
+<div class="crit">
+<div class="h"><span class="sev">실증</span>축소 파일럿은 순위를 뒤집습니다 — 수렴 확인이 의무입니다</div>
+v1.0은 "축소 파일럿으로 순위만 가리고 승자만 전체 학습"을 권했고, 순위 역전은 "알려진 위험"으로만 적었습니다. <b><a href="13_backbone_pilot_report.html">13 §4.1</a>에서 그 역전이 실제로 일어났습니다</b> — 8에폭에서는 <code>a0 0.358 &gt; a1 0.223 &gt; a2 0.068</code>, 30에폭에서는 <code>a1 0.913 &gt; a0 0.836 &gt; a2 0.595</code>로 <b>1위와 2위가 뒤바뀝니다.</b><br>
+원인은 ConvNeXt의 <b>layer_scale 1e-6 초기화</b>(블록이 초기에 거의 항등)로, 짧은 스케줄에서 구조적으로 불리합니다. <b>8에폭 결과만 봤다면 "ConvNeXt는 우리 자리에서 못 쓴다"는 정반대 결론</b>을 냈을 것입니다.<br>
+<b>따라서 축소 파일럿에는 "후보별 val 곡선이 포화했는가"를 판정 조건으로 명시</b>하고, 포화하지 않은 후보의 순위는 채택하지 않습니다. 함께 <b>lr 스윕 최소 2종</b>도 의무화합니다 — 최적 lr이 후보마다 달랐습니다(13 §4.2).
+</div>
+<div class="warnbox"><b>비용.</b> 후보 3종 × lr 2종 × 수렴 스케줄 = 6런. 13의 축소 파일럿(12k 샘플·30에폭)에서는 런당 <b>약 3분</b>(RTX PRO 6000)이었습니다 — 본 파일럿 규모에서는 08 §계획의 런당 ~6h가 기준입니다.</div>
+
+<h2 id="s9"><span class="no">9</span>미확인 항목 · 결정 대기</h2>
+
+<table>
+<tr><th style="width:5%">#</th><th style="width:26%">항목</th><th style="width:12%">유형</th><th>내용</th></tr>
+<tr><td>1</td><td><b>DINOv3 License 상업 조건</b></td><td class="r w">일부 해소</td><td>HF 접근 동의는 완료되어 <b>기술 검증은 가능해졌습니다</b>. 다만 <b>배포용 상업 조건의 약관 원문 검토는 미완</b>이며, <a href="13_backbone_pilot_report.html">13 §4.2c</a>에서 DINOv3 절단 사용이 정본 대비 이득 없음으로 나왔으므로 <b>이 자리에 한해서는 라이선스 판단의 실익이 사라졌습니다</b>. <b>D4(ShapeNetCore)와 묶어 함께 처리</b> 권고. 불가 시 폴백은 DINOv2(Apache-2.0)이며 ConvNeXt 증류판·register 내장·patch16 절감을 잃음</td></tr>
+<tr><td>2</td><td>Sonata / dGeDi 라이선스</td><td>확인 필요</td><td>오프라인 교사·기준선 용도라 배포물에 포함되지 않을 가능성이 높으나, 증류 결과물의 파생 여부는 약관 확인 필요</td></tr>
+<tr class="pick"><td>3</td><td><b>geo 도메인에서 RGB 사전학습이 유효한가</b></td><td class="r g">1차 답변 확보</td><td>§4-③. <b>유효합니다</b> — <a href="13_backbone_pilot_report.html">13 §4.2</a>에서 a1−a2 = <b>+0.186 top-1</b>(수렴 기준), 밀도 25%에서 상대 +16%·10%에서 +30%로 <b>희소할수록 이득이 커짐</b>. 단 구조 페널티로 <b>순 이득은 +0.024</b>이며, ImageNet 대리·단일 CAD·프록시 과제 — DINOv3 고유 이득과 팔레트형 형상은 여전히 미측정</td></tr>
+<tr><td>4</td><td>ConvNeXt 절단 지점</td><td>설계 미정</td><td>stage1까지 / stage2까지 / FPN 결합 형태. 파라미터·수용영역 트레이드오프 — 파일럿 전 소규모 스윕 필요</td></tr>
+<tr><td>5</td><td>Orin NX ViT/ConvNeXt 실측</td><td>측정 부재</td><td>공개 벤치마크는 Orin <b>Nano·AGX</b> 위주. <b>NX 직접 수치는 우리가 만들어야 함</b>(M0-2)</td></tr>
+<tr><td>6</td><td>교사 레이어 선택</td><td>하이퍼파라미터</td><td>FoundPose는 <b>중간 레이어</b>가 최적이라고 보고. 증류 시 마지막 레이어를 기본값으로 두면 안 됨</td></tr>
+<tr><td>7</td><td>CroCo 계열 검토</td><td>범위 밖</td><td>Co-op이 DINO 대신 CroCo를 택한 것은 <b>대응 태스크에 크로스뷰 사전학습이 더 맞다</b>는 판단. 이 문서는 "DINO 계열에서 고른다"는 요청 범위를 지켰으나, <b>범위를 넓힐지는 별도 결정</b></td></tr>
+<tr class="pick"><td>8</td><td><b>ConvNeXt-T 실제 config</b></td><td class="r g">해소</td><td class="r g"><b>확인 완료</b> — 실제 config가 depths <code>[3,3,9,3]</code> · hidden_sizes <code>[96,192,384,768]</code>로 <b>표준 ConvNeXt-T와 정확히 일치</b>. §7.1 예산 계산과 "stage3+4 = 26.6M(92%)"가 그대로 유효합니다. 가중치 매핑도 원본 대비 출력 오차 0.000e+00로 검증(<a href="13_backbone_pilot_report.html">13 §4.2c</a>)</td></tr>
+<tr><td>9</td><td>학습 시 활성화 메모리</td><td>확인 필요</td><td>03 §9 검증[상-7] — CAD측 2뷰가 gradient 포함 통과해 활성화가 <b>장면측의 ~3배</b>, bs64가 OOM 경계입니다. 절단 ConvNeXt의 56²×96 ×3블록 활성화가 ResNet18-lite 대비 어떤지 <b>파일럿 전 실측</b> 필요</td></tr>
+</table>
+
+<div class="box">
+<b class="t">한 문장 결론</b>
+DINO 계열은 <b>쓸 가치가 있으나 우리 자리에 맞는 형태는 하나뿐</b>입니다 — ViT가 아니라 <b>DINOv3 ConvNeXt-Tiny를 절단해 기하 인코더 초기화로 쓰고, ViT-L은 오프라인 교사로만</b> 두는 구성입니다. 그리고 그 선택의 유일한 정당화는 <b>a1−a2(사전학습 순수 기여)</b>이며, 그 수치는 아직 존재하지 않습니다. 라이선스 검토가 이 경로의 <b>선결 조건</b>입니다.
+</div>
+
+<p class="src">주요 참조 — <a href="https://arxiv.org/abs/2508.10104">DINOv3 (arXiv:2508.10104)</a> · <a href="https://huggingface.co/facebook/dinov3-vits16-pretrain-lvd1689m">DINOv3 모델 카드/라이선스</a> · <a href="https://huggingface.co/facebook/dinov2-small">DINOv2 (Apache-2.0)</a> · <a href="https://arxiv.org/abs/2309.16588">Vision Transformers Need Registers (ICLR24)</a> · <a href="https://github.com/facebookresearch/sonata">Sonata (CVPR25 Highlight)</a> · <a href="https://arxiv.org/abs/2503.15106">dGeDi (arXiv:2503.15106)</a> · <a href="https://github.com/NVlabs/RADIO">AM-RADIO / C-RADIO</a> · <a href="https://nv-nguyen.github.io/cnos/">CNOS</a> · <a href="https://arxiv.org/abs/2311.18809">FoundPose</a> · <a href="https://arxiv.org/abs/2312.00947">FreeZe</a> · <a href="https://arxiv.org/abs/2503.17731">Co-op</a><br>
+내부: <a href="03_implementation_design.html">03 §6.2·§6.3·§6.4</a> · <a href="08_training_plan.html">08 §E2·§3.2</a> · <a href="10_network_design_and_critique.html">10 §2.2·§6.4·§6.6·§6.7·권고 2·3·9</a> · <a href="11_sota_approach_comparison.html">11</a></p>
+
+</div>
+</body>
+</html>

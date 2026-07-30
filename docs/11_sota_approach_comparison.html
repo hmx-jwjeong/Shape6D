@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shape6D vs Co-op vs FreeZe — 어프로치·네트워크 대조 (v1.0)</title>
+<style>
+  :root {
+    --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb;
+    --accent:#0b5fff; --accent-soft:#e8f0ff; --good:#0a7d43; --good-soft:#e6f5ec;
+    --warn:#a05a00; --warn-soft:#fdf3e3; --bad:#b4232a; --bad-soft:#fdecec;
+    --shape:#6d28d9; --shape-soft:#f1eafd;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif; color:var(--ink); background:var(--bg); line-height:1.65; font-size:15px; }
+  .wrap { max-width:1140px; margin:0 auto; padding:40px 28px 100px; }
+  h1 { font-size:28px; margin:0 0 4px; letter-spacing:-0.5px; }
+  h2 { font-size:20px; margin:56px 0 12px; padding-top:18px; border-top:2px solid var(--ink); letter-spacing:-0.3px; }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:26px 0 8px; }
+  h4 { font-size:14px; margin:18px 0 6px; color:var(--sub); }
+  p { margin:8px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:22px; }
+  table { width:100%; border-collapse:collapse; margin:12px 0 8px; font-size:12.6px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 9px; font-weight:600; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.c, th.c { text-align:center; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.pick td { background:var(--good-soft); }
+  tr.pick td:first-child { border-left:3px solid var(--good); font-weight:700; }
+  tr.hi td { background:var(--bad-soft); }
+  tr.me td { background:var(--shape-soft); }
+  tr.me td:first-child { border-left:3px solid var(--shape); font-weight:700; }
+  .r { font-weight:700; } .r.g { color:var(--good); } .r.w { color:var(--warn); } .r.b { color:var(--bad); }
+  code, .mono { font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace; font-size:12.4px; background:var(--panel); padding:1px 5px; border-radius:4px; }
+  pre { background:#12151b; color:#e6e9ef; padding:13px 16px; border-radius:9px; overflow-x:auto; font-size:12.3px; line-height:1.55; margin:10px 0; }
+  pre .c { color:#7f8996; } pre .k { color:#79b8ff; } pre .s { color:#9ecbff; } pre .hl { color:#ffab70; font-weight:600; }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0 4px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:20px; letter-spacing:-0.5px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.bad b { color:var(--bad); } .stat.good b { color:var(--good); } .stat.warn b { color:var(--warn); }
+  .box { border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:8px; padding:12px 16px; margin:12px 0; font-size:13.5px; background:var(--panel); }
+  .box b.t { display:block; font-size:14px; margin-bottom:4px; }
+  .crit { border:1px solid var(--line); border-left:4px solid var(--bad); background:var(--bad-soft); border-radius:8px; padding:13px 17px; margin:16px 0; }
+  .crit .h { font-weight:800; font-size:14.5px; color:var(--bad); margin-bottom:6px; }
+  .crit .h .sev { font-size:11px; background:var(--bad); color:#fff; padding:1px 7px; border-radius:20px; margin-right:8px; vertical-align:2px; letter-spacing:0.3px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft); border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.4px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; font-size:14px; }
+  .note { border:1.5px dashed var(--shape); border-radius:10px; background:var(--shape-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .warnbox { border:1.5px dashed var(--warn); border-radius:10px; background:var(--warn-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  ul, ol { margin:8px 0 8px; padding-left:22px; } li { margin:4px 0; }
+  .src { font-size:11.5px; color:var(--sub); }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 20px; margin:20px 0; font-size:13.3px; column-count:2; column-gap:30px; }
+  .toc a { display:block; padding:2px 0; break-inside:avoid; }
+  .kv { display:grid; grid-template-columns:150px 1fr; gap:4px 14px; font-size:13.3px; margin:10px 0; }
+  .kv dt { color:var(--sub); } .kv dd { margin:0; }
+  .tiny { font-size:11.8px; color:var(--sub); }
+  .three { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:16px 0; }
+  .card { border:1px solid var(--line); border-radius:10px; padding:13px 15px; background:var(--panel); font-size:13px; }
+  .card .t { font-weight:800; font-size:14.5px; margin-bottom:5px; }
+  .card.a { border-top:3px solid var(--good); } .card.b { border-top:3px solid var(--accent); } .card.c { border-top:3px solid var(--shape); }
+  @media (max-width:820px){ .hero{grid-template-columns:repeat(2,1fr);} .toc{column-count:1;} .three{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Shape6D vs Co-op vs FreeZe — 어프로치·네트워크 대조</h1>
+<div class="meta">v1.0 · 2026-07-28 · 대상: <code>docs/03_implementation_design.html §6</code>(Shape6D-PEM) · 대조군 원문 실사: Co-op(arXiv:2503.17731, CVPR 2025) 본문 · FreeZe(arXiv:2312.00947, ECCV 2024) 본문 · dGeDi(arXiv:2503.15106)<br>
+선행 문서: <a href="05_concept_review.html">05 컨셉 리뷰 §3</a>(기존 방식 비교 — 이 문서가 그 표의 "확인 필요" 5건을 해소)와 <a href="10_network_design_and_critique.html">10 네트워크 비판 §3·§4</a>(BOP 지형 — 이 문서가 그 대조표를 논문 원문 수준으로 확장)의 후속입니다.</div>
+
+<div class="box">
+<b class="t">이 문서가 하는 일</b>
+10 문서의 §4 대조표는 리더보드 수치 기반이었습니다. 이 문서는 <b>Co-op과 FreeZe의 논문 본문을 직접 읽어</b> 네트워크 구성·손실·솔버·신뢰도 체계를 라인 수준으로 대조하고, 그 결과 05·10에 남아 있던 <b>미확인 항목 5건을 해소하거나 정정</b>합니다. 새 실험이나 코드 변경은 포함하지 않습니다.
+</div>
+
+<div class="toc">
+<a href="#s1">1. 문제 정식화의 차이 — 여기서 모든 것이 갈린다</a>
+<a href="#s2">2. 네트워크 대조표</a>
+<a href="#s3">3. 스테이지별 대조</a>
+<a href="#s4">4. 축별 심층 — 특징·불변성·솔버·대칭·신뢰도</a>
+<a href="#s5">5. 05·10 문서에 대한 정정·갱신 5건</a>
+<a href="#s6">6. 정직한 열세</a>
+<a href="#s7">7. 결론 — Shape6D의 좌표</a>
+</div>
+
+<div class="hero">
+  <div class="stat"><b>3가지</b><span>서로 다른 수학 문제 (3D-3D 정합 / 재투영 / soft 대응)</span></div>
+  <div class="stat bad"><b>~100×</b><span>파라미터 격차 — 8M(설계) vs 0.9~1.1B</span></div>
+  <div class="stat warn"><b>5건</b><span>05·10의 "확인 필요"를 해소·정정</span></div>
+  <div class="stat good"><b>1K</b><span>FreeZe의 장면 측 점 개수 — 우리 N_f=1024와 동일 대역</span></div>
+</div>
+
+<h2 id="s1"><span class="no">1</span>문제 정식화의 차이 — 여기서 모든 것이 갈린다</h2>
+
+<p>세 방법의 네트워크 차이는 대부분 <b>"6D 포즈를 무슨 문제로 두었는가"</b>에서 파생됩니다. 백본이나 파라미터 수는 그 결과일 뿐입니다.</p>
+
+<table>
+<tr><th style="width:15%">방법</th><th style="width:24%">푸는 문제</th><th style="width:20%">대응의 정의역</th><th style="width:21%">솔버</th><th>최소화하는 오차</th></tr>
+<tr><td><b>FreeZe</b></td><td>3D-3D 정합 (point cloud registration)</td><td>특징공간 최근접 (점↔점)</td><td>RANSAC(triplet) + ICP</td><td>3D 유클리드 잔차</td></tr>
+<tr><td><b>Co-op</b></td><td>2D-2D 대응 → 2D-3D 승격 → PnP</td><td>패치↔패치 (16px 격자)</td><td>미분가능 PnP (LM×3 → Gauss-Newton)</td><td><b>가중 재투영 오차 (px)</b></td></tr>
+<tr><td>SAM-6D</td><td>3D-3D soft 대응 (학습)</td><td>점↔점 (attention)</td><td>가중 SVD, 6000/300 가설</td><td>3D 유클리드 잔차</td></tr>
+<tr class="me"><td>Shape6D</td><td>3D-3D soft 대응 + 무학습 TDF 검색</td><td>점↔점 / (v0-geo: 점↔거리장)</td><td>가중 SVD 2000/100 → top-3 + NMS → ICP</td><td>3D 유클리드 잔차 (mm)</td></tr>
+</table>
+
+<div class="note">
+<b>이 차이의 실질적 귀결 — z(깊이) 방향 정밀도.</b><br>
+Co-op의 최종 목적함수는 <b>재투영 오차</b>이므로 z는 이미지상 스케일 변화로만 간접 구속됩니다. <a href="10_network_design_and_critique.html">10 §3.3</a>의 RGB-D→RGB 낙폭 표에서 Co-op이 ITODD −12.3, YCB-V −20.1로 무너지는 이유가 정확히 이것입니다(ITODD는 50mm 망원 렌즈 → 이미지 스케일 오차가 z로 증폭).<br>
+Shape6D의 요구 스펙은 <b>3m에서 위치 10mm</b>(상대 0.33%)입니다. 재투영 정식화로 이 수준의 z 정밀도를 얻으려면 서브픽셀 대응 정밀도가 필요하고, 3D-3D 정식화는 depth가 z를 직접 구속합니다.<br>
+<b>즉 Shape6D가 3D-3D 계열을 택한 것의 정당화는 "기하가 외형보다 강하다"는 일반론이 아니라, 요구 스펙이 z 방향 절대 정밀도라는 사실에 있습니다.</b> 이 논거가 10 §6.2의 비판("기하 우선 논거가 자기 타깃에 가장 약하게 적용된다")과 충돌하지 않는 이유는, 전자는 <i>정밀도</i>의 근거이고 후자는 <i>대칭 모호성 해소</i>에 대한 비판이기 때문입니다. 두 논점은 분리해서 다뤄야 합니다.
+</div>
+
+<h2 id="s2"><span class="no">2</span>네트워크 대조표</h2>
+
+<table>
+<tr><th style="width:13%">축</th><th style="width:22%">FreeZe / FreeZeV2</th><th style="width:22%">Co-op (CVPR 2025)</th><th style="width:18%">SAM-6D (기준선)</th><th>Shape6D-PEM (설계)</th></tr>
+<tr><td><b>학습량</b></td><td class="r g">0 — 전 가중치 동결</td><td>8×A100 · 3모델 합 6.5일<br><span class="tiny">coarse 450ep/bs64 2일 · refiner 3일 · selection 1.5일</span></td><td>MegaPose 2M img</td><td>RTX PRO 6000 ×1 · 7~9주(계획)</td></tr>
+<tr><td><b>주 백본</b></td><td>DINOv2 <b>ViT-g/14</b>(동결) + <b>GeDi</b>(PointNet++/LRF, 동결)</td><td><b>CroCo</b> 사전학습 ViT-L(enc)+ViT-B(dec) ×2<br>+ 선택모델 ViT-B+ViT-S</td><td>ViT-B(RGB) + PointNet++(geo)</td><td>ResNet18-lite+FPN 2.0M<br><span class="tiny">(후보 3종 중 우선순위 1)</span></td></tr>
+<tr><td><b>파라미터</b></td><td class="r b">~1.1B (동결)</td><td class="r b">~0.9B (학습) <span class="tiny">추정</span></td><td>~104M</td><td class="r g">~8M</td></tr>
+<tr><td><b>특징 차원</b></td><td><b>128</b> = 시각 64(1536→PCA) + 기하 64(2 radii × 32)</td><td>ViT 토큰 (패치 단위)</td><td>256</td><td>256 (dense_fm)</td></tr>
+<tr><td><b>입력 해상도</b></td><td>224 (DINOv2) / 포인트</td><td>coarse 224 · refine/select 256</td><td>224</td><td>224 (geo_maps 10ch)</td></tr>
+<tr><td><b>점 개수</b></td><td>query <b>5K</b> / <b>scene 1K</b></td><td>— (14×14 패치 격자)</td><td>2048</td><td class="r g">1024 (N_f 고정)</td></tr>
+<tr><td><b>템플릿</b></td><td>R뷰 렌더 → DINOv2 특징 3D 역투영</td><td><b>42뷰 icosphere</b>, out-of-plane만, Blender RGB</td><td>42뷰 RGB-D</td><td><b>42뷰 depth</b> (전제 A1)</td></tr>
+<tr><td><b>불변성</b></td><td>LRF <b>설계</b>로 회전 불변</td><td>in-plane을 템플릿 축에서 제거 <b>(구조)</b></td><td>학습</td><td>학습(가중치 공유 + domain_flag)</td></tr>
+<tr><td><b>매칭 출력</b></td><td>특징 최근접 (하드)</td><td>패치 분류 K+1 클래스 + 오프셋 회귀 ±0.5</td><td>soft 대응 + bg_token</td><td>soft 대응 + bg_token (유지 필수)</td></tr>
+<tr><td><b>손실</b></td><td class="r g">없음</td><td>L<sub>cls</sub>+2·L<sub>reg</sub> / L<sub>flow</sub>+5·L<sub>cert</sub>+20·L<sub>pose</sub> / BCE</td><td>단일 GT 최근접 CE</td><td>대칭군 g* 단일선택 CE</td></tr>
+<tr><td><b>대칭</b></td><td><b>SAR</b> — 추론 시 해소<br><span class="tiny">Chamfer로 대칭 추정 → 후보 렌더 → DINOv2 패치 코사인으로 선택</span></td><td class="r b">학습 시 처리 없음<br><span class="tiny">(평가만 VSD/MSSD/MSPD)</span></td><td class="r b">없음</td><td class="r g">손실단 g* (coarse 해상도 단일선택)</td></tr>
+<tr><td><b>신뢰도</b></td><td>RANSAC inlier 수 + feature-aware scoring(V2)</td><td>certainty × sensitivity × P<sub>R</sub><br>+ 선택모델 BCE 랭킹</td><td>매칭 점수</td><td class="r g">10-d 로지스틱 <b>보정</b> + 하드가드 + UNCERTAIN</td></tr>
+<tr><td><b>런타임</b></td><td>21.7s (L40S, 리더보드)</td><td>논문 0.979s(coarse) / 1.852s(+1hyp) / 4.186s(5hyp) — RTX 3090 Ti</td><td>4.4s (RTX 3090)</td><td>목표 110~140ms (Orin NX, S3 단독) — <b>미실측</b></td></tr>
+<tr><td><b>BOP</b></td><td>AR 0.833 (V2.2) / 0.821 (V2.1, BOP24 1위)</td><td>리더보드 0.771 · <b>논문 mean AR 64.0</b>(RGB·1hyp)</td><td>0.704</td><td>—</td></tr>
+</table>
+
+<div class="warnbox">
+<b>⚠ Co-op의 두 수치는 같은 것이 아닙니다.</b> 리더보드 AR 0.771은 RGB-D·다가설 제출본이고, 논문 표의 mean AR 64.0은 RGB·단일가설입니다. 시간도 리더보드 0.8s와 논문 1.852s가 어긋납니다(구현·하드웨어 상이 추정). <b><a href="10_network_design_and_critique.html">10 §3.1</a>의 "0.8s(1hyp)" 표기는 리더보드 값이며, 논문 본문 값은 1.852s입니다</b> — §5-⑤에서 다시 다룹니다.
+</div>
+
+<h2 id="s3"><span class="no">3</span>스테이지별 대조</h2>
+
+<table>
+<tr><th style="width:12%">스테이지</th><th style="width:24%">FreeZe</th><th style="width:24%">Co-op</th><th>Shape6D</th></tr>
+<tr><td><b>검출/분할</b></td><td>CNOS 등 외부 (V2는 앙상블)</td><td>외부 검출기</td><td>LiDAR 클러스터 프롬프트 → (M1) EViT-SAM</td></tr>
+<tr><td><b>온보딩<br>(오프라인)</b></td><td>모델 표면 5K점 GeDi(2 스케일) + R뷰 DINOv2 → 3D 역투영</td><td>42뷰 Blender RGB 렌더 + 템플릿 특징</td><td>42뷰 depth 렌더 + TDF + 마스터 16384pt + 대칭 자동검출 <b>+ 인코더 forward 전량 캐시</b></td></tr>
+<tr><td><b>coarse</b></td><td>융합 128-d 특징 최근접 → RANSAC</td><td>패치 분류 + 오프셋 → 2D-3D → PnP</td><td>197토큰 2블록 attention → 2000/100 가중 SVD → top-3 + pose-NMS<br><span class="tiny">(v0-geo: TDF argmax(뷰,θ,δ))</span></td></tr>
+<tr><td><b>정련</b></td><td>ICP</td><td>확률적 flow(Laplace) + 미분가능 PnP 반복</td><td>fine 매칭(hyp0만) → projective p2pl ICP</td></tr>
+<tr><td><b>판정</b></td><td>inlier 수 / feature-aware score</td><td>선택모델(ViT-B+S) BCE 랭킹</td><td><b>free-space 위반·coverage·cond(H) 물리 증거 + 보정된 확률 + 3단 verdict</b></td></tr>
+<tr><td><b>온라인<br>오브젝트 측</b></td><td>사전계산 가능(특징 캐시)</td><td>템플릿 특징 사전계산 가능</td><td class="r g">0 — 전량 S0 캐시 (설계 강제)</td></tr>
+</table>
+
+<h2 id="s4"><span class="no">4</span>축별 심층</h2>
+
+<h3>4.1 특징의 출처 — 세 가지 철학</h3>
+<div class="three">
+  <div class="card a"><div class="t">FreeZe — 빌린다</div>웹스케일(DINOv2 ViT-g)과 무관 도메인 3D 학습(GeDi, 3DMatch)에서 온 특징을 <b>그대로 동결</b>. 태스크 적응은 RANSAC+ICP라는 고전 기하로 대체. 가중치를 한 번도 만지지 않고 BOP24 1위.</div>
+  <div class="card b"><div class="t">Co-op — 학습한다</div>대응·플로우·가설선택 3개 모델을 태스크 전용으로 학습. 일반성은 MegaPose 규모(ShapeNet+GSO) 렌더로 산다. 사전학습은 CroCo(크로스뷰 완성)에서 출발.</div>
+  <div class="card c"><div class="t">Shape6D — 대체한다</div>학습을 8M로 최소화하고 나머지를 <b>CAD 캐시 + 물리 증거</b>로 채운다. 일반성의 출처가 사전학습이 아니라 <b>CAD</b>이므로 학습 물체 다양성(GSO 1,030종)이 SOTA의 1/50이어도 성립할 수 있다는 것이 설계 가정.</div>
+</div>
+
+<h3>4.2 불변성을 어디서 얻는가</h3>
+<p>회전 불변성은 셋 다 필요하지만 얻는 방식이 다르고, <b>희소 입력에서의 취약점도 그에 따라 다릅니다.</b></p>
+<ul>
+<li><b>FreeZe = LRF(국소 기준 좌표계)</b> — 설계로 얻습니다. 대신 LRF는 국소 공분산/노멀 추정에 의존하므로 <b>희소·부분 관측에서 불안정</b>합니다. 이는 Shape6D 전처리의 노멀 추정(유효마스크 가중 박스필터 → Cardano 고유분해)과 <b>동일한 취약점</b>입니다 — 이 축에서 FreeZe는 우리보다 유리하지도 불리하지도 않습니다.</li>
+<li><b>Co-op = 템플릿 축 설계</b> — 42뷰를 out-of-plane만으로 두고 in-plane은 대응에서 자연히 나오게 합니다. 양자화 오차가 in-plane에는 없습니다.</li>
+<li><b>Shape6D = 학습 + 이산 검색</b> — 뷰 42개 + in-plane θ 이산화라 <b>양자화 오차가 남습니다</b>(05에 이미 열세로 등재). 다만 후속 ICP가 이를 흡수하는 구조입니다.</li>
+</ul>
+
+<h3>4.3 대칭 — 언제 푸는가</h3>
+<table>
+<tr><th style="width:14%">방법</th><th style="width:16%">해소 시점</th><th>메커니즘과 한계</th></tr>
+<tr><td>FreeZe</td><td>추론 (SAR)</td><td>회전공간 균일 샘플링 → Chamfer 최소화로 대칭군 자가 추정 → 후보 대칭 포즈를 렌더해 DINOv2 패치 코사인 유사도가 최대인 것 선택. <b>즉 대칭 모호성을 시각 특징으로 깬다</b> — Shape6D는 RGB를 보조로 두었으므로 이 카드를 약하게밖에 못 쓴다.</td></tr>
+<tr><td>Co-op</td><td class="r b">없음</td><td>학습 시 대칭 처리 없음. 선택모델의 BCE 랭킹이 사후에 일부 흡수.</td></tr>
+<tr><td>SAM-6D</td><td class="r b">없음</td><td>단일 GT 최근접 CE → 대칭 물체에서 모순 그라디언트.</td></tr>
+<tr class="me"><td>Shape6D</td><td><b>학습 (손실단)</b></td><td>샘플당 g* 단일선택(coarse 해상도), fine은 g* 하나로만. 포인트별 min 금지 명문화. <b>학습형 방법 중 손실 단계에서 대칭을 다루는 소수 사례</b>(10 §8-①).</td></tr>
+</table>
+<div class="note"><b>관찰:</b> 대칭을 <i>학습</i>에서 푸는 것(Shape6D)과 <i>추론</i>에서 푸는 것(FreeZe)은 배타적이지 않습니다. FreeZe식 SAR은 무학습이라 <b>지금 v0-geo에도 얹을 수 있고</b>, 우리 S4는 이미 전 가설 증거 비교 구조를 갖고 있어 결합 비용이 낮습니다. 다만 판별 신호가 DINOv2 시각 유사도인 반면 우리는 RGB를 신뢰하지 않으므로(A1), <b>free-space 증거로 치환한 SAR</b>이 실제 이식 형태가 됩니다 — 04 문서의 팔레트 성공이 (직립 프라이어 + free-space)였다는 자체 실증과 같은 방향입니다.</div>
+
+<h3>4.4 신뢰도 — "믿어도 되는가"를 묻는가</h3>
+<p>05가 Co-op·FreeZe에 대해 "확인 필요"로 남긴 항목입니다. 원문 확인 결과:</p>
+<ul>
+<li><b>Co-op에는 신뢰도 체계가 있습니다.</b> flow를 Laplace(μ, b)로 모델링해 P<sub>R</sub> = 1 − exp(−R/b)를 내고, 최종 flow confidence = certainty(가림) × sensitivity(텍스처 풍부도) × P<sub>R</sub>. 별도 <b>선택모델(ViT-B enc + ViT-S dec, BCE)</b>이 가설을 랭킹합니다.</li>
+<li><b>단, 이는 상대 랭킹이지 절대 accept/reject가 아닙니다.</b> "이 결과를 배포에서 믿어도 되는가"를 보정된 확률로 답하지 않습니다. FreeZeV2의 feature-aware scoring도 같습니다.</li>
+</ul>
+<div class="fair"><div class="h">따라서 10 §8-②는 유지하되 표현을 정밀화해야 합니다</div>
+"명시적 accept/reject 보정을 가진 방법은 없다"는 <b>여전히 참</b>입니다. 그러나 "신뢰도 개념 자체가 없다"로 읽히면 <b>과장</b>입니다 — Co-op은 3중 곱 신뢰도 + 학습형 선택모델을, FreeZeV2는 feature-aware scoring을 갖고 있습니다. 우리 고유성은 <b>"보정(calibration)"과 "거부(reject)"</b>이지 "점수의 존재"가 아닙니다.</div>
+
+<h3>4.5 "매칭 없음"을 1급 출력으로 두는 것은 공통 관행</h3>
+<p>Co-op의 패치 분류는 K = (H/16 × W/16) + 1 클래스이고, <b>마지막 클래스가 "대응 없음(가림)"</b>입니다. 이는 SAM-6D·Shape6D의 <code>bg_token</code>과 정확히 같은 역할입니다. 10 §2.5의 "bg_token은 배경 혼입의 배출구라 유지 필수"라는 판단은 <b>독립적으로 수렴한 설계</b>이며, 근거가 하나 더 생겼습니다.</p>
+
+<h2 id="s5"><span class="no">5</span>05·10 문서에 대한 정정·갱신 5건</h2>
+
+<table>
+<tr><th style="width:5%">#</th><th style="width:20%">대상</th><th style="width:22%">기존 서술</th><th>원문 확인 결과 / 조치</th></tr>
+<tr class="pick"><td>①</td><td>10 §6.7 · 권고 3<br>(GeDi 밀도 붕괴 우려)</td><td>"GeDi를 포함한 학습형 기하 디스크립터는 밀도 불일치에서 붕괴한다 — 권고 3의 중대한 단서"</td><td><b>부분 완화.</b> FreeZe는 <b>query 5K / target 1K</b>로 이미 5:1 비대칭을 돌립니다. 점 개수 자체는 우리 N_f=1024와 <b>같은 대역</b>이고 비대칭 구성도 같습니다. 남는 진짜 위험은 <b>점 개수가 아니라 분포</b>입니다 — FreeZe의 1K는 dense depth 균일 다운샘플이라 GeDi 패치(직경의 30~40% 반경) 안이 고르게 차지만, LiDAR 1K는 빔 패턴으로 비등방·줄무늬입니다. <b>권고 3의 실현 가능성은 상향, 검증 축은 "점 개수"에서 "패치 내 등방성"으로 좁힘.</b></td></tr>
+<tr class="pick"><td>②</td><td>10 §8-⑤<br>(42뷰 온보딩 예산)</td><td>ZeroPose 실측(42뷰 27초)에 비추어 42뷰는 5분 예산 안</td><td><b>보강.</b> Co-op도 <b>42뷰 icosphere, out-of-plane만</b>을 씁니다. 42뷰는 우리만의 선택이 아니라 이 대역의 표준 동작점입니다. 차이는 렌더 대상뿐 — Co-op은 RGB, 우리는 depth(A1).</td></tr>
+<tr class="hi"><td>③</td><td>05 §3 비교표<br>(Co-op 신뢰도 "확인 필요")</td><td>"flow certainty (확인 필요)"</td><td><b>해소.</b> certainty × sensitivity × P<sub>R</sub>(Laplace) + 선택모델 BCE 랭킹. 존재하되 <b>보정된 accept/reject는 아님</b>. §4.4 참조.</td></tr>
+<tr class="hi"><td>④</td><td>05 §3 비교표<br>(FreeZe "명시 신뢰도 없음 (확인 필요)")</td><td>"명시 신뢰도 없음 (확인 필요)"</td><td><b>정정.</b> V1은 RANSAC inlier 수, <b>V2는 feature-aware scoring</b>을 명시적으로 도입했습니다. "없음"은 부정확 — "가설 점수화는 있으나 배포용 거부 임계가 없음"이 정확합니다.</td></tr>
+<tr class="hi"><td>⑤</td><td>10 §3.1 · §6.6<br>(Co-op 시간·AR)</td><td>"AR 0.771 · 6.9s · 0.8s(1hyp)"</td><td><b>출처 분리 필요.</b> 논문 본문(RTX 3090 Ti): coarse 0.979s / +1hyp <b>1.852s</b> / 5hyp 4.186s, mean AR은 coarse 58.4 / 1hyp <b>64.0</b> / 5hyp 65.7. 리더보드 0.771·0.8s와 다른 설정입니다. <b>§6.6의 "1초 목표 난이도" 논거는 논문 값(1.852s)을 쓰면 오히려 강해집니다</b> — 현 SOTA 최속 축이 데스크톱에서 1.85s라면 Orin NX 환산은 더 나빠집니다.</td></tr>
+</table>
+
+<div class="warnbox">위 5건은 <b>05·10 본문에 아직 반영하지 않았습니다.</b> ①②는 기존 결론을 뒤집지 않고 보강·완화하는 성격이고, ③④⑤는 표현·출처 수정입니다. 원 문서를 수정할지, 이 문서를 후속 정본으로 둘지는 결정 사항으로 남깁니다.</div>
+
+<h2 id="s6"><span class="no">6</span>정직한 열세 — 이 대조에서 새로 드러난 것</h2>
+
+<table>
+<tr><th style="width:20%">항목</th><th>내용</th></tr>
+<tr><td><b>학습 규모의 비대칭</b></td><td>Co-op 재현에는 <b>8×A100 6.5일</b>(3모델)이 필요합니다. 우리 자원은 RTX PRO 6000 ×1. <b>Co-op식 경로는 재현 불가이며 목표로 삼아서도 안 됩니다.</b> 이는 10 §9의 "M2를 증류 프로젝트로 재정의" 결론과 같은 방향이고, 근거가 하나 더 붙습니다.</td></tr>
+<tr><td><b>파라미터 100배</b></td><td>비교 대상이 SAM-6D 104M이 아니라 현 SOTA <b>0.9~1.1B</b>입니다. 10 §6.3의 "13배 축소에 AR −1pt 가정은 근거 없음" 비판은 이 사실로 더 무거워집니다.</td></tr>
+<tr><td><b>대칭 해소 카드</b></td><td>FreeZe는 시각 특징으로 대칭 모호성을 깹니다(SAR). A1(외형 불신) 전제상 우리는 이 카드를 약하게밖에 못 씁니다 — 10 §6.2가 지적한 "기하만으로는 원리적으로 구분 불가"의 우회로가 <b>남들에게는 있고 우리에게는 제한적</b>입니다.</td></tr>
+<tr><td><b>RGB-only 생존</b></td><td>05에 이미 등재된 열세. LiDAR가 죽으면 Shape6D는 전면 불능이고 Co-op은 삽니다.</td></tr>
+</table>
+
+<h2 id="s7"><span class="no">7</span>결론 — Shape6D의 좌표</h2>
+
+<div class="box">
+<b class="t">한 문단</b>
+FreeZe는 <b>특징을 빌리고</b>, Co-op은 <b>태스크를 학습하고</b>, Shape6D는 <b>CAD 캐시와 물리 증거로 학습을 대체</b>합니다. 접근 차이의 핵심은 "기하 vs 외형"이 아니라 — 그건 FreeZe가 이미 정리했습니다 — <b>재투영 오차(Co-op)냐 3D 잔차(FreeZe·Shape6D)냐</b>, 그리고 <b>일반성을 사전학습에서 사느냐 CAD에서 얻느냐</b>입니다. 3m에서 10mm라는 스펙과 희소 LiDAR라는 입력은 둘 다 후자를 강제하므로 <b>정식화 선택 자체는 타당</b>합니다. 남는 위험은 정식화가 아니라 <b>8M 예산으로 그 정식화를 감당할 수 있는가</b>이며, 이는 10 §9 권고 2·3(밀도 스윕 · 무학습 기준선)이 답해야 할 질문 그대로입니다.
+</div>
+
+<div class="fair"><div class="h">이 대조가 남기는 실행 항목</div>
+<ol>
+<li><b>FreeZe식 SAR을 free-space 증거로 치환해 v0-geo S4에 얹는 것</b>을 검토 — 무학습이고 우리 전 가설 비교 구조와 결합 비용이 낮습니다(§4.3).</li>
+<li><b>10 권고 3의 무학습 기준선에 dGeDi를 포함</b> — GeDi를 PointTransformerV3로 증류해 <b>170배 빠르게</b>(≈50 FPS) 만들면서 BOP AR 62.2(GT seg 기준, GeDi 59.8 대비 +2.4)를 낸 결과가 이미 있습니다(arXiv:2503.15106). 다만 저자들도 <b>희소 포인트는 다루지 않았습니다</b> — 권고 2의 밀도 스윕과 <b>반드시 함께</b> 측정해야 유효합니다.</li>
+<li>Co-op의 시간·AR 수치를 인용할 때 <b>리더보드 값과 논문 값을 분리 표기</b>(§5-⑤).</li>
+</ol>
+</div>
+
+<p class="src">주요 참조 — <a href="https://arxiv.org/abs/2503.17731">Co-op (arXiv:2503.17731, CVPR 2025)</a> · <a href="https://naverlabs.github.io/Co-op/">Co-op 프로젝트</a> · <a href="https://arxiv.org/abs/2312.00947">FreeZe (arXiv:2312.00947, ECCV 2024)</a> · <a href="https://andreacaraffa.github.io/freeze/">FreeZe 프로젝트</a> · <a href="https://arxiv.org/abs/2503.15106">dGeDi — Distilling 3D distinctive local descriptors (arXiv:2503.15106)</a> · 내부: <a href="03_implementation_design.html">03 §6</a>, <a href="05_concept_review.html">05 §3</a>, <a href="10_network_design_and_critique.html">10 §3·§4·§8</a></p>
+
+</div>
+</body>
+</html>

@@ -14,6 +14,18 @@ SAM-6D의 2단 포인트 매칭 구조를 승계하되, 특징을 RGB 주도 →
 | [docs/04_synthetic_validation_report.html](docs/04_synthetic_validation_report.html) | v0-geo 합성 검증 보고서 (10시행, 이미지·통계) |
 | [docs/05_concept_review.html](docs/05_concept_review.html) | 컨셉 6기둥 정리 · 교차 검증된 간과점 · 기존 방식 비교 |
 | [docs/06_external_eval_visual_report.html](docs/06_external_eval_visual_report.html) | MegaPose 외부 평가 시각 자료집 (케이스 패널·3D·집계) |
+| [docs/07_uam_field_log_eval_report.html](docs/07_uam_field_log_eval_report.html) | UAM 전시장 로봇 로그 학습 전(v0-geo) 평가 — 70샘플, 판정 역전 분석 |
+| [docs/08_training_plan.html](docs/08_training_plan.html) | **학습 진행 계획** — Track 0/1/2, 증강 5종, 검증기 재설계, 일정 10주. 02의 M2·M3 개정판 |
+| [docs/09_track0_calib_eval_report.html](docs/09_track0_calib_eval_report.html) | Track 0 + 보정 1차 학습 결과 — 시험세션 정선택 95%·오수락 0, free_viol 부호 반전 실증 |
+| [docs/10_network_design_and_critique.html](docs/10_network_design_and_critique.html) | **Shape6D-PEM 설계 해설 + 2026 SOTA 대조 + 비판** — BOP 2024/25 리더보드 대조, 구현 실사(신경망 0줄), 권고 10건 |
+| [docs/11_sota_approach_comparison.html](docs/11_sota_approach_comparison.html) | **Co-op·FreeZe 대조** — 논문 원문 실사. 문제 정식화(재투영 vs 3D 잔차)·네트워크·손실·신뢰도 축별 비교 + 05·10 정정 5건 |
+| [docs/12_backbone_survey_dino.html](docs/12_backbone_survey_dino.html) | **백본 선정 서베이 (DINO 계열)** — 5개 자리 분해, DINOv2/v3·ConvNeXt·RADIO·Sonata/dGeDi 후보표, 감점요인 7건, 권고 + E-BB 실험 설계 |
+| [docs/13_backbone_pilot_report.html](docs/13_backbone_pilot_report.html) | **E-BB 백본 파일럿 실측** — 예산 검증(오차 2%), stem 점유율 실측(이항 가정 11배 오차), a0/a1/a2+DINOv3 통제 비교 — DINOv3 절단 사용은 정본과 동률(−0.0007±0.0012), ImageNet보다 −0.025 |
+| [docs/14_encoder_pilot_paper.html](docs/14_encoder_pilot_paper.html) | **인코더 통제 비교 (논문형)** — 데이터·과제·통제 설계 전문, 그림 6종·표 4종. 운용 밀도에서는 포화, **163pt에서 DINOv3가 오답률 절반**. 13의 수치를 대체 |
+| [docs/15_network_and_training_scope.html](docs/15_network_and_training_scope.html) | **PEM 구조도 + 현재 학습 범위 + 영향 예측** — 8M 중 1.33M(17%)만 갱신, 매칭부 5.5M 미구현. 미학습 물체 top-1 0.99→0.15 실증 |
+| [docs/16_pretraining_comparison.html](docs/16_pretraining_comparison.html) | **사전학습 대조** — SAM 2·MegaPose·FoundationPose·Co-op·SAM-6D vs 우리. 전부 "비교기"를 학습한다는 공통 구조와 그 함의 |
+| [docs/17_full_line_redesign_and_training_plan.html](docs/17_full_line_redesign_and_training_plan.html) | **전체 입출력 라인 재구성 v3** — SAM3/DINOv3 제안의 3라운드 비판 검토, SAM-6D 승계 확정, 네트워크 명세 + Phase 0/A/B/C 학습 계획(~10주) |
+| [docs/18_module_networks_and_pretraining_plan.html](docs/18_module_networks_and_pretraining_plan.html) | **슬롯별 네트워크·사전학습 결정** — 13개 슬롯 조달표, 학습 5슬롯, 데이터셋 인벤토리·라이선스 매트릭스, Phase별 데이터 흐름 (UAM 비사용) |
 | docs/design_archive/ | 영역별 설계 원문 5건 + 교차 검증 리포트 2건 |
 
 ## 확정 전제 (2026-07-18)
