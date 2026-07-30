@@ -8,6 +8,7 @@ SAM-6D의 2단 포인트 매칭 구조를 승계하되, 특징을 RGB 주도 →
 
 | 문서 | 내용 |
 |---|---|
+| [docs/20_final_design_plan.html](docs/20_final_design_plan.html) | **★ 최종 확정 설계·실행 계획 (정본 진입점)** — 슬롯 확정표·네트워크/데이터 명세·Phase 0~C·확정/미결 대장. 충돌 시 이 문서 우선 |
 | [docs/01_stage_design.html](docs/01_stage_design.html) | 스테이지 정의(S0~S4) + 후보 알고리즘 선정 근거 |
 | [docs/02_development_plan.html](docs/02_development_plan.html) | M0~M5 개발 계획, 게이트, 일정 |
 | [docs/03_implementation_design.html](docs/03_implementation_design.html) | **구현 상세 정본** — FrameBundle/캐시 스키마/알고리즘/임계값. 코드와 불일치 시 이 문서 기준 |
@@ -26,6 +27,7 @@ SAM-6D의 2단 포인트 매칭 구조를 승계하되, 특징을 RGB 주도 →
 | [docs/16_pretraining_comparison.html](docs/16_pretraining_comparison.html) | **사전학습 대조** — SAM 2·MegaPose·FoundationPose·Co-op·SAM-6D vs 우리. 전부 "비교기"를 학습한다는 공통 구조와 그 함의 |
 | [docs/17_full_line_redesign_and_training_plan.html](docs/17_full_line_redesign_and_training_plan.html) | **전체 입출력 라인 재구성 v3** — SAM3/DINOv3 제안의 3라운드 비판 검토, SAM-6D 승계 확정, 네트워크 명세 + Phase 0/A/B/C 학습 계획(~10주) |
 | [docs/18_module_networks_and_pretraining_plan.html](docs/18_module_networks_and_pretraining_plan.html) | **슬롯별 네트워크·사전학습 결정** — 13개 슬롯 조달표, 학습 5슬롯, 데이터셋 인벤토리·라이선스 매트릭스, Phase별 데이터 흐름 (UAM 비사용) |
+| [docs/19_license_assessment.html](docs/19_license_assessment.html) | **라이선스 실사** — 18 조달안 상업 판정. 빨강 5건 교체(FB가중치 NC→timm Apache, SAM-6D·GeDi 무라이선스→클린룸·자체학습, CroCo·EdgeSAM NC 제외), 교체 후 기본 경로 전부 초록 |
 | docs/design_archive/ | 영역별 설계 원문 5건 + 교차 검증 리포트 2건 |
 
 ## 확정 전제 (2026-07-18)

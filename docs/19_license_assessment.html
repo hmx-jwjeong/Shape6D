@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>라이선스 실사 — 채택 네트워크·데이터 상업 사용 판정</title>
+<style>
+  :root { --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --panel:#f6f8fb; --accent:#0b5fff;
+          --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e3;
+          --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+         color:var(--ink); background:#fff; line-height:1.7; font-size:15px; }
+  .wrap { max-width:1150px; margin:0 auto; padding:44px 28px 110px; }
+  h1 { font-size:25px; margin:0 0 6px; letter-spacing:-0.5px; line-height:1.35; }
+  h2 { font-size:19px; margin:52px 0 12px; padding-top:16px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:26px 0 8px; }
+  p { margin:9px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  .abs { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:16px 20px; margin:18px 0 26px; font-size:14px; }
+  .abs b.t { display:block; font-size:15px; margin-bottom:6px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.3px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 9px; font-weight:600; }
+  th.c, td.c { text-align:center; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr.g td { background:var(--good-soft); } tr.g td:first-child { border-left:3px solid var(--good); }
+  tr.y td { background:var(--warn-soft); } tr.y td:first-child { border-left:3px solid var(--warn); }
+  tr.r td { background:var(--bad-soft); } tr.r td:first-child { border-left:3px solid var(--bad); }
+  .cap { font-size:12.3px; color:var(--sub); margin:4px 0 20px; }
+  .cap b { color:var(--ink); }
+  code { font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace; font-size:12.3px;
+         background:var(--panel); padding:1px 5px; border-radius:4px; }
+  .crit { border:1px solid var(--line); border-left:4px solid var(--bad); background:var(--bad-soft);
+          border-radius:8px; padding:13px 17px; margin:16px 0; font-size:13.6px; }
+  .crit .h { font-weight:800; color:var(--bad); margin-bottom:5px; font-size:14.5px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.6px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; font-size:14px; }
+  .box { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.6px; }
+  .warnbox { border:1.5px dashed var(--warn); background:var(--warn-soft); border-radius:10px;
+             padding:11px 16px; margin:14px 0; font-size:13.3px; }
+  ul, ol { margin:8px 0; padding-left:22px; } li { margin:5px 0; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 20px;
+         margin:18px 0 6px; font-size:13.3px; column-count:2; column-gap:30px; }
+  .toc a { display:block; padding:2px 0; break-inside:avoid; }
+  .tiny { font-size:11.8px; color:var(--sub); }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:18px 0 6px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:19px; letter-spacing:-0.5px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good b { color:var(--good); } .stat.bad b { color:var(--bad); } .stat.warn b { color:var(--warn); }
+  .lic { font-size:11px; padding:1px 7px; border-radius:20px; font-weight:700; white-space:nowrap; }
+  .lic.g { background:var(--good-soft); color:var(--good); }
+  .lic.y { background:var(--warn-soft); color:var(--warn); }
+  .lic.r { background:var(--bad-soft); color:var(--bad); }
+  @media (max-width:820px){ .toc{column-count:1;} .hero{grid-template-columns:repeat(2,1fr);} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>라이선스 실사<br>— 18 조달안의 상업 사용 판정과 교체 결정 5건</h1>
+<div class="meta">v1.0 · 2026-07-30 · 대상: <a href="18_module_networks_and_pretraining_plan.html">18</a>의 슬롯별 선택 전체 · 방법: 각 저장소 LICENSE·모델카드·약관 원문 직접 확인(2026-07-30) · 기준: <b>상업 배포 제품</b>(산업 장비 탑재)<br>
+<span class="tiny">※ 본 문서는 엔지니어링 실사이며 법률 자문이 아니다. 노랑(조건부) 항목은 법무 검토 대상으로 표기했다.</span></div>
+
+<div class="abs">
+<b class="t">요약 — 결론부터</b>
+18의 선택을 실사한 결과 <b>그대로 쓰면 안 되는 항목이 5건</b> 나왔다: ① FB ConvNeXt ImageNet 가중치(<b>CC-BY-NC — 비상업</b>) ② CroCo v2(<b>CC BY-NC-SA</b>) ③ EdgeSAM 백업(<b>S-Lab NC</b>) ④ <b>SAM-6D — LICENSE 파일 없음</b>(기본값 all rights reserved: 가중치는 물론 <b>코드 포팅도 불가</b>) ⑤ <b>GeDi — LICENSE 파일 없음</b>(증류 교사 불가).<br><br>
+다행히 <b>전부 동급 대체재가 있고, 교체 후 기본 경로는 초록으로 성립한다</b>: 인코더 초기화는 <code>timm/convnext_tiny.in12k_ft_in1k</code>(<b>Apache-2.0</b>, timm 자체 학습)로, S1 백업은 MobileSAM(MIT)으로, S2 디스크립터는 GeDi 증류 대신 <b>자체 대조학습</b>(MegaPose-GSO GT 대응 — 데이터 보유)으로, 매칭부는 SAM-6D 코드 포팅이 아니라 <b>논문 기반 클린룸 재구현</b>으로. 학습 데이터 본체(MegaPose HF 배포 Apache-2.0 + GSO CC-BY 4.0)는 안전하다.
+</div>
+
+<div class="hero">
+  <div class="stat bad"><b>5건</b><span>18 선택 중 교체 필요 (NC 3 + 무라이선스 2)</span></div>
+  <div class="stat good"><b>성립</b><span>교체 후 기본 경로 — 전부 Apache/MIT/CC-BY</span></div>
+  <div class="stat warn"><b>2건</b><span>조건부(법무 검토): DINOv3 · SAM 3 custom</span></div>
+  <div class="stat"><b>1건</b><span>업계 그레이존: ImageNet 계열 가중치 일반론</span></div>
+</div>
+
+<div class="toc">
+<a href="#s1">1. 판정 기준 — 용도별로 법적 무게가 다르다</a>
+<a href="#s2">2. 신호등 매트릭스 (전 자산)</a>
+<a href="#s3">3. 빨강 5건 — 교체 결정</a>
+<a href="#s4">4. 노랑 — 조건부 사용과 그레이존</a>
+<a href="#s5">5. 18 대비 변경 요약 (개정 지시)</a>
+<a href="#s6">6. 준수 조치 목록</a>
+</div>
+
+<div class="fair"><div class="h">[확정 2026-07-30] 초록 우선 개발</div>
+본 실사 직후 사용자 결정: <b>라이선스 무풍(초록) 자산 경로를 기본 개발 경로로 확정</b>한다. 노랑(DINOv3·SAM 3)은 법무 검토(D-2) 통과 전 착수하지 않으며, §5의 교체 5건은 즉시 발효. Phase 0 위생 구현이 이 결정 하에 착수됨 — config 주입(A-1)·보정기 로드 배선(A-2)·골든 테스트(A-3)·coverage 항(A-4)·합성 희소화 정식화(<code>shape6d/common/sparsify.py</code>) 완료, 테스트 40 passed + 1 xfail.</div>
+
+<h2 id="s1"><span class="no">1</span>판정 기준 — 용도별로 법적 무게가 다르다</h2>
+
+<table>
+<tr><th style="width:20%">용도 등급</th><th style="width:36%">정의</th><th>라이선스 요구 수준</th></tr>
+<tr class="r"><td><b>U1 배포 포함</b></td><td>제품(Orin NX)에 가중치·코드가 실린다 — S1 분할기, S3 전체, S2 디스크립터, S4 보정기</td><td><b>최고</b> — 상업 재배포 허용 필수. NC·무라이선스 즉시 탈락</td></tr>
+<tr class="y"><td><b>U2 학습 관여</b></td><td>배포물엔 없지만 학습에 개입 — 초기화 가중치, 증류 교사, 학습 데이터</td><td><b>높음</b> — 산출물(학생·학습된 가중치)이 파생물로 해석될 위험 관리. NC 교사는 학생의 상업성을 오염시킬 수 있음</td></tr>
+<tr class="g"><td><b>U3 사내 도구</b></td><td>평가·주석·앵커 — SAM 3 데이터 엔진, PC 평가, 무학습 기준선</td><td><b>중간</b> — 재배포 없음. 단 약관이 "내부 사용"까지 금지하면 불가</td></tr>
+<tr><td><b>U4 방법론 참조</b></td><td>논문을 읽고 재구현 — 아이디어·수식·하이퍼파라미터</td><td><b>낮음</b> — 저작권은 표현(코드)에 미치고 아이디어에는 미치지 않음. 단 <b>코드를 보며 옮기면 U1</b>이 된다</td></tr>
+</table>
+
+<h2 id="s2"><span class="no">2</span>신호등 매트릭스 (전 자산)</h2>
+
+<table>
+<tr><th style="width:17%">자산</th><th class="c" style="width:8%">용도</th><th class="c" style="width:14%">확인된 라이선스</th><th class="c" style="width:9%">판정</th><th style="width:30%">근거 (직접 확인)</th><th>조치</th></tr>
+<tr class="g"><td>EfficientViT-SAM (S1)</td><td class="c">U1</td><td class="c"><span class="lic g">Apache-2.0</span></td><td class="c"><b>초록</b></td><td>mit-han-lab/efficientvit 저장소·HF 카드</td><td>채택 유지</td></tr>
+<tr class="g"><td>MobileSAM (S1 백업)</td><td class="c">U1</td><td class="c"><span class="lic g">MIT</span></td><td class="c"><b>초록</b></td><td>ChaoningZhang/MobileSAM LICENSE</td><td><b>EdgeSAM 대체 신규 채택</b></td></tr>
+<tr class="r"><td>EdgeSAM</td><td class="c">U1</td><td class="c"><span class="lic r">S-Lab NC 1.0</span></td><td class="c"><b>빨강</b></td><td>"non-commercial purpose" 명시</td><td>백업 목록에서 제외</td></tr>
+<tr class="g"><td><b>MegaPose 렌더셋</b> (HF bop-benchmark)</td><td class="c">U2</td><td class="c"><span class="lic g">Apache-2.0</span></td><td class="c"><b>초록</b></td><td>HF 데이터셋 카드 license 필드</td><td>학습 본체 유지</td></tr>
+<tr class="g"><td>GSO 3D 모델</td><td class="c">U2</td><td class="c"><span class="lic g">CC-BY 4.0</span></td><td class="c"><b>초록</b></td><td>Google Scanned Objects 공식</td><td><b>저작자 표시 의무</b> — 문서·제품 고지에 기재</td></tr>
+<tr class="r"><td>FB ConvNeXt IN 가중치 (<code>fb_in1k</code>)</td><td class="c">U2</td><td class="c"><span class="lic r">CC-BY-NC</span></td><td class="c"><b>빨강</b></td><td>facebookresearch/ConvNeXt README — "코드 MIT, ImageNet 가중치 CC-BY-NC"</td><td>사용 금지 → 아래로 교체</td></tr>
+<tr class="g"><td><b><code>timm/convnext_tiny .in12k_ft_in1k</code></b></td><td class="c">U2</td><td class="c"><span class="lic g">Apache-2.0</span></td><td class="c"><b>초록</b></td><td>HF 모델카드 license 필드 직접 확인 — timm(Ross Wightman) 자체 학습 IN-12k→1k</td><td><b>인코더 초기화 신규 기본안</b> · 체크포인트 태그 고정 필수</td></tr>
+<tr class="g"><td>DINOv2-S (S2 폴백)</td><td class="c">U1</td><td class="c"><span class="lic g">Apache-2.0</span></td><td class="c"><b>초록</b></td><td>HF 모델카드 (12 §3에서 확인)</td><td>유지</td></tr>
+<tr class="y"><td>DINOv3 (S2 상급·교사)</td><td class="c">U1/U2</td><td class="c"><span class="lic y">DINOv3 License</span></td><td class="c"><b>노랑</b></td><td>상업 허용 명시. 단 <b>재배포 시 동일 약관 + "Built with DINOv3" 표시, 파생물도 동일 약관</b> — 증류 학생의 파생물 해석 여지</td><td>법무 검토 (D-2) · 통과 전엔 DINOv2-S 경로</td></tr>
+<tr class="r"><td>CroCo v2 (RGB 교사 대안)</td><td class="c">U2</td><td class="c"><span class="lic r">CC BY-NC-SA 4.0</span></td><td class="c"><b>빨강</b></td><td>naver/croco README — NC 명시</td><td><b>교사 ablation에서 제외</b></td></tr>
+<tr class="r"><td><b>SAM-6D 코드·가중치</b></td><td class="c">U1/U2</td><td class="c"><span class="lic r">LICENSE 없음</span></td><td class="c"><b>빨강</b></td><td>저장소에 LICENSE 파일·배지 부재 확인 — 기본값 all rights reserved</td><td><b>코드 포팅 금지 → 클린룸 재구현</b> · 외부 교사 폐기 · BOP 재현(M0-1)은 U3 평가라 저위험이나 확인 문의 권장</td></tr>
+<tr class="r"><td><b>GeDi 가중치</b></td><td class="c">U2</td><td class="c"><span class="lic r">LICENSE 없음</span></td><td class="c"><b>빨강</b></td><td>저장소 LICENSE 부재 확인 (가중치는 3DMatch 학습)</td><td><b>증류 교사 폐기</b> → 자체 대조학습 디스크립터 (§3.5)</td></tr>
+<tr class="y"><td>SAM 3 (데이터 엔진·앵커)</td><td class="c">U3</td><td class="c"><span class="lic y">SAM License</span></td><td class="c"><b>노랑</b></td><td>연구·상업 허용 custom — 군사/ITAR/재배포 제한, 재라이선스 금지</td><td>내부 도구 용도는 저위험 · 산출 주석의 지위 확인 (D-2)</td></tr>
+<tr class="g"><td>T-LESS (평가)</td><td class="c">U3</td><td class="c"><span class="lic g">CC BY 4.0</span></td><td class="c"><b>초록</b></td><td>공식 페이지</td><td>평가 사용 — 표시 의무</td></tr>
+<tr class="r"><td>ShapeNet</td><td class="c">U2</td><td class="c"><span class="lic r">비상업 약관</span></td><td class="c"><b>빨강</b></td><td>기존 D4 판단 유지</td><td>보류 지속 · 대안 Objaverse CC0/CC-BY 필터 서브셋</td></tr>
+<tr class="y"><td>PPF/Drost (무학습 기준선)</td><td class="c">U3</td><td class="c"><span class="lic y">특허 주의</span></td><td class="c"><b>노랑</b></td><td>MVTec 상용(HALCON) 계열 — 관련 특허 존재 가능성</td><td><b>평가 전용 한정</b> — 제품 탑재 금지, 탑재 검토 시 특허 조사 선행</td></tr>
+<tr class="g"><td>torch·timm·transformers</td><td class="c">U1</td><td class="c"><span class="lic g">BSD/Apache</span></td><td class="c"><b>초록</b></td><td>표준</td><td>—</td></tr>
+<tr class="g"><td>자체 산출물 (v0-geo·자체 교사 PEM·합성 데이터·팔레트 CAD 렌더)</td><td class="c">U1/U2</td><td class="c"><span class="lic g">자체</span></td><td class="c"><b>초록</b></td><td>—</td><td>—</td></tr>
+</table>
+<div class="cap"><b>Table 1.</b> 2026-07-30 원문 확인 기준. "LICENSE 없음"은 오픈소스가 아니라는 뜻이다 — 저작권법 기본값에 의해 명시 허락 없이는 복제·파생·재배포 전부 불가.</div>
+
+<h2 id="s3"><span class="no">3</span>빨강 5건 — 교체 결정</h2>
+
+<h3>3.1 인코더 초기화: FB 가중치 → <code>timm/convnext_tiny.in12k_ft_in1k</code></h3>
+<div class="crit"><div class="h">문제</div>
+FB 공식 저장소가 명시한다 — 코드는 MIT지만 <b>ImageNet 사전학습 가중치는 CC-BY-NC</b>. 상업 제품의 초기화로 쓰면 위반이다.<br>
+<b>[검증 완료]</b> 13·14 파일럿의 timm 기본 <code>pretrained=True</code>가 어느 태그로 해석됐는지 실측 확인한 결과, 설치된 timm 1.0.27의 기본 태그는 <b><code>in12k_ft_in1k</code>(Apache-2.0)였다</b> — 즉 파일럿은 우연히도 깨끗한 가중치를 썼고 산출물 오염은 없다. 다만 timm 버전에 따라 기본 태그가 바뀔 수 있으므로 <b>명시 고정이 필수</b>다.</div>
+<div class="fair"><div class="h">교체</div>
+<b><code>timm/convnext_tiny.in12k_ft_in1k</code> — Apache-2.0, timm 프로젝트가 자체 학습한 IN-12k→IN-1k 체크포인트</b> (모델카드 license 필드 직접 확인). 구조가 동일하므로 12 §7.1의 절단·예산 계산이 그대로 적용된다. Phase A 코드에 <b>체크포인트 태그를 명시 고정</b>하고 <code>fb_*</code> 태그를 금지한다. 스크래치 대조군은 라이선스 무풍 폴백으로 유지(측정 격차 작음 — 13 §4.2b).</div>
+
+<h3>3.2 매칭 디코더: SAM-6D 코드 포팅 → 클린룸 재구현</h3>
+<div class="crit"><div class="h">문제 — 이번 실사에서 가장 무거운 발견</div>
+SAM-6D 저장소에는 <b>LICENSE 파일이 없다</b>. 오픈소스처럼 보이지만 법적으로는 all rights reserved다. 그런데 03 정본은 <code>pose_estimation_model.py</code> 라인 번호까지 참조하며 <b>"M2에서 포팅"</b>을 전제해 왔다(README 구조도의 <code>shape6d/pose</code> 주석 포함). <b>코드를 보고 옮기는 순간 파생물이 된다.</b> 외부 교사(유사도행렬) 옵션도 같은 이유로 불가.</div>
+<div class="fair"><div class="h">교체</div>
+① <b>클린룸 재구현</b> — CVPR 2024 논문(공개 문헌)과 우리 설계 문서(03 §6.5 — 이미 구조를 자체 언어로 재기술해 둠)만으로 구현한다. 구현자는 SAM-6D 소스를 열지 않는 것을 규약으로 명문화. 참조 수치(6000/300, nsample 등)는 논문 기재 값이라 사용 가능.<br>
+② 교사는 <b>자체 full-size PEM만</b> (M2-D 자기 증류 — 원래 1차안이라 계획 변경 없음).<br>
+③ M0-1(SAM-6D BOP 재현)은 U3 사내 평가라 저위험이나, 저자에게 라이선스 문의 이슈를 남기는 것을 권장(응답 시 옵션 복원 가능).</div>
+
+<h3>3.3 S2 디스크립터: GeDi 증류 → 자체 대조학습</h3>
+<div class="crit"><div class="h">문제</div>GeDi 저장소도 LICENSE가 없다. 교사 가중치 자체를 쓸 수 없으므로 "GeDi → PointNet-lite 증류"(18 §2.2)가 성립하지 않는다.</div>
+<div class="fair"><div class="h">교체 — 오히려 더 깨끗한 경로가 있다</div>
+<b>자체 대조학습 디스크립터.</b> MegaPose-GSO에는 GT 포즈가 있으므로 <b>점 대응 라벨을 무한 생성</b>할 수 있다 — 같은 물체의 서로 다른 부분 뷰에서 대응점을 양성, 비대응·타물체 점을 음성으로 하는 InfoNCE로 PointNet-lite(0.35M)를 직접 학습한다. GeDi의 방법론(LRF·다중 스케일)은 논문 참조(U4)로 차용 가능. 교사가 없어졌을 뿐 데이터·구조·예산은 동일하고, <b>산출물의 권리가 완전히 우리 것</b>이 된다. 비용: Phase C 증류 1런 → 대조학습 1런 (동급).</div>
+
+<h3>3.4 RGB 교사 ablation: CroCo v2 제외</h3>
+<p>CC BY-NC-SA 확인 — 증류 학생이 NC-SA에 오염될 위험이 있어 <b>교사 후보에서 제외</b>한다. 17 D-4는 "기각"으로 종결. 남는 팔: <b>DINOv3 ViT-L(약관 조건부)</b> vs <b>증류 생략(스크래치 MBConv 유지)</b>. Co-op이 시사한 "대응 사전학습이 낫다" 가설은 아쉽지만, 애초에 RGB branch는 보조(0.4M)라 손실 폭이 제한적이다.</p>
+
+<h3>3.5 S1 백업: EdgeSAM → MobileSAM</h3>
+<p>EdgeSAM은 S-Lab NC 1.0(비상업 명시)이라 백업 목록에서 제외. <b>MobileSAM(MIT)</b>이 동급 경량 대체재로 확인됐다. 기본안 EfficientViT-SAM(Apache-2.0)은 그대로.</p>
+
+<h2 id="s4"><span class="no">4</span>노랑 — 조건부 사용과 그레이존</h2>
+
+<table>
+<tr><th style="width:16%">항목</th><th style="width:42%">쟁점</th><th>운용 방침</th></tr>
+<tr><td><b>DINOv3 License</b></td><td>상업 사용은 허용 명시. 쟁점은 두 조항: ① 재배포 시 동일 약관 동봉 + <b>"Built with DINOv3" 표시</b> ② <b>파생물도 동일 약관</b> — S2에 동결 ViT-S를 실으면 제품이 이 의무를 진다. 교사로 쓰면 <b>증류 학생이 파생물인지</b>가 해석 문제</td><td>S2 탑재·교사 채용 모두 <b>법무 검토 통과를 조건</b>으로(D-2). 통과 전 기본 경로는 DINOv2-S(Apache) + 증류 생략. 통과 시 표시 의무를 제품 고지에 반영</td></tr>
+<tr><td><b>SAM License (SAM 3)</b></td><td>연구·상업 허용 custom — 군사/ITAR 사용 제한·재라이선스 금지. 우리 용도는 사내 도구(U3)라 재배포 없음. 잔여 쟁점: SAM 3가 생성한 <b>주석의 지위</b>(평가셋에 포함되어 외부 공개될 경우)</td><td>내부 사용 진행 가능. 주석 공개 전 약관 확인. <b>군수 전용 제한은 UAM(도심항공) 전시 문맥과 무관하나 최종 고객 용도 확인 항목으로 기재</b></td></tr>
+<tr><td><b>ImageNet 계열 일반론</b></td><td>timm 체크포인트가 Apache여도 <b>ImageNet 데이터 자체의 약관</b>(연구 목적)이 가중치에 미치는지는 업계 미해결 그레이존 — 관행상 수용되나 판례 없음</td><td>잔여 리스크로 문서화. <b>스크래치 대조군이 상시 폴백</b>이므로 프로젝트가 인질이 되지 않음. Phase A에서 격차가 작게 나오면(13에서 +0.024) 스크래치 기본화로 완전 해소 가능</td></tr>
+<tr><td>SA-1B ↔ EfficientViT-SAM</td><td>SA-1B 데이터는 연구 약관이지만 우리는 데이터를 쓰지 않고 <b>Apache-2.0 가중치</b>만 쓴다 — 가중치 라이선스가 준거</td><td>저위험 수용. 자체 재학습 금지(데이터 약관 회피 목적)</td></tr>
+</table>
+
+<h2 id="s5"><span class="no">5</span>18 대비 변경 요약 (개정 지시)</h2>
+
+<table>
+<tr><th style="width:22%">18의 선택</th><th style="width:30%">19 확정</th><th>사유</th></tr>
+<tr class="r"><td>인코더 초기화 "ImageNet ConvNeXt-T"</td><td><b><code>timm/convnext_tiny.in12k_ft_in1k</code> 태그 고정</b> (Apache-2.0)</td><td>FB 가중치 CC-BY-NC · 파일럿 태그 검증 + 체크포인트 재학습 필요</td></tr>
+<tr class="r"><td>S2 "GeDi → PointNet-lite 증류"</td><td><b>자체 대조학습 디스크립터</b> (GSO GT 대응 InfoNCE, GeDi는 논문 참조만)</td><td>GeDi 무라이선스 · 대체가 권리상 더 우월</td></tr>
+<tr class="r"><td>매칭부 "SAM-6D 승계 (포팅 전제)"</td><td><b>클린룸 재구현</b> (논문+자체 설계문서만) · 외부 교사 폐기</td><td>SAM-6D 무라이선스 — 구조 승계(U4)는 유지, 코드 승계(U1)는 금지</td></tr>
+<tr class="r"><td>RGB 교사 "DINOv3 vs CroCo ablation"</td><td><b>DINOv3(조건부) vs 증류 생략</b> 2팔로 축소</td><td>CroCo CC BY-NC-SA</td></tr>
+<tr class="r"><td>S1 백업 "EdgeSAM/MobileSAM"</td><td><b>MobileSAM만</b> (MIT)</td><td>EdgeSAM S-Lab NC</td></tr>
+<tr class="g"><td>학습 본체 MegaPose-GSO · S1 EfficientViT-SAM · S2 폴백 DINOv2-S · 평가 T-LESS</td><td>변경 없음</td><td>Apache/MIT/CC-BY 확인 완료</td></tr>
+</table>
+
+<div class="fair"><div class="h">교체 후 기본 경로의 라이선스 구성 (전부 초록)</div>
+S1 EfficientViT-SAM(Apache) → S2 크기·TDF(자체) + 자체 대조학습 디스크립터(자체) + DINOv2-S 보조(Apache) → S3 timm Apache 초기화(또는 스크래치) + 클린룸 매칭부(자체) → S4 자체 보정기 · 학습 데이터 MegaPose(Apache)+GSO(CC-BY, 표시) · 프레임워크 BSD/Apache.<br>
+<b>조건부 자산(DINOv3·SAM 3)이 전부 빠져도 파이프라인·학습 계획이 완결된다</b> — 18 §4의 "최악 시나리오 성립" 결론이 실사 후에도 유지되며, 이제 그 구성이 구체적 체크포인트 태그 수준으로 고정됐다.</div>
+
+<h2 id="s6"><span class="no">6</span>준수 조치 목록</h2>
+
+<table>
+<tr><th style="width:6%">#</th><th style="width:44%">조치</th><th class="c" style="width:12%">시점</th><th>담당 성격</th></tr>
+<tr><td>1</td><td>Phase A 코드에 체크포인트 태그 고정: <code>convnext_tiny.in12k_ft_in1k</code> 명시 + <code>fb_*</code> 태그 금지 주석 (파일럿은 기본 태그가 이것으로 해석됐음을 실측 확인 — 오염 없음)</td><td class="c">Phase A 착수 시</td><td>코드</td></tr>
+<tr><td>2</td><td>클린룸 규약 명문화 — 매칭부 구현 브랜치에서 SAM-6D 소스 열람 금지, 참조는 논문·03 문서만 (커밋 메시지에 근거 기록)</td><td class="c">Phase A</td><td>프로세스</td></tr>
+<tr><td>3</td><td>GSO·T-LESS CC-BY 저작자 표시를 README·제품 고지 초안에 추가</td><td class="c">즉시</td><td>문서</td></tr>
+<tr><td>4</td><td>D-2 법무 검토 의뢰: DINOv3 License(탑재·증류 각각) + SAM License(주석 지위) 원문 첨부</td><td class="c">Phase C 전</td><td>법무</td></tr>
+<tr><td>5</td><td>SAM-6D·GeDi 저자에게 라이선스 문의 이슈 등록 (허가 시 옵션 복원)</td><td class="c">여유 시</td><td>커뮤니케이션</td></tr>
+<tr><td>6</td><td>18 문서에 본 문서 기준 개정 표식 반영 (§5 표)</td><td class="c">즉시</td><td>문서</td></tr>
+<tr><td>7</td><td>PPF 기준선을 평가 전용으로 코드상 격리 (배포 빌드 제외 목록)</td><td class="c">Phase A</td><td>코드</td></tr>
+</table>
+
+<p class="tiny" style="margin-top:26px">확인 출처 — <a href="https://github.com/mit-han-lab/efficientvit">EfficientViT-SAM (Apache-2.0)</a> · <a href="https://github.com/ChaoningZhang/MobileSAM/blob/master/LICENSE">MobileSAM (MIT)</a> · <a href="https://github.com/chongzhou96/EdgeSAM/blob/master/LICENSE">EdgeSAM (S-Lab NC)</a> · <a href="https://ai.meta.com/resources/models-and-libraries/dinov3-license/">DINOv3 License</a> · <a href="https://github.com/naver/croco">CroCo (CC BY-NC-SA)</a> · <a href="https://github.com/JiehongLin/SAM-6D">SAM-6D (LICENSE 부재)</a> · <a href="https://github.com/fabiopoiesi/gedi">GeDi (LICENSE 부재)</a> · <a href="https://huggingface.co/datasets/bop-benchmark/megapose">MegaPose HF (Apache-2.0)</a> · <a href="https://github.com/facebookresearch/ConvNeXt">FB ConvNeXt (가중치 CC-BY-NC)</a> · <a href="https://huggingface.co/timm/convnext_tiny.in12k_ft_in1k">timm in12k_ft_in1k (Apache-2.0)</a> · <a href="https://github.com/facebookresearch/sam3/blob/main/LICENSE">SAM 3 (SAM License)</a> · <a href="https://cmp.felk.cvut.cz/t-less/">T-LESS (CC BY 4.0)</a><br>
+내부 — <a href="18_module_networks_and_pretraining_plan.html">18</a> · <a href="17_full_line_redesign_and_training_plan.html">17 D-2·D-4</a> · <a href="13_backbone_pilot_report.html">13 §4.2b</a></p>
+
+</div>
+</body>
+</html>

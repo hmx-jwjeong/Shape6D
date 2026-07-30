@@ -314,6 +314,8 @@ Phase 0 (1주) → A (2주) → B (4~5주) → C (2~3주). 병렬 트랙: 데이
 <tr><td>D-2</td><td>DINOv3·SAM 3 상업 약관</td><td>결정 대기</td><td>연구 사용은 확보. 배포·데이터 엔진 산출물의 파생 조건 검토 — D4와 묶어 처리</td></tr>
 <tr><td>D-3</td><td>BOP vs UAM 게이트 우선순위</td><td>합의 필요</td><td>본 문서 제안: <b>UAM 우선</b> (BPC 2025에서 지표 1위≠파지 1위 실증 — 10 §6.5)</td></tr>
 <tr><td>D-4</td><td>CroCo 교사 채택 여부</td><td>Phase C 판정</td><td>Co-op의 선택이 근거. ablation으로 결정 — 사전 확정하지 않음</td></tr>
+<tr><td>D-8</td><td>free_viol_max 0.05 vs 0.15</td><td>결정 대기</td><td>A-1 해소에서 yaml을 현행 실측 거동(0.15)으로 정본화 — 04/07/09 공표 수치 보호. 03 원안 0.05로의 재강화 여부는 별도 결정</td></tr>
+<tr class="hi"><td>D-9</td><td><b>프레임 free-space의 see-through 오판</b></td><td>결함 등재</td><td>Phase 0 골든 테스트 작성 중 발견: 슬랫 틈으로 바닥이 보이는 정답 포즈가 <b>free_viol 0.31 → REJECT</b> (stride-4 스플랫 홀채움이 틈을 메움). A-3이 경고한 미커버 경로의 실제 결함. <code>tests/test_e2e_geo.py</code>에 <b>xfail(strict)로 고정 추적</b> — 수정은 07/09 수치 영향 평가와 함께 백로그</td></tr>
 <tr class="hi"><td>R-1</td><td><b>매칭부 최초 구현 리스크</b></td><td>기술</td><td>현재 nn.Module 0개 — Phase A의 최소 매칭부가 첫 구현. SAM-6D 코드가 참조 구현으로 존재하는 것이 완충</td></tr>
 <tr class="hi"><td>R-2</td><td>밀도 비대칭 붕괴</td><td>기술</td><td>문헌상 최대 리스크(10 §6.7). Phase A 밀도 스윕이 조기 경보 — 붕괴 시 후보 (b)/(c)로 전환</td></tr>
 <tr><td>R-3</td><td>1s 예산 미달</td><td>배포</td><td>M0-2 실측(Phase 0)이 조기 판정. 미달 시 계층화 ICP·해상도 축소의 순으로 삭감 (05 #1)</td></tr>
