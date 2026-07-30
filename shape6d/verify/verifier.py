@@ -1,6 +1,7 @@
 """S4 오케스트레이터 (03 문서 §7): dedupe → 가설 선별 → ICP → 재스코어 → 판정.
 
-하드 가드: inlier<25 → ACCEPT 금지 / degenerate → 금지 / free_viol>0.05 → REJECT.
+하드 가드: inlier<n_min → ACCEPT 금지 / degenerate → 금지 / free_viol>free_viol_max → REJECT
+(임계 정본은 config/pipeline.yaml s4.* — A-1 해소로 docstring 하드코딩 제거).
 UNCERTAIN이면 차순위 가설로 1회 재시도 (coarse 가설엔 ICP 예산 보상 — 검증 [M5]).
 """
 from __future__ import annotations
@@ -19,18 +20,51 @@ class Verifier:
     def __init__(self, K: CameraIntrinsics, sym: SymmetryHandler,
                  sigma_lidar: float = 0.008, theta_acc: float = 0.7,
                  theta_rej: float = 0.3, n_inlier_min: int = 25,
-                 free_viol_max: float = 0.15,
+                 free_viol_max: float = 0.15, splat_stride: int = 4,
+                 tau_z_mult: float = 3.0, huber_mult: float = 1.5,
+                 icp_schedule_rel: list | None = None, icp_tau_floor_m: float = 0.02,
                  calibrator: ConfidenceCalibrator | None = None):
         self.K = K
         self.sym = sym
-        self.tau_z = 3.0 * sigma_lidar          # 03 §2.6
-        self.scorer = HypothesisScorer(K, tau_z=self.tau_z)
-        self.icp = ProjectiveICP(K, huber_delta=1.5 * sigma_lidar)
+        self.tau_z = tau_z_mult * sigma_lidar   # 03 §2.6
+        self.scorer = HypothesisScorer(K, stride=splat_stride, tau_z=self.tau_z)
+        self.icp = ProjectiveICP(K, huber_delta=huber_mult * sigma_lidar,
+                                 schedule_rel=icp_schedule_rel, tau_floor_m=icp_tau_floor_m)
         self.theta_acc = theta_acc
         self.theta_rej = theta_rej
         self.n_inlier_min = n_inlier_min
         self.free_viol_max = free_viol_max
         self.calib = calibrator or ConfidenceCalibrator()
+
+    @classmethod
+    def from_config(cls, K: CameraIntrinsics, sym: SymmetryHandler,
+                    cfg: dict | None = None,
+                    calibrator: ConfidenceCalibrator | None = None) -> "Verifier":
+        """pipeline.yaml에서 s4 임계 전량 주입 (A-1). cfg=None이면 패키지 정본 로드.
+
+        calibrator 우선순위: 인자 > cfg s4.calibrator_path(npz) > 휴리스틱 _W0.
+        """
+        from ..common.config import cfg_get, load_config
+        cfg = cfg or load_config()
+        if calibrator is None:
+            cal_path = cfg_get(cfg, "s4.calibrator_path", None)
+            if cal_path:
+                calibrator = ConfidenceCalibrator.load(cal_path)
+        sched = cfg_get(cfg, "s4.icp_schedule_rel")
+        return cls(
+            K, sym,
+            sigma_lidar=cfg_get(cfg, "sensor.sigma_lidar_m"),
+            theta_acc=cfg_get(cfg, "s4.theta_accept"),
+            theta_rej=cfg_get(cfg, "s4.theta_reject"),
+            n_inlier_min=cfg_get(cfg, "thresholds.s4_min_inlier"),
+            free_viol_max=cfg_get(cfg, "s4.free_viol_max"),
+            splat_stride=cfg_get(cfg, "s4.stride"),
+            tau_z_mult=cfg_get(cfg, "s4.tau_z_sigma_mult"),
+            huber_mult=cfg_get(cfg, "s4.huber_sigma_mult"),
+            icp_schedule_rel=[tuple(x) for x in sched],
+            icp_tau_floor_m=cfg_get(cfg, "s4.icp_tau_floor_m"),
+            calibrator=calibrator,
+        )
 
     def _evaluate(self, h: PoseHypothesis, obs_pts, obs_uv, X_m, N_m, X_verify,
                   d_cad, s2_scores, border, frame_obs=None) -> VerifyResult:
@@ -67,7 +101,8 @@ class Verifier:
         T = np.eye(4)
         T[:3, :3], T[:3, 3] = R, t
         return VerifyResult(pose=T, p_conf=p, verdict=verdict,
-                            diag={"stats": stats, "scorer": sd, "icp": icp_diag, "features": x})
+                            diag={"stats": stats, "scorer": sd, "icp": icp_diag, "features": x,
+                                  "calibrator_version": self.calib.version})
 
     def __call__(self, hyps: list[PoseHypothesis], obs_pts: np.ndarray,
                  obs_uv: np.ndarray, X_m: np.ndarray, N_m: np.ndarray,

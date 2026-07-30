@@ -114,9 +114,11 @@ def test_e2e_pose_within_spec(onboarded):
     cand = gated[0]
 
     tpl = onboarded["tpl"]
-    matcher = PointToTemplateMatcher(tpl["tdf"], tpl["tpl_center"], onboarded["diam"])
+    matcher = PointToTemplateMatcher(tpl["tdf"], tpl["tpl_center"], onboarded["diam"],
+                                     tpl_pts=tpl.get("tpl_pts"), tpl_pose=tpl.get("tpl_pose"))
     m = matcher.match(cand.pts, k=3)
     assert m.s_depth > 0.5, f"S2 정합 점수 {m.s_depth:.2f} — 정합 붕괴"
+    assert m.best.coverage > 0.9, f"정상 관측인데 coverage {m.best.coverage:.2f} (A-4 항 오작동)"
     cand.scores["depth"] = m.s_depth
 
     # -- coarse 포즈 (무학습 template_init) -----------------------------------
@@ -125,7 +127,9 @@ def test_e2e_pose_within_spec(onboarded):
 
     # -- S4: ICP 정련 + 검증 ---------------------------------------------------
     sym = SymmetryHandler(onboarded["sym"].sym_rots, onboarded["sym"].sym_axes)
-    ver = Verifier(K, sym, sigma_lidar=SIGMA)
+    from shape6d.common.config import load_config
+    cfg = load_config(); cfg["sensor"]["sigma_lidar_m"] = SIGMA   # 픽스처 σ 주입
+    ver = Verifier.from_config(K, sym, cfg)                        # A-1: 정본 경로로 조립
     X_verify = onboarded["master"][fps_indices(onboarded["master"].astype(np.float32), 1024)]
     res = ver(hyps, cand.pts.astype(np.float64), cand.uv, onboarded["master"],
               onboarded["master_n"], X_verify, onboarded["diam"],
@@ -136,3 +140,65 @@ def test_e2e_pose_within_spec(onboarded):
     assert e_pos < 0.010, f"위치 오차 {e_pos*1e3:.1f}mm ≥ 10mm (스펙 위반)"
     assert e_rot < 1.0, f"회전 오차 {e_rot:.2f}° ≥ 1° (스펙 위반)"
     assert res.verdict != "REJECT", f"정답 포즈 REJECT: p={res.p_conf:.2f} diag={res.diag['scorer']}"
+    # A-3 골든 넘버: 실측 1.60mm/0.254° 고정 (여유 25%). 2배 악화 침묵 통과 차단.
+    assert e_pos < 0.0020, f"[골든] 위치 {e_pos*1e3:.2f}mm > 2.0mm — 기준선 회귀"
+    assert e_rot < 0.32, f"[골든] 회전 {e_rot:.3f}° > 0.32° — 기준선 회귀"
+    assert res.diag["calibrator_version"] == "heuristic_w0"
+
+
+@pytest.mark.xfail(strict=True, reason="[D-9] 프레임 전역 free-space가 슬랫 틈 see-through를 "
+                   "위반으로 오판 (GT free_viol 0.31 > 0.15 — 홀채움 셀에서 발생). "
+                   "07/09 공표 수치 보존을 위해 Phase 0에서는 거동 유지, 수정은 백로그.")
+def test_e2e_frame_obs_freespace_accepts_gt(onboarded):
+    """A-3 지적 경로(frame_obs — 실제 하네스 규약) 커버. 현재 결함을 xfail로 고정 추적."""
+    fb, R_gt, t_gt = _synthetic_frame(onboarded)
+    gen = LidarPromptGenerator(voxel=0.06, min_cluster_pts=30)
+    _, clusters = gen(fb)
+    cands = [Candidate(proposal=Proposal(mask=None, bbox=np.zeros(4), score=0.5,
+                                         source="lidar_hull", cluster_id=c.id,
+                                         lidar_idx=c.point_indices, n_lidar=len(c.point_indices)),
+                       pts=fb.lidar_points[c.point_indices], uv=fb.lidar_pixels[c.point_indices])
+             for c in clusters]
+    cand = SizeGate()(cands, onboarded["diam"])[0]
+    tpl = onboarded["tpl"]
+    m = PointToTemplateMatcher(tpl["tdf"], tpl["tpl_center"], onboarded["diam"],
+                               tpl_pts=tpl.get("tpl_pts"), tpl_pose=tpl.get("tpl_pose")
+                               ).match(cand.pts, k=3)
+    hyps = coarse_poses_from_match(m, tpl["tpl_pose"], tpl["tpl_center"])
+    sym = SymmetryHandler(onboarded["sym"].sym_rots, onboarded["sym"].sym_axes)
+    ver = Verifier.from_config(K, sym)
+    X_verify = onboarded["master"][fps_indices(onboarded["master"].astype(np.float32), 1024)]
+    res = ver(hyps, cand.pts.astype(np.float64), cand.uv, onboarded["master"],
+              onboarded["master_n"], X_verify, onboarded["diam"],
+              s2_scores={"depth": m.s_depth},
+              frame_obs=(fb.lidar_pixels, fb.lidar_points[:, 2]))
+    assert res.verdict != "REJECT", (
+        f"frame_obs 경로에서 정답 REJECT: free_viol={res.diag['stats']['free_viol']:.3f}")
+
+
+def test_coverage_blocks_small_blob(onboarded):
+    """A-4 회귀: 팔레트 일부만 덮는 '작은 점 뭉치'는 coverage로 게이트 미달이어야 한다.
+
+    수정 전에는 단방향 점수가 만점(≈1.0)이라 S2를 통과했다 (10 §5 A-4)."""
+    tpl = onboarded["tpl"]
+    fb, _, _ = _synthetic_frame(onboarded)
+    gen = LidarPromptGenerator(voxel=0.06, min_cluster_pts=30)
+    _, clusters = gen(fb)
+    cands = [Candidate(proposal=Proposal(mask=None, bbox=np.zeros(4), score=0.5,
+                                         source="lidar_hull", cluster_id=c.id,
+                                         lidar_idx=c.point_indices, n_lidar=len(c.point_indices)),
+                       pts=fb.lidar_points[c.point_indices], uv=fb.lidar_pixels[c.point_indices])
+             for c in clusters]
+    pall = SizeGate()(cands, onboarded["diam"])[0].pts
+    # 팔레트 관측 중 한 모서리 근방 20cm 반경만 남긴 blob
+    corner = pall[np.argmin(pall[:, 0] + pall[:, 1])]
+    blob = pall[np.linalg.norm(pall - corner, axis=1) < 0.20]
+    assert len(blob) >= 30
+    mt = PointToTemplateMatcher(tpl["tdf"], tpl["tpl_center"], onboarded["diam"],
+                                tpl_pts=tpl.get("tpl_pts"), tpl_pose=tpl.get("tpl_pose"))
+    m_full = mt.match(pall, k=1)
+    m_blob = mt.match(blob, k=1)
+    assert m_blob.best.coverage < 0.45, f"blob coverage {m_blob.best.coverage:.2f} — 재현율 항 무력"
+    assert m_blob.s_depth < 0.5 * m_full.s_depth, (
+        f"blob 최종점수 {m_blob.s_depth:.2f} vs full {m_full.s_depth:.2f} — A-4 미차단")
+    assert m_blob.best.s_oneway > m_blob.s_depth, "편도점수가 블렌드보다 낮음 — 정의 역전"

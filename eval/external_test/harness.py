@@ -21,33 +21,10 @@ from shape6d.proposal.prompt_gen import LidarPromptGenerator
 from shape6d.verify.symmetry_eval import SymmetryHandler
 from shape6d.verify.verifier import Verifier
 
-# SOS Lab ML-X(80) 각도 분해능 (03 §1.4b)
-MLX80_DH_DEG = 0.14
-MLX80_DV_DEG = 0.42
-
-
-def sparsify_fixed_grid(depth_m: np.ndarray, K: CameraIntrinsics,
-                        dh_deg: float = MLX80_DH_DEG, dv_deg: float = MLX80_DV_DEG,
-                        sigma: float = 0.0, seed: int = 0):
-    """dense depth → 고정 각도 격자 샘플 포인트 (카메라계 [N,3]).
-
-    카메라 픽셀의 각도 피치(≈1/fx rad)를 LiDAR 격자(δh, δv)로 재샘플 —
-    격자 방향에 가장 가까운 픽셀 1개만 유지 (실측치 선택, 보간 없음: A1).
-    """
-    H, W = depth_m.shape
-    rng = np.random.default_rng(seed)
-    step_u = max(1, int(round(np.deg2rad(dh_deg) * K.fx)))
-    step_v = max(1, int(round(np.deg2rad(dv_deg) * K.fy)))
-    vs, us = np.meshgrid(np.arange(0, H, step_v), np.arange(0, W, step_u), indexing="ij")
-    z = depth_m[vs, us]
-    ok = z > 1e-6
-    u, v, z = us[ok].astype(np.float64), vs[ok].astype(np.float64), z[ok].astype(np.float64)
-    x = (u - K.cx) * z / K.fx
-    y = (v - K.cy) * z / K.fy
-    pts = np.stack([x, y, z], 1).astype(np.float32)
-    if sigma > 0:
-        pts[:, 2] += rng.normal(0, sigma, len(pts)).astype(np.float32)
-    return pts
+# 희소화 정본은 shape6d.common.sparsify — 여기서는 재수출 (기존 임포트 호환)
+from shape6d.common.sparsify import (  # noqa: F401
+    MLX80_DH_DEG, MLX80_DV_DEG, sparsify_fixed_grid,
+)
 
 
 def onboard_mesh(mesh: trimesh.Trimesh, n_surface: int = 60000, n_master: int = 8192,
@@ -93,7 +70,9 @@ def run_frame(onb: dict, fb, K: CameraIntrinsics, sigma: float = 0.008,
     gated = sorted(gated, key=lambda c: -c.pts.shape[0])[:max_candidates]
 
     matcher = PointToTemplateMatcher(onb["tpl"]["tdf"], onb["tpl"]["tpl_center"],
-                                     onb["diam"], view_mask=view_mask, top_views_pass2=k)
+                                     onb["diam"], view_mask=view_mask, top_views_pass2=k,
+                                     tpl_pts=onb["tpl"].get("tpl_pts"),
+                                     tpl_pose=onb["tpl"].get("tpl_pose"))
     sym_h = SymmetryHandler(onb["sym"].sym_rots, onb["sym"].sym_axes)
     ver = Verifier(K, sym_h, sigma_lidar=sigma)
 

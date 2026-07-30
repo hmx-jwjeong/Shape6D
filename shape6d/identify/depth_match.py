@@ -35,10 +35,12 @@ def _rotz(theta: float) -> np.ndarray:
 
 @dataclass
 class MatchHypo:
-    score: float
+    score: float                # 최종 점수 = s_oneway × coverage (coverage 미가용 시 s_oneway)
     view: int
     theta: float
     jitter: np.ndarray          # [3] 병진 jitter (템플릿 프레임)
+    s_oneway: float = -1.0      # 관측→템플릿 편도 점수 (구 score, 진단용)
+    coverage: float = 1.0       # 템플릿 측 재현율 (A-4 — tpl_pts 미제공 시 1.0)
 
 
 @dataclass
@@ -55,7 +57,10 @@ class PointToTemplateMatcher:
     def __init__(self, tdf: np.ndarray, tpl_center: np.ndarray, diameter: float,
                  k_inplane_pass1: int = 12, k_inplane_pass2: int = 24,
                  top_views_pass2: int = 3, jitter_vox: int = 2,
-                 view_mask: np.ndarray | None = None):
+                 view_mask: np.ndarray | None = None,
+                 tpl_pts: np.ndarray | None = None,
+                 tpl_pose: np.ndarray | None = None,
+                 coverage_tau_rel: float = TDF_TRUNC):
         """tdf [V,48³] f16, tpl_center [V,3] (뷰 프레임 median), view_mask [V] bool
         (팔레트류 수평 밴드 프루닝 옵션, 03 §1.4e)."""
         self.tdf = tdf
@@ -69,6 +74,34 @@ class PointToTemplateMatcher:
         self.jitters = np.stack(np.meshgrid(j, j, j, indexing="ij"), -1).reshape(-1, 3)
         self.n_views = tdf.shape[0]
         self.view_mask = view_mask if view_mask is not None else np.ones(self.n_views, bool)
+        # A-4 coverage: 템플릿 측 재현율. tpl_pts(모델계 [V,P,3]) + tpl_pose([V,4,4],
+        # 센터링 흡수됨)가 있으면 뷰별 "TDF 도메인 좌표" 포인트를 선계산해 둔다.
+        # 미제공 시 coverage=1.0 (구 동작 유지 — 단방향 점수).
+        self.tpl_view_pts: np.ndarray | None = None
+        self.cov_tau = float(coverage_tau_rel) * self.D
+        if tpl_pts is not None and tpl_pose is not None:
+            Rv = tpl_pose[:, :3, :3]                                  # [V,3,3]
+            tv = tpl_pose[:, :3, 3]                                   # [V,3]
+            vp = np.einsum("vij,vpj->vpi", Rv, tpl_pts) + tv[:, None]  # 모델계→뷰계
+            self.tpl_view_pts = (vp - tpl_center[:, None]).astype(np.float32)
+
+    def _coverage(self, q: np.ndarray, v: int) -> float:
+        """템플릿 뷰 v의 가시 포인트 중 관측 q(TDF 도메인)와 cov_tau 이내인 비율.
+
+        단방향 s_oneway는 '작은 점 뭉치'에 만점을 주는 취약점이 있다(10 §5 A-4) —
+        템플릿 재현율을 곱해 관측이 템플릿 표면을 얼마나 덮는지를 점수에 반영한다.
+        """
+        if self.tpl_view_pts is None:
+            return 1.0
+        T = self.tpl_view_pts[v]                                       # [P,3]
+        # P(≤512)×N 거리 — N이 크면 청크 (순수 numpy, A1: 보간 없음)
+        step = 4096
+        dmin = np.full(len(T), np.inf, dtype=np.float32)
+        qf = q.astype(np.float32)
+        for s0 in range(0, len(qf), step):
+            d = np.linalg.norm(T[:, None, :] - qf[None, s0:s0 + step, :], axis=-1)
+            dmin = np.minimum(dmin, d.min(axis=1))
+        return float((dmin < self.cov_tau).mean())
 
     def _score_once(self, q: np.ndarray, v: int) -> float:
         d = tdf_lookup(self.tdf[v], q, self.D)
@@ -103,7 +136,9 @@ class PointToTemplateMatcher:
                 s = self._score_once(q0 + dj, int(v))
                 if s > best_s:
                     best_s, best_d = s, dj
-            hypos.append(MatchHypo(score=best_s, view=int(v), theta=th_best, jitter=best_d.copy()))
+            cov = self._coverage(q0 + best_d, int(v))
+            hypos.append(MatchHypo(score=best_s * cov, view=int(v), theta=th_best,
+                                   jitter=best_d.copy(), s_oneway=best_s, coverage=cov))
 
         hypos.sort(key=lambda h: h.score, reverse=True)
         best = hypos[0] if hypos else MatchHypo(0.0, 0, 0.0, np.zeros(3))

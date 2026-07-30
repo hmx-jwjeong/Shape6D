@@ -25,6 +25,8 @@ def _exp_so3(w: np.ndarray) -> np.ndarray:
 class ProjectiveICP:
     def __init__(self, K: CameraIntrinsics, huber_delta: float = 0.012,
                  schedule: list[tuple[float, int, int]] | None = None,
+                 schedule_rel: list[tuple[float, int, int]] | None = None,
+                 tau_floor_m: float = 0.02,
                  conv_rot: float = 1e-4, conv_trans: float = 5e-5,
                  max_win: int = 15, lam: float = 1e-9, w_pp: float = 0.0):
         """schedule: [(tau_assoc_m, stride, iters), ...] — 기본은 D_cad 기준 refine()에서 생성.
@@ -36,6 +38,9 @@ class ProjectiveICP:
         self.K = K
         self.delta = huber_delta
         self.schedule = schedule
+        # A-1: yaml s4.icp_schedule_rel 주입 경로 — τ = max(tau_floor_m·(마지막 단만), τ_rel·D_cad)
+        self.schedule_rel = schedule_rel
+        self.tau_floor_m = tau_floor_m
         self.conv_rot = conv_rot
         self.conv_trans = conv_trans
         self.max_win = max_win
@@ -72,14 +77,16 @@ class ProjectiveICP:
     def refine(self, R: np.ndarray, t: np.ndarray, P: np.ndarray,
                X_m: np.ndarray, N_m: np.ndarray, d_cad: float) -> tuple[np.ndarray, np.ndarray, dict]:
         """반환: (R, t, diag{n_assoc, rmse, cond_H, degenerate, iters})."""
-        sched = self.schedule or [
+        if self.schedule is not None:
+            sched = self.schedule
+        else:
             # 템플릿 coarse 오차(뷰 17.8° + in-plane 7.5° → 변위 ~0.2D)의 수렴 반경 확보:
-            # 1단계 τ는 0.25D — Huber+p2pl가 오대응을 감쇠하며 점진 축소
-            (0.25 * d_cad, 4, 6),
-            (0.10 * d_cad, 4, 4),
-            (0.05 * d_cad, 2, 4),
-            (max(0.02, 0.02 * d_cad), 2, 4),
-        ]
+            # 1단계 τ는 0.25D — Huber+p2pl가 오대응을 감쇠하며 점진 축소.
+            # 정본은 yaml s4.icp_schedule_rel (아래 기본값과 동일 — A-1 이중관리 제거)
+            rel = self.schedule_rel or [(0.25, 4, 6), (0.10, 4, 4), (0.05, 2, 4), (0.02, 2, 4)]
+            sched = [(r * d_cad, st, it) for r, st, it in rel]
+            last = sched[-1]
+            sched[-1] = (max(self.tau_floor_m, last[0]), last[1], last[2])
         R, t = R.copy(), t.copy()
         diag = {"n_assoc": 0, "rmse": np.inf, "cond_H": 0.0, "degenerate": True, "iters": 0}
         H_last = None
