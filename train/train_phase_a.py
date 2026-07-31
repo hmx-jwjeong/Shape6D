@@ -144,6 +144,10 @@ def main():
     ap.add_argument("--lr", type=float, default=None, help="미지정 시 LR[enc]·√(bs/48) 스케일")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default=str(DATA / "runs"))
+    ap.add_argument("--init-from", default=None,
+                    help="체크포인트에서 이어 학습(추가학습) — 태그에 ext 접미사")
+    ap.add_argument("--ext-name", default="ext",
+                    help="이어학습 태그 접미사 (2차 연장은 ext2 등으로 충돌 방지)")
     ap.add_argument("--no-dash", action="store_true", help="대시보드 자동 기동 끄기")
     a = ap.parse_args()
     if not a.no_dash:
@@ -159,6 +163,8 @@ def main():
         parts.append(a.sched)                  # 태그 충돌 방지 (a1_s0 cosine 덮어쓰기 사고)
     if a.bs != 48:
         parts.append(f"bs{a.bs}")
+    if a.init_from:
+        parts.append(a.ext_name)               # 이어학습 런 태그 분리 (덮어쓰기 방지)
     tag = "_".join(parts) + f"_s{a.seed}"
 
     bank = ObjBank()
@@ -167,6 +173,10 @@ def main():
     tr, va = ld("train"), ld("val")
     enc = build_encoder(a.enc).to(DEV)
     matcher = MiniMatcher().to(DEV)
+    if a.init_from:
+        sd = torch.load(a.init_from, map_location=DEV)
+        enc.load_state_dict(sd["enc"]); matcher.load_state_dict(sd["matcher"])
+        print(f"[{tag}] init from {a.init_from}", flush=True)
     npar = sum(p.numel() for p in enc.parameters()) / 1e6
     npm = sum(p.numel() for p in matcher.parameters()) / 1e6
     print(f"[{tag}] enc {npar:.2f}M + matcher {npm:.2f}M · train {len(tr['oi'])} · "
@@ -186,6 +196,7 @@ def main():
         "obj_train": int(len(torch.unique(tr["oi"]))),
         "obj_val_unseen": int(len(torch.unique(va["oi"]))),
         "sparsify": "ML-X 격자 σ3mm · npt U[256,4096] · frame_correction 적용",
+        "init_from": a.init_from,
     }, open(out / f"cfg_{tag}.json", "w"), indent=1, ensure_ascii=False)
 
     import torch.nn as nn
