@@ -26,6 +26,13 @@ HDR_RE = re.compile(r"\[(\w+)\] enc ([\d.]+)M \+ matcher ([\d.]+)M · train (\d+
 # dataviz 검증 팔레트 (CVD ΔE 통과) — 후보 태그별 고정 배정
 COLORS = {"a0": "#2a78d6", "a1": "#eb6834", "a1d": "#1baf7a", "a2": "#eda100"}
 
+
+def _shade(hex_color: str, t: float) -> str:
+    """base 색을 흰색 쪽으로 t(0~1)만큼 블렌드 — 같은 그룹 내 TRY 시간순 그라데이션."""
+    r, g, b = (int(hex_color[i:i + 2], 16) for i in (1, 3, 5))
+    mix = lambda c: round(c + (255 - c) * t)
+    return f"#{mix(r):02x}{mix(g):02x}{mix(b):02x}"
+
 # 구 런(cfg 덤프 이전)용 정적 상수 — train_phase_a.py/pem_mini.py 현행 값과 동기
 STATIC_CFG = {
     "batch_size": 48, "optimizer": "AdamW(wd=0.05)",
@@ -110,11 +117,24 @@ def collect(log_path: Path | None) -> dict:
                 return None
             return round((xs[-1][key] - xs[0][key]) / (xs[-1]["ep"] - xs[0]["ep"]), 4)
         conv = {"ce": slope("ce"), "rot_p50": slope("rot_p50"), "le30": slope("le30")}
+        # 시작 시각: cfg 파일 생성 시각(런 시작 시 덤프) > hist 최종 갱신 시각
+        start_ts = cfgf.stat().st_mtime if cfgf.exists() else r["mtime"]
         out.append({"tag": tag, "hist": h, "ep": ep, "total_ep": tot,
                     "elapsed_m": r["elapsed_m"], "eta_m": eta, "live": live,
-                    "cfg": cfg, "conv": conv,
-                    "color": COLORS.get(tag.split("_")[0], "#e87ba4")})
-    out.sort(key=lambda x: (-x["live"], x["tag"]))
+                    "cfg": cfg, "conv": conv, "start_ts": start_ts})
+    # 색상: 그룹(a0/a1/…) 기본색은 유지, 같은 그룹 내 TRY는 시간순 그라데이션
+    # (오래된 런일수록 연하게, 최신 런이 원색)
+    groups: dict[str, list] = {}
+    for r in out:
+        groups.setdefault(r["tag"].split("_")[0], []).append(r)
+    for base_tag, members in groups.items():
+        base = COLORS.get(base_tag, "#e87ba4")
+        members.sort(key=lambda x: x["start_ts"])
+        n = len(members)
+        for i, m in enumerate(members):
+            t = 0.55 * (n - 1 - i) / (n - 1) if n > 1 else 0.0
+            m["color"] = _shade(base, t)
+    out.sort(key=lambda x: -x["start_ts"])  # 최신 런이 위
     return {"runs": out, "proc_alive": alive, "ts": now}
 
 
@@ -143,7 +163,12 @@ h1{font-size:19px;margin:0}
 .runcard{border:1px solid var(--line);border-radius:10px;background:var(--panel);
          padding:9px 13px;min-width:230px}
 .runcard b{font-size:15px}
-.runcard .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px}
+.ptry{margin:4px 0;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.ptry summary{cursor:pointer;padding:7px 12px;font-weight:700}
+.ptry .psub{color:var(--sub);font-weight:400;font-size:11px;margin-left:8px;
+            font-variant-numeric:tabular-nums}
+.ptry .pt{border:none;margin:0;padding-top:0}
 .runcard .kv{font-size:12px;color:var(--sub);margin-top:3px;
              font-variant-numeric:tabular-nums}
 .conv{font-size:11px;margin-top:3px}
@@ -172,8 +197,8 @@ td{padding:5px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
 <span id="proc" class="pill done">확인 중</span>
 <span id="meta"></span></header>
 <div class="runs" id="runs"></div>
-<details id="parambox" open><summary style="cursor:pointer;font-weight:700;margin:6px 0">
-학습 파라미터 (런별 실사용 값)</summary><div id="params"></div></details>
+<div style="font-weight:700;margin:6px 0">학습 파라미터 (TRY별 토글 · 시간순)</div>
+<div id="params"></div>
 <div class="grid" id="charts"></div>
 <table id="tbl"></table>
 <div class="tt" id="tt"></div>
@@ -206,13 +231,13 @@ function chart(id,runs,cfg){
  if(cfg.ref){const y=Y(cfg.ref.v);
    s+=`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="var(--sub)" stroke-dasharray="4 3"/>`+
       `<text class="tick" x="${W-R}" y="${y-4}" text-anchor="end">${cfg.ref.label}</text>`;}
- runs.forEach(r=>{
+ runs.slice().reverse().forEach(r=>{  // 최신 런이 맨 위에 그려지도록 (배열은 최신순)
    const pts=r.hist.filter(h=>h[cfg.key]!=null).map(h=>[X(h.ep),Y(h[cfg.key]),h.ep,h[cfg.key]]);
    if(!pts.length)return;
    s+=`<polyline fill="none" stroke="${r.color}" stroke-width="2" points="${pts.map(p=>p[0]+','+p[1]).join(' ')}"/>`;
    const lp=pts[pts.length-1];
    s+=`<circle cx="${lp[0]}" cy="${lp[1]}" r="3.5" fill="${r.color}"/>`+
-      `<text x="${Math.min(lp[0]+6,W-40)}" y="${lp[1]-6}" fill="${r.color}" font-size="11" font-weight="700">${r.tag.split('_')[0]}</text>`;
+      `<text x="${Math.min(lp[0]+6,W-90)}" y="${lp[1]-6}" fill="${r.color}" font-size="10" font-weight="700">${r.tag.replace(/_s[0-9]+$/,'')}</text>`;
    pts.forEach(p=>{s+=`<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="transparent" `+
      `data-tt="${r.tag} · ep${p[2]}&#10;${cfg.title.split('·')[1]||cfg.key}: ${cfg.pct?(p[3]*100).toFixed(1)+'%':p[3].toFixed(3)}"/>`});
  });
@@ -232,25 +257,31 @@ async function refresh(){
  document.getElementById('proc').className='pill '+(d.proc_alive?'live':'done');
  document.getElementById('proc').textContent=d.proc_alive?'● 학습 프로세스 실행 중':'프로세스 없음';
  document.getElementById('meta').textContent='갱신 '+new Date(d.ts*1000).toLocaleTimeString()+' · 60s 자동';
+ const stamp=ts=>{const d=new Date(ts*1000);
+  return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`};
  document.getElementById('runs').innerHTML=d.runs.map(r=>{
   const last=r.hist[r.hist.length-1]||{};
   return `<div class="runcard"><span class="dot" style="background:${r.color}"></span>`+
    `<b>${r.tag}</b> <span class="pill ${r.live?'live':'done'}">${r.live?'LIVE':'완료/대기'}</span>`+
-   `<div class="kv">ep ${r.ep}${r.total_ep?'/'+r.total_ep:''}`+
+   `<div class="kv">시작 ${stamp(r.start_ts)} · ep ${r.ep}${r.total_ep?'/'+r.total_ep:''}`+
    (r.eta_m?` · ETA ~${r.eta_m}분`:'')+(r.elapsed_m?` · 경과 ${r.elapsed_m}분`:'')+`</div>`+
    `<div class="kv"><a href="/reports/${r.tag}/index.html" target="_blank">리포트 →</a></div>`+
    `<div class="kv">rot_p50 <b>${(last.rot_p50??0).toFixed(1)}°</b> · ≤30° <b>${((last.le30??0)*100).toFixed(1)}%</b> · CE ${(last.ce??0).toFixed(2)}</div>`+
    `<div class="conv">수렴(최근5ep/ep): CE <b>${fmt(r.conv.ce)}</b> · rot <b>${fmt(r.conv.rot_p50)}°</b> · ≤30° <b>${fmt(r.conv.le30,true)}</b>`+
    ` ${(r.conv.ce!==null&&Math.abs(r.conv.ce)<0.01)?'<span class="pill done">포화 근접</span>':''}</div></div>`;
  }).join('');
+ const open=new Set([...document.querySelectorAll('.ptry[open]')].map(e=>e.dataset.tag));
  document.getElementById('params').innerHTML=d.runs.map(r=>
-  `<div style="margin:6px 0 2px"><span class="dot" style="background:${r.color};display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px"></span><b>${r.tag}</b></div>`+
+  `<details class="ptry" data-tag="${r.tag}"${open.has(r.tag)?' open':''}>`+
+  `<summary><span class="dot" style="background:${r.color}"></span>${r.tag}`+
+  `<span class="psub">시작 ${stamp(r.start_ts)} · ep ${r.ep}${r.total_ep?'/'+r.total_ep:''}`+
+  `${r.live?' · LIVE':''}</span></summary>`+
   `<div class="pt">`+PKEYS.filter(([k])=>r.cfg[k]!==undefined).map(([k,l])=>
-    `<div><span>${l}</span><b>${r.cfg[k]}</b></div>`).join('')+`</div>`).join('');
+    `<div><span>${l}</span><b>${r.cfg[k]}</b></div>`).join('')+`</div></details>`).join('');
  document.getElementById('charts').innerHTML=CHARTS.map((c,i)=>
   `<div class="card"><h3>${c.title}</h3><div class="sub">x = epoch</div>${chart(i,d.runs,c)}</div>`).join('');
  const rows=d.runs.map(r=>{const l=r.hist[r.hist.length-1]||{};
-  return `<tr><td><span class="dot" style="background:${r.color};display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px"></span>${r.tag}</td>`+
+  return `<tr><td><span class="dot" style="background:${r.color}"></span>${r.tag}</td>`+
   `<td>${r.ep}${r.total_ep?'/'+r.total_ep:''}</td><td>${(l.rot_p50??0).toFixed(1)}°</td>`+
   `<td>${((l.le30??0)*100).toFixed(1)}%</td><td>${(l.trans_rel_p50??0).toFixed(3)}D</td>`+
   `<td>${(l.ce??0).toFixed(2)}</td><td>${(l.rot_deg??0).toFixed(0)}°</td><td>${((l.bg_rate??0)*100).toFixed(0)}%</td>`+
