@@ -152,7 +152,14 @@ def main():
     torch.manual_seed(a.seed); np.random.seed(a.seed)
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     lr = a.lr if a.lr is not None else LR[a.enc] * (a.bs / 48) ** 0.5
-    tag = f"{a.enc}_{a.opt}_bs{a.bs}_s{a.seed}" if (a.opt != "adamw" or a.bs != 48)         else f"{a.enc}_s{a.seed}"
+    parts = [a.enc]
+    if a.opt != "adamw":
+        parts.append(a.opt)
+    if a.opt == "adamw" and a.sched != "onecycle":
+        parts.append(a.sched)                  # 태그 충돌 방지 (a1_s0 cosine 덮어쓰기 사고)
+    if a.bs != 48:
+        parts.append(f"bs{a.bs}")
+    tag = "_".join(parts) + f"_s{a.seed}"
 
     bank = ObjBank()
     ld = lambda sp: {k: torch.from_numpy(v) for k, v in
@@ -264,6 +271,14 @@ def main():
         torch.save(dict(enc=enc.state_dict(), matcher=matcher.state_dict()),
                    out / f"ckpt_{tag}.pt")
     print(f"[{tag}] 완료 {(time.time()-t0)/60:.1f}분", flush=True)
+    # 결과 리포트 자동 생성 (규약 2026-07-31) — 실패해도 학습 결과는 보존
+    try:
+        import subprocess as sp
+        sp.Popen([sys.executable, "-u", str(Path(__file__).parent / "make_run_report.py"),
+                  "--tag", tag], start_new_session=True)
+        print(f"[{tag}] 리포트 생성 시작 → reports/{tag}/index.html", flush=True)
+    except Exception as e:
+        print(f"[{tag}] 리포트 생성 실패(무시): {e}", flush=True)
 
 
 if __name__ == "__main__":

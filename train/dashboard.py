@@ -238,6 +238,7 @@ async function refresh(){
    `<b>${r.tag}</b> <span class="pill ${r.live?'live':'done'}">${r.live?'LIVE':'완료/대기'}</span>`+
    `<div class="kv">ep ${r.ep}${r.total_ep?'/'+r.total_ep:''}`+
    (r.eta_m?` · ETA ~${r.eta_m}분`:'')+(r.elapsed_m?` · 경과 ${r.elapsed_m}분`:'')+`</div>`+
+   `<div class="kv"><a href="/reports/${r.tag}/index.html" target="_blank">리포트 →</a></div>`+
    `<div class="kv">rot_p50 <b>${(last.rot_p50??0).toFixed(1)}°</b> · ≤30° <b>${((last.le30??0)*100).toFixed(1)}%</b> · CE ${(last.ce??0).toFixed(2)}</div>`+
    `<div class="conv">수렴(최근5ep/ep): CE <b>${fmt(r.conv.ce)}</b> · rot <b>${fmt(r.conv.rot_p50)}°</b> · ≤30° <b>${fmt(r.conv.le30,true)}</b>`+
    ` ${(r.conv.ce!==null&&Math.abs(r.conv.ce)<0.01)?'<span class="pill done">포화 근접</span>':''}</div></div>`;
@@ -279,6 +280,18 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        if self.path.startswith("/reports/"):
+            # 런 리포트 정적 서빙 (reports/{tag}/index.html·png)
+            import mimetypes
+            rel = self.path[len("/reports/"):].split("?")[0]
+            f = (RUNS.parent / "reports" / rel).resolve()
+            base = (RUNS.parent / "reports").resolve()
+            if str(f).startswith(str(base)) and f.is_file():
+                self._send(f.read_bytes(),
+                           mimetypes.guess_type(str(f))[0] or "application/octet-stream")
+            else:
+                self.send_response(404); self.end_headers()
+            return
         if self.path.startswith("/api/runs"):
             self._send(json.dumps(collect(self.log_path)).encode(),
                        "application/json; charset=utf-8")
