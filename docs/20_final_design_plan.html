@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shape6D 최종 확정 설계·실행 계획 (정본 v1.0)</title>
+<title>Shape6D 최종 확정 설계·실행 계획 (정본 v1.1)</title>
 <style>
   :root {
     --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#ffffff; --panel:#f6f8fb;
@@ -107,21 +107,21 @@
   <h1>Shape6D 최종 확정 설계·실행 계획</h1>
   <span class="status">정본 · CANONICAL</span>
 </div>
-<div class="meta">v1.0 · 2026-07-30 · <b>우선순위 규약</b>: 확정 사항이 타 문서와 충돌하면 <b>본 문서가 우선</b>하며, 상세 근거·수치는 원문서(<a href="03_implementation_design.html">03</a>·<a href="10_network_design_and_critique.html">10</a>·<a href="13_backbone_pilot_report.html">13</a>~<a href="19_license_assessment.html">19</a>)를 따른다. 미결 항목은 §8 대장에만 존재한다 — 본문에 흩어진 "결정 대기"는 없다.</div>
+<div class="meta">v1.1 · 2026-07-31 (v1.0: 07-30) · <b>개정 이력</b>: v1.1 — C-9(S1 v2 선택식 ROI)·C-10(분할 무학습 확정)·C-11(Phase A 종료 규칙) 등재, D-10 해소, Phase A 현황 반영, 문헌 감사(<a href="22_training_method_literature_audit.html">22</a>) 근거 연결 · <b>우선순위 규약</b>: 확정 사항이 타 문서와 충돌하면 <b>본 문서가 우선</b>하며, 상세 근거·수치는 원문서(<a href="03_implementation_design.html">03</a>·<a href="10_network_design_and_critique.html">10</a>·<a href="13_backbone_pilot_report.html">13</a>~<a href="19_license_assessment.html">19</a>·<a href="22_training_method_literature_audit.html">22</a>)를 따른다. 미결 항목은 §8 대장에만 존재한다 — 본문에 흩어진 "결정 대기"는 없다.</div>
 
 <div class="abs">
 <b class="t">이 문서가 확정하는 것</b>
 ① <b>무엇을 만드는가</b> — 희소 LiDAR 기하 주도 제로샷 6D 포즈, SAM-6D 2단 점 매칭 구조의 클린룸 재구현, 온라인 ~8M, Orin NX &lt;1s.
 ② <b>무엇으로 채우는가</b> — 슬롯 13개의 네트워크·가중치·데이터를 <b>라이선스 초록 자산만으로</b> 확정 (조건부 자산은 전부 분리 가능한 보조 경로).
 ③ <b>어떻게 학습·검증하는가</b> — Phase 0(완료)→A→B→C, UAM은 전면 평가 전용, 게이트는 Δ(v0-geo)·ICP 수렴반경·밀도 곡선·Orin 실측.
-④ <b>무엇이 아직 미정인가</b> — §8의 D-1~D-9 아홉 건뿐이며, 어느 것도 Phase A 착수를 막지 않는다.
+④ <b>무엇이 아직 미정인가</b> — §8 대장의 잔여 7건(D-5·D-10 해소 반영)뿐이며, 어느 것도 진행을 막지 않는다.
 </div>
 
 <div class="hero">
   <div class="stat"><b>~8M / 7GF</b><span>온라인 예산 (인코더 2.4M + 매칭 5.5M) — Orin NX &lt;1s</span></div>
   <div class="stat good"><b>100% 초록</b><span>기본 경로 라이선스 (Apache·MIT·CC-BY·자체)</span></div>
   <div class="stat good"><b>40 + 1xf</b><span>테스트 현황 — Phase 0 위생 완료</span></div>
-  <div class="stat warn"><b>9건</b><span>미결 (D-1~D-9) — 착수 비차단</span></div>
+  <div class="stat warn"><b>7건</b><span>미결 잔여 (D-5·D-10 해소) — 진행 비차단</span></div>
 </div>
 
 <div class="toc">
@@ -132,7 +132,7 @@
 <a href="#s5">5. 실행 계획 — Phase 0(완료) / A / B / C</a>
 <a href="#s6">6. 검증·게이트 체계</a>
 <a href="#s7">7. 확정 결정 대장</a>
-<a href="#s8">8. 미결 대장 (D-1~D-9)</a>
+<a href="#s8">8. 미결 대장 (D — 잔여 7건)</a>
 <a href="#s9">9. 리스크와 폴백 사다리</a>
 <a href="#s10">10. 일정과 다음 액션</a>
 </div>
@@ -157,12 +157,12 @@
 
 <h2 id="s2"><span class="no">2</span>최종 아키텍처 — 전체 라인과 슬롯 확정표</h2>
 
-<figure><img src="assets_17/figP_full_line.png" alt="전체 입출력 라인"></figure>
-<div class="cap"><b>Fig 1.</b> 전체 입출력 라인 (17 Fig P). 색 = 학습(초록)/동결(파랑)/비학습(회색)/오프라인(보라)/적합(주황). PEM 내부 상세는 <a href="15_network_and_training_scope.html">15 Fig A</a>.</div>
+<figure><img src="assets_20/figP_full_line_v2.png" alt="전체 입출력 라인 v2 (S1 v2 반영)"></figure>
+<div class="cap"><b>Fig 1 (v2).</b> 전체 입출력 라인 — <b>S1 v2(C-9) 반영판</b>: RGB 마스크 ROI 선택 주경로 + 클러스터=프롬프트 시드 + 기하 폴백. 색 = 학습(초록)/동결(파랑)/비학습(회색)/오프라인(보라)/적합(주황). 생성: <code>assets_20/make_figp_v2.py</code> · 구판(v1, 평면 제거 경로)은 <a href="17_full_line_redesign_and_training_plan.html">17 Fig P</a>에 보존. PEM 내부 상세는 <a href="15_network_and_training_scope.html">15 Fig A</a>.</div>
 
 <table>
 <tr><th style="width:5%">단계</th><th style="width:17%">슬롯</th><th style="width:26%">확정 (라이선스 실사 반영판)</th><th class="c" style="width:9%">가중치</th><th class="c" style="width:10%">라이선스</th><th>비고</th></tr>
-<tr><td rowspan="2"><b>S1</b></td><td>클러스터·프롬프트</td><td>평면 제거 + voxel BFS → 포인트 프롬프트</td><td class="c">비학습</td><td class="c"><span class="tag g">자체</span></td><td>구현됨</td></tr>
+<tr><td rowspan="2"><b>S1</b></td><td>ROI·프롬프트 <b>(v2)</b></td><td><b>RGB 마스크 ROI 선택 주경로</b> — 거친 클러스터(<b>평면 제거 폐지</b>) → 투영 박스/점 프롬프트 → 마스크(침식 δpx) ∩ LiDAR = ROI · <b>폴백</b>: 유효 마스크 0 → 클러스터 ROI 직행</td><td class="c">비학습</td><td class="c"><span class="tag g">자체</span></td><td><b>C-9 개정 (07-31)</b> — 삭제식→선택식. v1(평면 제거 + voxel BFS)은 폴백 경로로 강등</td></tr>
 <tr><td>분할기</td><td><b>EfficientViT-SAM-L0</b> (동결) · 백업 <b>MobileSAM</b></td><td class="c">동결</td><td class="c"><span class="tag g">Apache / MIT</span></td><td>SAM 3(840M)은 오프라인 전용 (17 R1-1)</td></tr>
 <tr><td rowspan="3"><b>S2</b></td><td>① 크기 ② TDF</td><td>metric 게이트 + TDF 정합 <b>+ coverage 항</b></td><td class="c">비학습</td><td class="c"><span class="tag g">자체</span></td><td>coverage 구현·검증 완료 (A-4)</td></tr>
 <tr><td>③ 기하 디스크립터</td><td>PointNet-lite 0.35M — <b>자체 대조학습</b> (GSO GT 대응 InfoNCE)</td><td class="c">학습</td><td class="c"><span class="tag g">자체</span></td><td>GeDi는 무라이선스 → 논문 참조만 (19 §3.3)</td></tr>
@@ -210,7 +210,7 @@
 <table>
 <tr><th style="width:9%">Phase</th><th style="width:14%">기간</th><th style="width:40%">내용 · 산출물</th><th>게이트</th></tr>
 <tr class="done"><td><b>0 위생</b></td><td class="c"><b>완료</b><br><span class="tiny">2026-07-30</span></td><td>✓ config 단일 출처화(A-1: <code>from_config</code> 주입) ✓ 보정기 로드 배선+버전 기록(A-2) ✓ 골든 테스트 1.60mm/0.254°(A-3) ✓ TDF coverage 항(A-4) ✓ 합성 희소화 정식화 · <b>테스트 40+1xf</b> · 잔여: M0-2 Orin 실측(HW 대기)·BOP 다운로드</td><td>—</td></tr>
-<tr><td><b>A 파일럿</b></td><td class="c">2주</td><td><b>최소 매칭부 클린룸 구현</b>(coarse 1blk → soft 대응 → SVD, 포즈 회귀 과제 — 뷰 분류 폐기) → 인코더 4후보 + 무학습 기준선(d) 재선정. 규약: 수렴 확인 의무 · 후보별 lr(사전학습 3e-4/스크래치 1e-3) · 시드 3종 · 팔레트 CAD 평가 포함</td><td><b>G-A</b>: 미학습 194종 ≤30° 진입률이 무학습 기준선 상회 + 밀도 낙폭 곡선 + TRT 빌드 → <b>인코더 1종 확정</b></td></tr>
+<tr><td><b>A 파일럿</b></td><td class="c">2주<br><span class="tiny">진행 중</span></td><td><b>최소 매칭부 클린룸 구현</b>(coarse 2blk → soft 대응 → SVD, 포즈 회귀 과제 — 뷰 분류 폐기) → 인코더 재선정. <b>현황(07-31)</b>: a1 26.6% vs a0 18.3% vs 초기 10.0% (미학습 32종 ≤30°, <code>reports/</code> 자동 추적) — 첫 유효 제로샷 신호 확보. 잔여는 <b>R1·R2·R3 + 종료 규칙 C-11</b>. 규약: 수렴 확인 의무 · 후보별 lr · 시드 3종 · 팔레트 CAD 평가 포함</td><td><b>G-A</b>: 미학습 물체 ≤30° 진입률이 무학습 기준선 상회 + 밀도 낙폭 곡선 + TRT 빌드 → <b>인코더 1종 확정</b></td></tr>
 <tr><td><b>B 본학습</b></td><td class="c">4~5주</td><td>full PEM(인코더+coarse2+fine2, ~8M) — GSO ~104만 샘플 · 증강 5종+레짐 2종 · g* 손실 · bs64+activation ckpt(CAD측 2뷰 gradient — 활성화 3배) · 평가 훅 500/10k/25k</td><td><b>G-B</b>: Δ(v0-geo)&gt;0 (팔레트 스위트) + UAM 70샘플 ≥ v0-geo + 밀도 곡선 유지</td></tr>
 <tr><td><b>C 증류·보정</b></td><td class="c">2~3주</td><td>① 매칭 축소판 자기 증류(H192→128·3→2blk, 각 1/3 스케줄) ② S2 디스크립터 InfoNCE ③ 보정기 적합(합성+sBOP — 라벨 진단 선행) ④ TRT 3분할 엔진 → Orin E2E</td><td><b>G-C</b>: E2E &lt;1s 실측 + FA&lt;1% 리콜(도메인별) + UNCERTAIN 재시도 검증</td></tr>
 </table>
@@ -239,9 +239,12 @@
 <tr><td>C-6</td><td>config 단일 출처 = <code>pipeline.yaml</code> (현행 거동 정본화: free_viol 0.15 · stride 4 · ICP 스케줄)</td><td class="c">07-30</td><td>yaml 주석 + <code>common/config.py</code></td></tr>
 <tr><td>C-7</td><td>학습 규약: 수렴 확인 의무 · 후보별 lr · 시드 3종 · 축소 파일럿 순위 채택 금지(미포화 시)</td><td class="c">07-29</td><td>13 §4.1·§6.2 → 12 §8</td></tr>
 <tr><td>C-8</td><td>게이트 재정의: 절대 BOP AR 폐기 → Δ(v0-geo)+UAM+≤30° 진입률+밀도 곡선+Orin</td><td class="c">07-29</td><td>17 R3-5</td></tr>
+<tr class="g"><td>C-9</td><td><b>S1 v2 — 삭제식→선택식 ROI</b>: RGB 마스크 ROI 선택이 주경로 (거친 클러스터는 프롬프트 시드로 강등, 평면 제거 주경로 폐지, 마스크 침식 δpx로 외부보정 오귀속 방지) + 기하 폴백(유효 마스크 0 → 클러스터 ROI 직행). 근거: 희소점 삭제식 전처리의 물체점 소실 리스크 + RGB 제안 우선 관례(SAM-6D ISM·CNOS — 22에서 원문 검증). 채택 판정은 UAM t0 A/B(ROI recall/precision + 하류 ≤30°, 평가 전용 준수)</td><td class="c">07-31</td><td>22 §3.1·§3.7 · 대화 결정</td></tr>
+<tr class="g"><td>C-10</td><td><b>학습 자원 배분 — 분할 무학습 확정</b>: SAM 계열 로컬 학습·파인튜닝 전면 배제(동결 고정), 로컬 GPU 학습은 PEM(S3)+S2 디스크립터에 100% 집중. 분할 병목 신호 시에도 순서는 프롬프트/보정 → 그래도 불충분할 때만 재론. 근거: 직접 비교 4편 전부 분할 무학습·포즈망만 학습(22 §4) + 규모 비대칭(SA-1B 대비 로컬 47k) + UAM 학습 금지(C-4)와 정합</td><td class="c">07-31</td><td>22 §5-A · 대화 결정</td></tr>
+<tr class="g"><td>C-11</td><td><b>Phase A 재학습 종료 규칙</b>: R1(g* 마스터 기반 — 22 감사 유일 '수정' 판정)·R2(학습 뷰 2→6 — 문헌 관례 이탈 실험)·R3(a2 절단판) 완료 시 무조건 1차 정산. 연장 허용: ① 30ep 말 수렴 슬로프 잔존 시 60ep 1런 ② R1×R2 상호작용 의심 시 조합 1런 — 이 두 가지뿐. <b>런당 ≤30° 개선 +1%p 미만이면 그 축 종료</b>, 잔여 갭은 데이터 부족분으로 간주하고 Phase B 전환 (물체 ~1k 포화·이미지 ~1M 포화 — 22 §6 문헌 근거)</td><td class="c">07-31</td><td>22 §5-C·§6 · 21</td></tr>
 </table>
 
-<h2 id="s8"><span class="no">8</span>미결 대장 (D-1~D-9)</h2>
+<h2 id="s8"><span class="no">8</span>미결 대장 (D — 잔여 7건, D-5·D-10 해소)</h2>
 
 <table>
 <tr><th style="width:7%">ID</th><th style="width:34%">항목</th><th class="c" style="width:13%">기한</th><th class="c" style="width:12%">차단 범위</th><th>기본값 (미결 시 적용)</th></tr>
@@ -273,19 +276,19 @@
 
 <pre>
 2026-07  Phase 0 ██ 완료 (07-30)         config·보정배선·골든·coverage·희소화 + 테스트 41
-2026-08  Phase A ████ (2주)              최소 매칭부 클린룸 → 인코더 확정 [G-A]
-         ├─ 병행: M0-2 Orin 실측 · BOP 다운로드 · D-3/D-7 결정
-2026-08~09 Phase B ████████ (4~5주)      full PEM 본학습 [G-B]
+2026-07~08 Phase A ██▓▓ 진행 중 (07-31)  매칭부 구현·안정화·a0/a1 비교 완료 → R1·R2·R3 마감 [G-A]
+         ├─ 병행: S1 v2 하네스(C-9) · M0-2 Orin 실측 · BOP 다운로드 · D-3/D-7 결정
+2026-08~09 Phase B ████████ (4~5주)      full PEM 본학습 — GSO 861종 확보 선행 [G-B]
 2026-09~10 Phase C ██████ (2~3주)        증류·보정·TRT·Orin E2E [G-C]
                                           합계 ~10주 (08 프레임 정합)
 </pre>
 
 <table>
 <tr><th style="width:8%">순번</th><th style="width:52%">다음 액션</th><th>성격</th></tr>
-<tr><td>1</td><td>Phase 0 변경분 커밋 (12파일 + 본 문서)</td><td>승인 대기</td></tr>
-<tr><td>2</td><td><b>Phase A 착수</b> — 최소 매칭부 클린룸 구현 (2~3일)</td><td>즉시 가능</td></tr>
-<tr><td>3</td><td>BOP 코어 다운로드 개시 · SAM-6D/GeDi 라이선스 문의 이슈 (D-6)</td><td>병행</td></tr>
-<tr><td>4</td><td>D-3 (게이트 우선순위) · D-7 (팔레트 학습 CAD) 결정</td><td>Phase B 전</td></tr>
+<tr><td>1</td><td><b>R1</b> g* 마스터 기반 전환(스펙 03 §9.3 준수) → 재학습·리포트 Δ 판정 — 이후 R2(뷰6)·R3(a2), 종료 규칙은 C-11</td><td>즉시 가능</td></tr>
+<tr><td>2</td><td><b>S1 v2 구현 + UAM t0 A/B</b> (C-9 채택 판정 — 추론부라 R1~R3와 병렬 가능)</td><td>병행</td></tr>
+<tr><td>3</td><td>Phase B 데이터 선행: GSO 잔여 861종 확보(스케일 보정 포함) · BOP 코어 다운로드 · SAM-6D/GeDi 라이선스 문의(D-6)</td><td>병행</td></tr>
+<tr><td>4</td><td>M0-2 Orin 실측(HW 대기) · D-3 (게이트 우선순위) · D-7 (팔레트 학습 CAD) 결정</td><td>Phase B 전</td></tr>
 </table>
 
 <p class="tiny" style="margin-top:28px">정본 계보 — 상세 근거: <a href="03_implementation_design.html">03</a>(구현 정본) · <a href="10_network_design_and_critique.html">10</a>(SOTA 비판·권고) · <a href="13_backbone_pilot_report.html">13</a>·<a href="14_encoder_pilot_paper.html">14</a>·<a href="15_network_and_training_scope.html">15</a>(실측) · <a href="16_pretraining_comparison.html">16</a>(사전학습 대조) · <a href="17_full_line_redesign_and_training_plan.html">17</a>(v3 라인·비판 3라운드) · <a href="18_module_networks_and_pretraining_plan.html">18</a>(조달) · <a href="19_license_assessment.html">19</a>(라이선스 실사). 본 문서는 이들의 <b>확정 사항만</b>을 취합하며, 갱신 시 §7·§8 대장을 먼저 수정한다.</p>
