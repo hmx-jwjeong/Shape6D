@@ -141,6 +141,42 @@ def run_mode_b(onb, fb, sym_h, max_candidates=5):
     return best, best_diag
 
 
+def run_mode_c(onb, fb, sym_h, rgb, mask_gen, max_candidates=5):
+    """S1 v2 (C-9): 마스크 ROI 선택 — 모드 B와 하류 동일, S1만 교체한 A/B 대조군."""
+    rois, s1diag = mask_gen(rgb, fb)
+    if not rois:
+        return None, {'reason': 'no_rois', **s1diag}
+    cands = [Candidate(
+        proposal=Proposal(mask=None, bbox=np.zeros(4), score=.5, source='mask_roi',
+                          cluster_id=c.id, lidar_idx=c.point_indices,
+                          n_lidar=len(c.point_indices)),
+        pts=fb.lidar_points[c.point_indices], uv=fb.lidar_pixels[c.point_indices])
+        for c in rois]
+    gated = SizeGate()(cands, onb['diam'])
+    if not gated:
+        return None, {'reason': 'gated_out', 'n_rois': len(rois), **s1diag}
+    n_before = len(gated)
+    gated = [c for c in gated if planarity_ratio(c.pts) >= PLANARITY_MIN]  # T0-1
+    if not gated:
+        return None, {'reason': 'all_planar', 'n_gated_presize': n_before, **s1diag}
+    gated = sorted(gated, key=lambda c: -c.pts.shape[0])[:max_candidates]
+
+    best, best_diag = None, None
+    for cand in gated:
+        res, s_depth = verify_candidate(onb, fb, cand, sym_h)
+        st = res.diag['stats']
+        q = st['inlier_ratio'] * st['coverage'] - st['free_viol']
+        if s_depth < 0.25:
+            continue
+        if best is None or q > best_diag['quality']:
+            best = res
+            best_diag = {'quality': q, 's_depth': s_depth,
+                         'n_pts': int(cand.pts.shape[0]), 'n_gated': len(gated), **s1diag}
+    if best is None:
+        return None, {'reason': 'no_match', 'n_gated': len(gated), **s1diag}
+    return best, best_diag
+
+
 def run_mode_a(onb, fb, sym_h, center: np.ndarray, radius: float):
     d = np.linalg.norm(fb.lidar_points - center[None], axis=1)
     idx = np.nonzero(d < radius)[0]
@@ -238,6 +274,8 @@ def main():
     ap.add_argument('--n', type=int, default=30, help='폴더당 샘플 수 (시간순 균등)')
     ap.add_argument('--out', default=OUT, help='결과 디렉토리 (07 정본 보존용)')
     ap.add_argument('--overlay-all', action='store_true')
+    ap.add_argument('--s1v2', action='store_true',
+                    help='모드 C(마스크 ROI, C-9) 추가 실행 — B와 동일 프레임 A/B')
     args = ap.parse_args()
     out_dir = args.out
     os.makedirs(out_dir, exist_ok=True)
@@ -248,6 +286,13 @@ def main():
     sym_h = SymmetryHandler(onb['sym'].sym_rots, onb['sym'].sym_axes)
     print(f'onboard {time.time()-t0:.1f}s diam={onb["diam"]:.3f} '
           f'sym_rots={len(onb["sym"].sym_rots)}', flush=True)
+
+    mask_gen = None
+    if args.s1v2:
+        from shape6d.proposal.mask_roi import MaskROIGenerator
+        mask_gen = MaskROIGenerator(seed_cfg={k: v for k, v in S1_CFG.items()
+                                              if k != 'max_planes'})
+        print('S1 v2 (mask ROI) 활성 — 모드 C 병행', flush=True)
 
     results = []
     for folder in ['robot_log', 'robot_log_essential']:
@@ -275,17 +320,29 @@ def main():
                     rec['A_ms'] = (time.time() - t1) * 1e3
                     rec['A'] = result_row(resA, diagA, ref_t, onb['master'])
 
+                if mask_gen is not None:
+                    t1 = time.time()
+                    resC, diagC = run_mode_c(onb, fb, sym_h, rgb, mask_gen)
+                    rec['C_ms'] = (time.time() - t1) * 1e3
+                    rec['C'] = result_row(resC, diagC, ref_t, onb['master'])
+                    for k in ('n_seeds', 'fallback', 'mask_ok'):
+                        if k in diagC:
+                            rec['C'][k] = diagC[k]
+
                 overlay(rgb, fb, onb, resA, resB, ref_t,
                         f'{out_dir}/{folder}__{name}.jpg')
             except Exception as e:
                 rec['error'] = repr(e)
             results.append(rec)
             bt = rec.get('B', {})
+            ct = rec.get('C', {})
             print(f'[{i+1}/{len(samples)}] {name} '
                   f'B={bt.get("verdict", bt.get("reason", "ERR"))} '
                   f'dtB={bt.get("dt_ref_m", float("nan")):.2f} '
+                  f'C={ct.get("verdict", ct.get("reason", "-"))} '
+                  f'dtC={ct.get("dt_ref_m", float("nan")):.2f} '
+                  f'mask_ok={ct.get("mask_ok", "-")}/{ct.get("n_seeds", "-")} '
                   f'A={rec.get("A", {}).get("verdict", "-")} '
-                  f'dtA={rec.get("A", {}).get("dt_ref_m", float("nan")):.2f} '
                   f'({rec.get("B_ms", 0)/1e3:.0f}s)', flush=True)
 
     json.dump(results, open(f'{out_dir}/uam_results.json', 'w'), indent=1, ensure_ascii=False)

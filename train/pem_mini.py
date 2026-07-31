@@ -249,10 +249,17 @@ def select_g_star(P_s, valid_s, R_gt, t_gt, G, gn, P_o):
 
 
 def phase_a_loss(sim, P_s, valid_s, P_o, R_gt, t_gt, G, gn, diam,
-                 tau_rel: float = 0.10, w_pose: float = 0.5):
-    """대응 CE(+bg) + 포즈 손실. 반환 (loss, 진단 dict)."""
+                 tau_rel: float = 0.10, w_pose: float = 0.5, P_ref=None):
+    """대응 CE(+bg) + 포즈 손실. 반환 (loss, 진단 dict).
+
+    P_ref: g* 선택 기준점(모델계). 03 §9.3 정본은 마스터(고정점) — 미지정 시
+    P_o(학습 뷰 코어셋) 폴백. 뷰 기반 g*는 뷰 조합 따라 라벨이 요동하는
+    스펙 일탈(마스터 대비 일치율 0.73 실측, C-4 → R1에서 마스터로 전환).
+    CE 타깃은 그대로 P_o 최근접 — SAM-6D Eq.(13)과 동형 유지.
+    """
     B, K, _ = P_s.shape
-    g = select_g_star(P_s, valid_s, R_gt, t_gt, G, gn, P_o)
+    g = select_g_star(P_s, valid_s, R_gt, t_gt, G, gn,
+                      P_o if P_ref is None else P_ref)
     R_eff = R_gt @ g                                   # 정답 포즈의 g* 표현
     pm = torch.einsum("bji,bkj->bki", R_eff, P_s - t_gt.unsqueeze(1))
     with torch.no_grad():

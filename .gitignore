@@ -10,3 +10,4 @@ Data/
 .DS_Store
 reports
 .vscode/
+.dashboard.out

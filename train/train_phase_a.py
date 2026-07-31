@@ -148,6 +148,10 @@ def main():
                     help="체크포인트에서 이어 학습(추가학습) — 태그에 ext 접미사")
     ap.add_argument("--ext-name", default="ext",
                     help="이어학습 태그 접미사 (2차 연장은 ext2 등으로 충돌 방지)")
+    ap.add_argument("--gstar", choices=["view", "master"], default="view",
+                    help="g* 기준점 — R1 실측: master 18.8%% vs view 27.0%% (기각), 기본 view")
+    ap.add_argument("--views", type=int, default=2, help="학습 CAD 뷰 수 (R2: 6)")
+    ap.add_argument("--suffix", default="", help="태그 접미사 (예: gm — 코드 변형 런 구분)")
     ap.add_argument("--no-dash", action="store_true", help="대시보드 자동 기동 끄기")
     a = ap.parse_args()
     if not a.no_dash:
@@ -165,6 +169,8 @@ def main():
         parts.append(f"bs{a.bs}")
     if a.init_from:
         parts.append(a.ext_name)               # 이어학습 런 태그 분리 (덮어쓰기 방지)
+    if a.suffix:
+        parts.append(a.suffix)
     tag = "_".join(parts) + f"_s{a.seed}"
 
     bank = ObjBank()
@@ -240,12 +246,14 @@ def main():
             t_eff = tr["t"][i].to(DEV) + torch.einsum("bij,bj->bi", R_gt, bank.c[oi])
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 F_s, P_s, val_s = encode_scene(enc, pts, valid)
-                P_o, F_o = encode_cad(enc, bank, oi, g)
+                P_o, F_o = encode_cad(enc, bank, oi, g, n_views=a.views)
                 sim = matcher(F_s.float(), P_s.float(), F_o.float(), P_o.float(),
                               bank.diam[oi])
             loss, diag = phase_a_loss(sim.float(), P_s.float(), val_s, P_o.float(),
                                       R_gt, t_eff, bank.G[oi], bank.gn[oi],
-                                      bank.diam[oi])
+                                      bank.diam[oi],
+                                      P_ref=(bank.master[oi, :512]
+                                             if a.gstar == "master" else None))
             if not torch.isfinite(loss):
                 agg["skip"] = agg.get("skip", 0.0) + 1.0
                 agg["_cskip"] = agg.get("_cskip", 0) + 1

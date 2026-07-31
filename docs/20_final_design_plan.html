@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shape6D 최종 확정 설계·실행 계획 (정본 v1.1)</title>
+<title>Shape6D 최종 확정 설계·실행 계획 (정본 v1.2)</title>
 <style>
   :root {
     --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#ffffff; --panel:#f6f8fb;
@@ -107,7 +107,7 @@
   <h1>Shape6D 최종 확정 설계·실행 계획</h1>
   <span class="status">정본 · CANONICAL</span>
 </div>
-<div class="meta">v1.1 · 2026-07-31 (v1.0: 07-30) · <b>개정 이력</b>: v1.1 — C-9(S1 v2 선택식 ROI)·C-10(분할 무학습 확정)·C-11(Phase A 종료 규칙) 등재, D-10 해소, Phase A 현황 반영, 문헌 감사(<a href="22_training_method_literature_audit.html">22</a>) 근거 연결 · <b>우선순위 규약</b>: 확정 사항이 타 문서와 충돌하면 <b>본 문서가 우선</b>하며, 상세 근거·수치는 원문서(<a href="03_implementation_design.html">03</a>·<a href="10_network_design_and_critique.html">10</a>·<a href="13_backbone_pilot_report.html">13</a>~<a href="19_license_assessment.html">19</a>·<a href="22_training_method_literature_audit.html">22</a>)를 따른다. 미결 항목은 §8 대장에만 존재한다 — 본문에 흩어진 "결정 대기"는 없다.</div>
+<div class="meta">v1.2 · 2026-07-31 저녁 (v1.0: 07-30) · <b>개정 이력</b>: v1.2 — C-11 정산(R1·R2 기각·인코더 a1 확정)·D-11(다중 가설, 오라클 94.9%) 등재 · v1.1 — C-9(S1 v2 선택식 ROI)·C-10(분할 무학습 확정)·C-11(Phase A 종료 규칙) 등재, D-10 해소, Phase A 현황 반영, 문헌 감사(<a href="22_training_method_literature_audit.html">22</a>) 근거 연결 · <b>우선순위 규약</b>: 확정 사항이 타 문서와 충돌하면 <b>본 문서가 우선</b>하며, 상세 근거·수치는 원문서(<a href="03_implementation_design.html">03</a>·<a href="10_network_design_and_critique.html">10</a>·<a href="13_backbone_pilot_report.html">13</a>~<a href="19_license_assessment.html">19</a>·<a href="22_training_method_literature_audit.html">22</a>)를 따른다. 미결 항목은 §8 대장에만 존재한다 — 본문에 흩어진 "결정 대기"는 없다.</div>
 
 <div class="abs">
 <b class="t">이 문서가 확정하는 것</b>
@@ -210,7 +210,7 @@
 <table>
 <tr><th style="width:9%">Phase</th><th style="width:14%">기간</th><th style="width:40%">내용 · 산출물</th><th>게이트</th></tr>
 <tr class="done"><td><b>0 위생</b></td><td class="c"><b>완료</b><br><span class="tiny">2026-07-30</span></td><td>✓ config 단일 출처화(A-1: <code>from_config</code> 주입) ✓ 보정기 로드 배선+버전 기록(A-2) ✓ 골든 테스트 1.60mm/0.254°(A-3) ✓ TDF coverage 항(A-4) ✓ 합성 희소화 정식화 · <b>테스트 40+1xf</b> · 잔여: M0-2 Orin 실측(HW 대기)·BOP 다운로드</td><td>—</td></tr>
-<tr><td><b>A 파일럿</b></td><td class="c">2주<br><span class="tiny">진행 중</span></td><td><b>최소 매칭부 클린룸 구현</b>(coarse 2blk → soft 대응 → SVD, 포즈 회귀 과제 — 뷰 분류 폐기) → 인코더 재선정. <b>현황(07-31)</b>: a1 26.6% vs a0 18.3% vs 초기 10.0% (미학습 32종 ≤30°, <code>reports/</code> 자동 추적) — 첫 유효 제로샷 신호 확보. 잔여는 <b>R1·R2·R3 + 종료 규칙 C-11</b>. 규약: 수렴 확인 의무 · 후보별 lr · 시드 3종 · 팔레트 CAD 평가 포함</td><td><b>G-A</b>: 미학습 물체 ≤30° 진입률이 무학습 기준선 상회 + 밀도 낙폭 곡선 + TRT 빌드 → <b>인코더 1종 확정</b></td></tr>
+<tr><td><b>A 파일럿</b></td><td class="c">2주<br><span class="tiny">진행 중</span></td><td><b>최소 매칭부 클린룸 구현</b>(coarse 2blk → soft 대응 → SVD, 포즈 회귀 과제 — 뷰 분류 폐기) → 인코더 재선정. <b>현황(07-31)</b>: a1 26.6% vs a0 18.3% vs 초기 10.0% (미학습 32종 ≤30°, <code>reports/</code> 자동 추적) — 첫 유효 제로샷 신호 확보. <b>정산 완료(C-11)</b>: 인코더 a1 확정, 상세 23. 규약: 수렴 확인 의무 · 후보별 lr · 시드 3종 · 팔레트 CAD 평가 포함</td><td><b>G-A</b>: 미학습 물체 ≤30° 진입률이 무학습 기준선 상회 + 밀도 낙폭 곡선 + TRT 빌드 → <b>인코더 1종 확정</b></td></tr>
 <tr><td><b>B 본학습</b></td><td class="c">4~5주</td><td>full PEM(인코더+coarse2+fine2, ~8M) — GSO ~104만 샘플 · 증강 5종+레짐 2종 · g* 손실 · bs64+activation ckpt(CAD측 2뷰 gradient — 활성화 3배) · 평가 훅 500/10k/25k</td><td><b>G-B</b>: Δ(v0-geo)&gt;0 (팔레트 스위트) + UAM 70샘플 ≥ v0-geo + 밀도 곡선 유지</td></tr>
 <tr><td><b>C 증류·보정</b></td><td class="c">2~3주</td><td>① 매칭 축소판 자기 증류(H192→128·3→2blk, 각 1/3 스케줄) ② S2 디스크립터 InfoNCE ③ 보정기 적합(합성+sBOP — 라벨 진단 선행) ④ TRT 3분할 엔진 → Orin E2E</td><td><b>G-C</b>: E2E &lt;1s 실측 + FA&lt;1% 리콜(도메인별) + UNCERTAIN 재시도 검증</td></tr>
 </table>
@@ -241,7 +241,7 @@
 <tr><td>C-8</td><td>게이트 재정의: 절대 BOP AR 폐기 → Δ(v0-geo)+UAM+≤30° 진입률+밀도 곡선+Orin</td><td class="c">07-29</td><td>17 R3-5</td></tr>
 <tr class="g"><td>C-9</td><td><b>S1 v2 — 삭제식→선택식 ROI</b>: RGB 마스크 ROI 선택이 주경로 (거친 클러스터는 프롬프트 시드로 강등, 평면 제거 주경로 폐지, 마스크 침식 δpx로 외부보정 오귀속 방지) + 기하 폴백(유효 마스크 0 → 클러스터 ROI 직행). 근거: 희소점 삭제식 전처리의 물체점 소실 리스크 + RGB 제안 우선 관례(SAM-6D ISM·CNOS — 22에서 원문 검증). 채택 판정은 UAM t0 A/B(ROI recall/precision + 하류 ≤30°, 평가 전용 준수)</td><td class="c">07-31</td><td>22 §3.1·§3.7 · 대화 결정</td></tr>
 <tr class="g"><td>C-10</td><td><b>학습 자원 배분 — 분할 무학습 확정</b>: SAM 계열 로컬 학습·파인튜닝 전면 배제(동결 고정), 로컬 GPU 학습은 PEM(S3)+S2 디스크립터에 100% 집중. 분할 병목 신호 시에도 순서는 프롬프트/보정 → 그래도 불충분할 때만 재론. 근거: 직접 비교 4편 전부 분할 무학습·포즈망만 학습(22 §4) + 규모 비대칭(SA-1B 대비 로컬 47k) + UAM 학습 금지(C-4)와 정합</td><td class="c">07-31</td><td>22 §5-A · 대화 결정</td></tr>
-<tr class="g"><td>C-11</td><td><b>Phase A 재학습 종료 규칙</b>: R1(g* 마스터 기반 — 22 감사 유일 '수정' 판정)·R2(학습 뷰 2→6 — 문헌 관례 이탈 실험)·R3(a2 절단판) 완료 시 무조건 1차 정산. 연장 허용: ① 30ep 말 수렴 슬로프 잔존 시 60ep 1런 ② R1×R2 상호작용 의심 시 조합 1런 — 이 두 가지뿐. <b>런당 ≤30° 개선 +1%p 미만이면 그 축 종료</b>, 잔여 갭은 데이터 부족분으로 간주하고 Phase B 전환 (물체 ~1k 포화·이미지 ~1M 포화 — 22 §6 문헌 근거)</td><td class="c">07-31</td><td>22 §5-C·§6 · 21</td></tr>
+<tr class="g"><td>C-11</td><td><b>Phase A 재학습 종료 규칙</b>: R1(g* 마스터 기반 — 22 감사 유일 '수정' 판정)·R2(학습 뷰 2→6 — 문헌 관례 이탈 실험)·R3(a2 절단판) 완료 시 무조건 1차 정산. 연장 허용: ① 30ep 말 수렴 슬로프 잔존 시 60ep 1런 ② R1×R2 상호작용 의심 시 조합 1런 — 이 두 가지뿐. <b>런당 ≤30° 개선 +1%p 미만이면 그 축 종료</b>, 잔여 갭은 데이터 부족분으로 간주하고 Phase B 전환 (물체 ~1k 포화·이미지 ~1M 포화 — 22 §6 문헌 근거). <b>정산 완료(07-31 저녁, 23)</b>: R1 기각(18.8% — 기준점 불일치 실증, 03 §9.3 반증) · R2 기각(24.8%, 시간 1.9×) · R3 a2 20.6% → <b>인코더 a1 확정</b>. 학습 축 종료 — 성능 지렛대는 다중 가설(D-11)·Phase B 데이터로 이관</td><td class="c">07-31</td><td>22 §5-C·§6 · 21 · 23</td></tr>
 </table>
 
 <h2 id="s8"><span class="no">8</span>미결 대장 (D — 잔여 7건, D-5·D-10 해소)</h2>
@@ -256,6 +256,7 @@
 <tr><td>D-7</td><td>팔레트류 <b>학습용</b> CAD 소싱 (평가용과 분리)</td><td class="c">Phase B 전</td><td class="c">팔레트 학습분</td><td>GSO 팔레트형 서브셋으로 개시</td></tr>
 <tr><td>D-8</td><td>free_viol_max 0.05(03 원안) vs 0.15(현행 정본화)</td><td class="c">Phase C 보정 시</td><td class="c">S4 임계</td><td>0.15 유지 (공표 수치 보호)</td></tr>
 <tr class="g"><td>D-10</td><td>~~정밀도 목표 개정 후보 0.1°/1mm~~ → <b>해소 (2026-07-31)</b>: 사용자 정정으로 <b>1° / 1cm 재확정</b> — 정본 C-1(10mm/≤1° @3m) 유지</td><td class="c">완료</td><td class="c">—</td><td>0.1°/1mm 검토(21 §5)는 <b>감도 분석 기록으로 보존</b> — 바이어스 바닥 ≈6.1mm이 1cm 예산의 61%를 차지한다는 사실은 여전히 유효한 마진 경고</td></tr>
+<tr class="g"><td>D-11</td><td><b>다중 가설 → S4 검증기 선택 통합</b> — 오라클 실측(23 §4): 대응 행렬 내 정답 존재율 <b>94.9%</b>, 경량 점수 선택 any-of-8만으로 45.2→69.3% (비대칭 13.7→24.0%). 후보 k·점수 함수·S4 배선 설계 결정 대기. 문헌 관례: SAM-6D 6000가설·MegaPose 520·FoundationPose 504 — 후보 1개는 우리뿐이었음(22 §4)</td><td class="c">즉시 가능</td><td class="c">평가 정의(any-of-k)</td><td>구현 승인 대기</td></tr>
 <tr class="r"><td>D-9</td><td><b>free-space see-through 오판</b> — 슬랫 틈 정답 포즈 REJECT (GT free_viol 0.31). xfail로 고정 추적</td><td class="c">Phase B 중</td><td class="c">S4 frame 경로</td><td>거동 유지 + xfail 감시 — 수정은 07/09 영향 평가와 함께</td></tr>
 </table>
 
