@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>학습 방법 문헌 감사 — 참고 연구 8편의 학습 정식 원문 대조와 Phase A 정합 판정</title>
+<style>
+  :root { --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb; --accent:#0b5fff;
+          --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e3;
+          --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; } }
+  :root[data-theme="dark"] {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+         color:var(--ink); background:var(--bg); line-height:1.7; font-size:15px; }
+  .wrap { max-width:1130px; margin:0 auto; padding:44px 28px 110px; }
+  h1 { font-size:24px; margin:0 0 6px; letter-spacing:-0.5px; line-height:1.35; text-wrap:balance; }
+  h2 { font-size:19px; margin:50px 0 12px; padding-top:16px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:24px 0 8px; }
+  p { margin:9px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.4px; }
+  th { background:var(--ink); color:var(--bg); text-align:left; padding:7px 9px; font-weight:600; }
+  th.c, td.c { text-align:center; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.g td { background:var(--good-soft); } tr.g td:first-child { border-left:3px solid var(--good); }
+  tr.y td { background:var(--warn-soft); } tr.y td:first-child { border-left:3px solid var(--warn); }
+  tr.r td { background:var(--bad-soft); } tr.r td:first-child { border-left:3px solid var(--bad); }
+  .cap { font-size:12.3px; color:var(--sub); margin:4px 0 18px; }
+  code { font-family:"JetBrains Mono",Consolas,monospace; font-size:12.3px;
+         background:var(--panel); padding:1px 5px; border-radius:4px; }
+  .abs { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:15px 19px; margin:16px 0 24px; font-size:14px; }
+  .abs b.t { display:block; font-size:15px; margin-bottom:5px; }
+  .crit { border:1px solid var(--line); border-left:4px solid var(--bad); background:var(--bad-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; }
+  .crit .h { font-weight:800; color:var(--bad); margin-bottom:4px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; }
+  .warnbox { border:1.5px dashed var(--warn); background:var(--warn-soft); border-radius:10px;
+             padding:11px 15px; margin:13px 0; font-size:13.2px; }
+  ul, ol { margin:8px 0; padding-left:22px; } li { margin:4px 0; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:13px 19px;
+         margin:16px 0 6px; font-size:13.2px; column-count:2; column-gap:28px; }
+  .toc a { display:block; padding:2px 0; break-inside:avoid; }
+  .tiny { font-size:11.8px; color:var(--sub); }
+  sup.r { font-size:10px; } sup.r a { color:var(--accent); font-weight:700; }
+  blockquote.q { margin:6px 0 6px 4px; padding:6px 13px; border-left:3px solid var(--shape);
+                 background:var(--shape-soft); border-radius:0 7px 7px 0; font-size:12.6px; color:var(--sub); }
+  blockquote.q i { color:var(--ink); }
+  .src { display:inline-block; font-size:11.3px; color:var(--shape); font-weight:700; margin-right:6px; }
+  .refs { font-size:12.8px; } .refs li { margin:7px 0; }
+  .badge { display:inline-block; font-size:11px; font-weight:800; padding:1px 8px; border-radius:10px; margin-right:5px; }
+  .b-ok { background:var(--good-soft); color:var(--good); border:1px solid var(--good); }
+  .b-up { background:var(--shape-soft); color:var(--shape); border:1px solid var(--shape); }
+  .b-dev { background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn); }
+  .b-fix { background:var(--bad-soft); color:var(--bad); border:1px solid var(--bad); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>학습 방법 문헌 감사 — 참고 연구 8편의 학습 정식 원문 대조와 Phase A 정합 판정</h1>
+<p class="meta">Shape6D 보고서 #22 · 2026-07-31 · 코드 기준 git <code>0ccb5dc</code> ·
+선행: <a href="17_full_pipeline_redesign_v3.html">17(파이프라인 정본)</a> ·
+<a href="20_final_design_plan.html">20(확정 설계)</a> ·
+<a href="21_phase_a_retry_and_optimization.html">21(Phase A 재시도)</a></p>
+
+<div class="abs"><b class="t">요약 — "이렇게 학습하는 게 맞는가?"에 대한 답</b>
+참고한 연구 8편(+대칭 처리 정전 3편)의 <b>arXiv 원문 전문을 내려받아 절·수식 번호 단위로 대조</b>했다.
+판정: 우리 Phase A 학습 정식의 골격 — <b>대응 CE + 배경 토큰 + 비학습 SVD 포즈 산출, coarse 196점,
+학습 2뷰/평가 다뷰 템플릿, 단위 정규화, 합성 전용 데이터</b> — 는 SAM-6D의 학습 정식과 항목 단위로
+일치한다<sup class="r"><a href="#ref1">[1]</a></sup>. 나아가 <b>학습 라벨의 대칭 처리는 SAM-6D·FoundationPose·Co-op
+세 편 모두 "명시 없음"이 원문에서 검증</b>되었고, 우리 g* 단일선택은 CosyPose의 대칭 거리 손실
+정전<sup class="r"><a href="#ref13">[13]</a></sup>을 따르는 <b>문헌 초과 사양</b>이다. 이탈은 5건으로, 3건은 근거를
+갖춰 유지(포즈 손실 혼합·CE 채택·fine 단계 유보), 1건은 수정 예정(g* 기준점의 마스터 전환 — 스펙 03 §9.3
+준수), 1건은 실험으로 표기(학습 뷰 2→6 — 문헌 관례는 2뷰). 부수 성과: 이전 문서(11)의
+Co-op 백본 서술 오류(DINOv2 → 실제는 <b>CroCo 파인튜닝</b><sup class="r"><a href="#ref5">[5]</a></sup>)를 정정한다.</div>
+
+<div class="toc">
+<a href="#s1">1. 감사 방법과 인용 규칙</a>
+<a href="#s2">2. 우리 학습 설정 사실표 (코드 인용)</a>
+<a href="#s3">3. 연구별 학습 방법 원문 대조</a>
+<a href="#s31">&nbsp;&nbsp;3.1 SAM-6D — 직접 비교 대상</a>
+<a href="#s32">&nbsp;&nbsp;3.2 GeoTransformer</a>
+<a href="#s33">&nbsp;&nbsp;3.3 MegaPose</a>
+<a href="#s34">&nbsp;&nbsp;3.4 FoundationPose</a>
+<a href="#s35">&nbsp;&nbsp;3.5 Co-op (서술 정정 포함)</a>
+<a href="#s36">&nbsp;&nbsp;3.6 FreeZe + GeDi</a>
+<a href="#s37">&nbsp;&nbsp;3.7 대칭 처리 정전 · 42뷰 관례 · 백본</a>
+<a href="#s4">4. 축별 대조표 (전 항목 출처 병기)</a>
+<a href="#s5">5. 정합 판정 — 일치·초과·이탈</a>
+<a href="#s6">6. 실행 반영 (R1·R2·Phase B 근거 갱신)</a>
+<a href="#s7">7. 미확인 항목 대장 (정직성 원칙)</a>
+<a href="#s8">참고문헌</a>
+</div>
+
+<h2 id="s1"><span class="no">1</span>감사 방법과 인용 규칙</h2>
+<p>질문은 "우리 학습 방법이 참고 연구들의 학습 방법과 맞는가"이므로, 2차 자료 없이 <b>원문만</b> 근거로 삼았다.</p>
+<ul>
+<li><b>원문 확보</b>: 각 논문의 arXiv HTML/ar5iv 전문(본문+보충자료)을 내려받아 대조. 판본 명기(예: SAM-6D는 arXiv v2). 로컬 검증 사본은 작업 스크래치에 보존.</li>
+<li><b>인용 형식</b>: 본문 주장마다 <code>[n, §절/Eq.(식)]</code>. 핵심 주장에는 원문 인용구(영문, ≤25단어)를 보라색 인용 블록으로 병기. 원문 오탈자는 [sic]로 보존.</li>
+<li><b>부재의 검증</b>: "논문이 X를 안 한다"는 주장은 전문 문자열 검색(예: symmetr*)으로 <b>부재를 확인</b>한 경우에만 기재. 확인 못 한 것은 §7 미확인 대장에 남긴다 — 관례값을 채워 넣는 것은 날조다.</li>
+<li><b>우리 측 근거</b>: 코드 <code>파일:행</code>(git <code>0ccb5dc</code>)과 실측 리포트(<code>reports/{tag}/metrics.json</code>)로 인용. 논문에 없는 사실(예: MegaPose-GSO 물체별 리스케일)은 "당측 실측"으로 출처를 구분한다.</li>
+</ul>
+
+<h2 id="s2"><span class="no">2</span>우리 학습 설정 사실표 (코드 인용)</h2>
+<table>
+<tr><th style="width:16%">항목</th><th>내용</th><th style="width:26%">근거</th></tr>
+<tr><td>과제 정식화</td><td>장면 196점 ↔ CAD 196점(+bg) 대응 소프트 할당 → 가중 Kabsch(SVD)로 포즈 산출(비학습)</td><td><code>train/pem_mini.py:180-226,105</code></td></tr>
+<tr><td>매처 구조</td><td>양방향 2블록(self+거리RPE 16bin, cross, FFN, pre-LN), H=192, heads 4, sim 256차원 코사인/τ=0.1, 학습 bg 토큰</td><td><code>train/pem_mini.py:132-195</code></td></tr>
+<tr><td>대응 라벨</td><td>g* 적용 GT 포즈로 장면점을 모델계 변환 → P_o 최근접 인덱스, 거리&lt;τ_rel=0.10·직경이면 그 인덱스, 아니면 bg</td><td><code>train/pem_mini.py:251-268</code></td></tr>
+<tr><td>대칭 라벨 g*</td><td>샘플당 대칭군 원소 1개 선택(장면점→모델계 최근접 평균거리 argmin, no-grad) — 포인트별 min 금지. 현 구현은 기준점이 학습 2뷰 P_o(≠스펙의 마스터)</td><td><code>train/pem_mini.py:228-249</code> · 스펙 03 §9.3</td></tr>
+<tr><td>손실</td><td>CE(+bg, ignore −100) + 0.5·(rot_rad + 2·trans/D)</td><td><code>train/pem_mini.py:270-276</code></td></tr>
+<tr><td>템플릿</td><td>icosphere 42뷰 팩 사전렌더, <b>학습 2뷰 무작위 / 평가 6뷰</b>, master 2048점(센터링)</td><td><code>shape6d/onboarding/templates.py:9</code>, <code>train/train_phase_a.py:53-100</code>, <code>train/build_phase_a_data.py:99-141</code></td></tr>
+<tr><td>정규화</td><td>매처 입력 좌표를 물체 직경으로 나눔(장면은 평균 중심화 후)</td><td><code>train/pem_mini.py:198-200</code></td></tr>
+<tr><td>대칭군 획득</td><td>메시에서 자동 검출(연속축 12분할 이산화, G≤16, 항등 포함)</td><td><code>train/build_phase_a_data.py:50-102</code></td></tr>
+<tr><td>데이터</td><td>MegaPose-GSO 합성 168종(메시 보유) = 학습 132 / 미학습 32, 47,354 / 11,903 샘플. 물체별 스케일 보정(frame_correction) 적용. 희소화: ML-X 격자 σ3mm·npt U[256,4096]</td><td><code>train/build_phase_a_data.py</code>, <code>train/recover_gso_scale.py</code>, 메모리(스케일 실측 s∈[0.10,1.43])</td></tr>
+<tr><td>최적화</td><td>AdamW(wd 0.05), lr 3e-4(a1), OneCycle, bs 48, 30ep(≈29.6k step), bf16 autocast + fp32 섬(softmax/CE/SVD), clip 5</td><td><code>train/train_phase_a.py:33,201-251</code></td></tr>
+<tr><td>평가</td><td>sym-aware 회전오차 = min<sub>g∈G</sub> geodesic(R_pr, R_gt·g), ≤30° 진입률, 미학습 32종</td><td><code>train/pem_mini.py:305-315</code></td></tr>
+<tr><td>실측(참고)</td><td>a1 30ep: 미학습 ≤30° 26.6%, rot_p50 55.9°, 비대칭만 9.7% · a0 30ep: 18.3%/68.8°/7.6%</td><td><code>reports/a1_s0/metrics.json</code>, <code>reports/a0_s0/metrics.json</code></td></tr>
+</table>
+
+<h2 id="s3"><span class="no">3</span>연구별 학습 방법 원문 대조</h2>
+
+<h3 id="s31">3.1 SAM-6D<sup class="r"><a href="#ref1">[1]</a></sup> — 직접 비교 대상 (우리 클린룸 재구성의 원형)</h3>
+<p><b>무엇을 학습하나</b>: 분할부(ISM)는 전체가 무학습이고, 포즈부(PEM)만 학습한다.</p>
+<blockquote class="q"><span class="src">[1, §1]</span><i>"ISM, built on SAM, does not require any network re-training or fine-tuning"</i></blockquote>
+<p><b>PEM 구조</b>: ViT-Base 특징(3·6·9·12블록 concat)<sup class="r"><a href="#ref1">[1, 보충 §B.1.1]</a></sup> →
+coarse 매칭(GeoTransformer 블록×3, <b>196점</b>) → fine 매칭(SDPT×3, 2048점). 소프트 할당은 학습 bg 토큰을 붙인
+행렬의 행·열 softmax 곱이며, 온도 τ 값은 논문에 명시가 없다<sup class="r"><a href="#ref1">[1, Eq.(5)(6)]</a></sup>.</p>
+<blockquote class="q"><span class="src">[1, §4]</span><i>"we set N_m^c=N_o^c=196 and N_m^f=N_o^f=2048"</i> — 우리 코어스 196은 이 수치를 그대로 따른 것.</blockquote>
+<p><b>손실은 InfoNCE(=행·열 CE) 하나뿐</b>이고, 전 트랜스포머 블록 출력에 심층 감독한다. 포즈 회귀 손실은 없다(포즈는 비학습 weighted SVD).</p>
+<blockquote class="q"><span class="src">[1, 보충 §B.2 Eq.(12)(14)]</span><i>"L = CE(A[1:,:], Ŷ_m) + CE(A[:,1:]^T, Ŷ_o)"</i> · 6개 블록 합산 최적화</blockquote>
+<p><b>대응 라벨</b>: GT 포즈로 관측점을 물체계로 보내 최근접 인덱스, 거리&lt;δ_dis=0.15(단위구 정규화 좌표)이면 그 인덱스, 아니면 배경(0번) — <b>우리 라벨 규칙과 동형</b>(우리는 0.10·직경).</p>
+<blockquote class="q"><span class="src">[1, 보충 §B.2 Eq.(13)]</span><i>"we set δ_dis as a constant 0.15, since both P_m and P_o are normalized to a unit sphere"</i></blockquote>
+<p><b>대칭</b>: 학습 라벨에서 대칭 처리 <b>명시 없음이 검증됨</b> — symmetr* 어휘는 전문에서 평가 지표(MSSD/MSPD) 소개 1곳뿐.
+<b>데이터</b>: MegaPose 제공 합성 2백만 장·약 5만 물체, RGB-D<sup class="r"><a href="#ref1">[1, §4]</a></sup>.
+<b>템플릿</b>: <b>학습 2뷰, 평가 42뷰</b>(CNOS 준거).</p>
+<blockquote class="q"><span class="src">[1, §4]</span><i>"For each object, we use two rendered templates for training PEM."</i></blockquote>
+<p><b>최적화</b>: Adam, 600k iter, lr 1e-4 cosine, bs 28<sup class="r"><a href="#ref1">[1, §4]</a></sup>. PEM ViT의 사전학습 출처·동결 여부는 명시 없음(§7 대장).</p>
+
+<h3 id="s32">3.2 GeoTransformer<sup class="r"><a href="#ref2">[2]</a></sup> — SAM-6D coarse 블록의 원 논문</h3>
+<p>손실은 <b>overlap-aware circle loss</b>(superpoint) + <b>NLL/dustbin</b>(point)의 합<sup class="r"><a href="#ref2">[2, §3.5 Eq.(14)(15)]</a></sup>.
+CE 대신 메트릭러닝을 택한 근거로 "CE 다중라벨 분류가 고신뢰 양성을 억제한다"는 그래디언트 분석을 제시한다<sup class="r"><a href="#ref2">[2, Appx C]</a></sup> —
+우리 CE 채택과의 설계 분기점(§5-C2). 라벨은 패치 중첩 ≥10% 양성/무중첩 음성/그 외 제외<sup class="r"><a href="#ref2">[2, §3.5]</a></sup>.
+기하 임베딩은 bin이 아닌 <b>사인파</b>(σ_d=0.2m, σ_a=15°, k=3)<sup class="r"><a href="#ref2">[2, Appx A.1/A.3]</a></sup> —
+우리 _DistBias(학습 16-bin)는 이를 단순화한 변형. 학습은 Adam 1e-4, 지수감쇠 0.05/ep, bs 1, wd 1e-6, 40ep(3DMatch)<sup class="r"><a href="#ref2">[2, Appx A.3]</a></sup>,
+teacher forcing(GT superpoint 대응 N_g=128 샘플)<sup class="r"><a href="#ref2">[2, §3.5]</a></sup>.</p>
+
+<h3 id="s33">3.3 MegaPose<sup class="r"><a href="#ref3">[3]</a></sup> — 학습 데이터의 출처이자 대칭 회피 전략의 반례 실증</h3>
+<p><b>Coarse = 분류</b>: 렌더-관측 비교로 "리파이너 수렴 영역 안인가"를 이진 CE로 학습(가설 104개 = 양성 1 + 음성 103)<sup class="r"><a href="#ref3">[3, §3.1-3.2, Appx D]</a></sup>.
+대칭 주석 없이 학습 가능한 이유를 분류 정식화 자체에 둔다:</p>
+<blockquote class="q"><span class="src">[3, §3.1]</span><i>"Since we are performing classification, our method can implicitly handle object symmetries, as multiple poses can be classified as correct."</i></blockquote>
+<p><b>결정적 반례 실증</b>: coarse를 회귀로 바꾸면 학습이 붕괴하며, 원인을 대칭 물체의 모호한 그래디언트로 추정한다 —
+<b>대칭 모호성을 라벨 수준에서 제거해야 한다는 우리 g* 설계의 문헌 근거</b>.</p>
+<blockquote class="q"><span class="src">[3, Appx F]</span><i>"We hypothesize this failure is due to the presence of symmetric objects in our training set which leads to ambiguous gradients during training."</i></blockquote>
+<p><b>Refiner</b>: 4뷰 렌더 입력, 병진 3 + 회전 6(Zhou 연속표현<sup class="r"><a href="#ref11">[11]</a></sup>) 출력, CosyPose형 분리 손실 —
+단 <b>대칭 정보는 미사용</b>이고 이유는 주석 부재다:</p>
+<blockquote class="q"><span class="src">[3, Appx B]</span><i>"without using symmetry information on the objects because it is not typically not available for large-scale datasets of CAD models"</i> [sic]</blockquote>
+<p><b>데이터</b>: BlenderProc 합성 2백만 장, ShapeNet 20k + GSO 1k 물체, RGB 증강(Pillow: blur·contrast·brightness·colors·sharpness),
+깊이 증강(blur·ellipse dropout·상관/무상관 노이즈)<sup class="r"><a href="#ref3">[3, §3.2, Appx E]</a></sup>.
+물체 수 어블레이션: GSO 단독 1,000종 62.2 vs ShapeNet+GSO 21,000종 61.7 — <b>물체 1k 이후 수확 체감</b><sup class="r"><a href="#ref3">[3, Table 3(b)]</a></sup>.
+<b>옵티마이저·lr·배치는 명시 없음</b>(V-100 32장, coarse 32h/refiner 48h만 기재)<sup class="r"><a href="#ref3">[3, Appx E]</a></sup>.
+메시 리스케일 서술도 없음 — 공개 MegaPose-GSO의 물체별 스케일(s∈[0.10,1.43])은 <b>당측이 데이터 파일에서 실측</b>한 사실이다(<code>train/recover_gso_scale.py</code>).</p>
+
+<h3 id="s34">3.4 FoundationPose<sup class="r"><a href="#ref4">[4]</a></sup> — 손실 선택의 반대 증거(InfoNCE 폐기)</h3>
+<p>리파이너(단일 뷰 렌더+관측, 공유 CNN→트랜스포머 헤드 2개)와 선택기(계층 비교)를 학습. 리파이너 손실은 Δt·ΔR(axis-angle) L2(w1=w2=1)<sup class="r"><a href="#ref4">[4, §3.3 Eq.(10)]</a></sup>,
+선택기는 pose-conditioned triplet(α=0.1, 양성 기준 회전 10° 이내, K=5)<sup class="r"><a href="#ref4">[4, §3.4 Eq.(11)-(14), 보충 §5.2]</a></sup>.
+InfoNCE는 실험 후 성능 저하로 폐기했다(ADD 91.52→89.39):</p>
+<blockquote class="q"><span class="src">[4, §3.4, Table 6]</span><i>"We also experimented with the InfoNCE loss [49] as used in [46] but observed worse performance"</i></blockquote>
+<p><b>데이터</b>: 합성 전용 — Objaverse-LVIS 40k+ 물체 + GSO, ChatGPT+TexFusion 텍스처 증강, Isaac Sim 경로추적,
+약 60만 장면/120만 장, <b>이득은 ~100만 장에서 포화</b><sup class="r"><a href="#ref4">[4, §3.1, §4.5 Fig.7, 보충 §5.2]</a></sup>.
+물체를 5–30cm로 랜덤 리스케일·정규화<sup class="r"><a href="#ref4">[4, 보충 §5.2]</a></sup> — 스케일 정규화 관례의 명시 사례.
+학습 라벨의 대칭 처리는 <b>명시 없음이 검증됨</b>(symmetr*는 평가 물체 속성 서술 1회뿐).
+옵티마이저·lr·배치 명시 없음; 리파이너 50ep + 선택기 25ep + e2e 5ep, V100 4장 약 1주<sup class="r"><a href="#ref4">[4, 보충 §5.2]</a></sup>.</p>
+
+<h3 id="s35">3.5 Co-op<sup class="r"><a href="#ref5">[5]</a></sup> — 대응 기반 최신안 + 당측 이전 서술 정정</h3>
+<div class="crit"><div class="h">정정 — 문서 11의 Co-op 백본 서술 오류</div>
+이전 보고서(11)는 Co-op이 DINOv2 특징을 쓴다고 서술했으나, 원문 검증 결과 백본은 <b>CroCo</b>(3D 비전 사전학습 파운데이션 모델)이며
+<b>frozen이 아니라 파인튜닝</b>된다. DINOv2는 관련연구 절에서 타 방법(GigaPose/FoundPose) 설명에만 등장(전문 검색으로 확인).
+<blockquote class="q"><span class="src">[5, §3.5]</span><i>"The encoder and decoder architecture of Co-op are based on CroCo, a vision foundation model trained on large-scale datasets for 3D vision tasks"</i></blockquote>
+CroCo 초기화 제거 시 coarse AR 58.4→46.4로 급락<sup class="r"><a href="#ref5">[5, §4.3 Table 2]</a></sup> —
+<b>"기하 과제에 맞는 사전학습 초기화가 스크래치를 크게 이긴다"</b>는 우리 a1 vs a0 실측(26.6% vs 18.3%)과 방향이 일치하는 문헌 근거.</div>
+<p><b>학습 대상</b>: coarse(패치 분류 + 오프셋 회귀의 하이브리드) / refiner(flow NLL-Laplace + certainty BCE + GenFlow형 분리 포즈 손실; β=5, γ=20) /
+selector(BCE, 양성=회전 5° 이내)<sup class="r"><a href="#ref5">[5, §3.4 Eq.(6)-(10), 보충 §6]</a></sup>.
+coarse 분류에 <b>no-match 클래스</b>를 두는 설계<sup class="r"><a href="#ref5">[5, §3.1]</a></sup>는 우리 bg 토큰과 같은 역할.
+템플릿은 <b>42 시점</b>, in-plane 불변 매칭<sup class="r"><a href="#ref5">[5, §3.1, §3.4]</a></sup>.
+데이터는 MegaPose 제공 합성셋(ShapeNet+GSO)<sup class="r"><a href="#ref5">[5, §3.4]</a></sup>.
+학습 시 대칭 처리 <b>명시 없음 검증</b>(symmetr*는 평가 지표 1곳). <b>최적화 전체 공개</b>: AdamW, A100 8장,
+coarse bs64·450ep, lr 2e-5→2e-6(워밍업 50ep), refiner bs32·clip 1e-2, selector bs16·200ep<sup class="r"><a href="#ref5">[5, 보충 §6.1-6.3]</a></sup>.</p>
+
+<h3 id="s36">3.6 FreeZe<sup class="r"><a href="#ref6">[6]</a></sup> + GeDi<sup class="r"><a href="#ref7">[7]</a></sup> — 무학습 노선과 그 기하 디스크립터의 원 학습법</h3>
+<p>FreeZe는 태스크 학습이 전무하다 — frozen GeDi(기하) + frozen DINOv2 ViT-g(비전, PCA 64차원)를 L2 정규화 후 연결,
+RANSAC+ICP로 정합<sup class="r"><a href="#ref6">[6, §3.1, §3.4-3.6, §4.1]</a></sup>.</p>
+<blockquote class="q"><span class="src">[6, §1]</span><i>"harnesses the capabilities of pre-trained geometric and vision foundation models without requiring any training"</i></blockquote>
+<p>대칭은 추론 시에만 다룬다: Chamfer 최소 회전 후보를 렌더-DINOv2 코사인 유사도로 선별하는 SAR(+0.5 AR)<sup class="r"><a href="#ref6">[6, §3.6, Table 3]</a></sup>.
+FreeZe가 쓰는 GeDi의 원 학습: LRF 정준화 패치 → PointNet++ Siamese, <b>hardest-contrastive 손실</b>(FCGF 채택),
+SGD lr 0.1, 3DMatch 실측 실내 데이터<sup class="r"><a href="#ref7">[7, §3.1-3.2, §4.2]</a></sup>.
+FreeZe는 GeDi 학습 데이터를 "indoor scenes"로만 서술하므로 "3DMatch 학습판"은 두 논문을 잇는 추론임을 명시해 둔다(§7 대장).
+우리 노선과의 관계: FreeZe는 우리와 같은 기하 우선 사상이지만 밀집 depth 전제(5k/1k 점 샘플)<sup class="r"><a href="#ref6">[6, §4.1]</a></sup> —
+희소 LiDAR(수백 점)에서 GeDi류 패치 LRF가 성립하기 어려운 것이 우리가 학습 노선을 택한 이유(문서 17 §3).</p>
+
+<h3 id="s37">3.7 대칭 처리 정전 · 42뷰 관례 · 백본 사전학습</h3>
+<p><b>대칭 처리의 계보</b> — 우리 선택지의 좌표:</p>
+<ul>
+<li><b>PoseCNN ShapeMatch-Loss</b><sup class="r"><a href="#ref10">[10, §III-D Eq.(4)]</a></sup>: 대칭 명세 없이 최근접점 min — 포인트별 min이라 라벨 일관성이 없다. 우리 스펙(03 §9.3)이 포인트별 min을 금지한 것과 대비되는 반대 극단.</li>
+<li><b>CosyPose 대칭 거리</b><sup class="r"><a href="#ref13">[13, §3.2 Eq.(2), 부록 Eqs.(15)-(17)]</a></sup>: 손실을 대칭군 위 min으로 정의 — <i>"D_l(T₁,T₂) = min_{S∈S(l)} …"</i>. 샘플당 최적 대칭 원소 하나가 손실을 지배하므로 <b>우리 g* 단일선택과 수학적으로 동치</b>(argmin 선택 후 고정 = min 평가).</li>
+<li><b>BOP 평가 정전</b><sup class="r"><a href="#ref12">[12, §2.2 Eq.(2)(3)]</a></sup>: MSSD/MSPD 모두 전역 대칭집합 위 min — 우리 평가식(<code>sym_aware_rot_err_deg</code>)과 동형. 대칭 주석은 Hausdorff 후보 + 텍스처 판단으로 제작<sup class="r"><a href="#ref12">[12, §2.3]</a></sup> — 우리는 메시 자동 검출(G≤16)로 같은 것을 무주석 획득.</li>
+</ul>
+<p><b>42뷰 관례</b>: CNOS가 Blender icosphere 42시점을 도입<sup class="r"><a href="#ref8">[8, §3.1]</a></sup>
+(<i>"we render CAD models under 42 viewpoints"</i>), SAM-6D 평가 42뷰<sup class="r"><a href="#ref1">[1, §4]</a></sup>,
+FoundationPose 초기화 icosphere 42시점<sup class="r"><a href="#ref4">[4, 보충 §5.2]</a></sup>, Co-op 42시점<sup class="r"><a href="#ref5">[5, §3.1]</a></sup> —
+4편 수렴. 우리 S0 온보딩의 <code>N_VIEWS=42</code>는 이 관례와 일치.</p>
+<p><b>백본 사전학습</b>: DINOv2 = DINO 이미지 수준 + iBOT 패치 수준 + KoLeo + Sinkhorn 센터링, LVD-142M 큐레이션, 소형은 ViT-g에서 증류<sup class="r"><a href="#ref9">[9, §3-5]</a></sup>.
+DINOv3 = 7B 교사·LVD-1689M, 밀집 특징 유지용 Gram anchoring(ℒ_Gram, Eq.(2)), ConvNeXt T/S/B/L 증류판 존재<sup class="r"><a href="#ref14">[14, §3.1, §4, §7.2]</a></sup>.
+단 공개 가중치 라이선스는 자체 <b>"DINOv3 License"</b>(Apache 아님 — GitHub README 원문 확인) — 문서 19의 초록 우선 원칙에 따라
+현 학습은 timm Apache-2.0 ConvNeXt(<code>convnext_tiny.in12k_ft_in1k</code>)를 사용(<code>train/encoders.py</code>), DINOv3 증류판은 라이선스 결정(D-4 계열) 전까지 보류가 맞다.</p>
+
+<h2 id="s4"><span class="no">4</span>축별 대조표 (전 항목 출처 병기)</h2>
+<table>
+<tr><th style="width:11%">축</th><th style="width:22%">Shape6D Phase A (당측)</th><th>SAM-6D<sup class="r"><a href="#ref1">[1]</a></sup></th><th>MegaPose<sup class="r"><a href="#ref3">[3]</a></sup></th><th>FoundationPose<sup class="r"><a href="#ref4">[4]</a></sup></th><th>Co-op<sup class="r"><a href="#ref5">[5]</a></sup></th><th>FreeZe<sup class="r"><a href="#ref6">[6]</a></sup></th></tr>
+<tr><td>학습 대상</td><td>매처+인코더 (3.3M)</td><td>PEM만 (ISM 무학습) [§1,§4]</td><td>coarse+refiner (ResNet-34) [§3.1]</td><td>refiner+selector [§3.3-3.4]</td><td>coarse+refiner+selector (CroCo ft) [§3.4-3.5]</td><td>전무 (frozen) [§1]</td></tr>
+<tr><td>핵심 손실</td><td>대응 CE(+bg) + 0.5·포즈</td><td>InfoNCE(행·열 CE)만, 심층감독 [Eq.12,14]</td><td>이진 CE / 분리 L1 [§3.2, Eq.13-17]</td><td>L2(Δt,ΔR) / triplet(α=0.1) [Eq.10-14]</td><td>CE+L1 / flow NLL+BCE+포즈 [Eq.6-10]</td><td>— (RANSAC+ICP 추론) [§3.5-3.6]</td></tr>
+<tr><td>라벨 대칭</td><td><b>g* 단일선택</b> (CosyPose 정전<sup class="r"><a href="#ref13">[13]</a></sup> 동치)</td><td>명시 없음(검증)</td><td>미사용 선언 — 주석 부재 사유 [Appx B] · 회귀 붕괴 실증 [Appx F]</td><td>명시 없음(검증)</td><td>명시 없음(검증)</td><td>추론 시 SAR [§3.6]</td></tr>
+<tr><td>포즈 산출</td><td>가중 Kabsch(비학습)</td><td>가중 SVD(비학습) [§3.2.3]</td><td>망 직접 출력(9값) [§3.1]</td><td>망 직접 출력(Δt,ΔR) [§3.3]</td><td>미분가능 PnP(LM+GN) [§3.2]</td><td>RANSAC 3D-3D [§3.5]</td></tr>
+<tr><td>템플릿(학습)</td><td>42뷰 팩 중 <b>2뷰</b>/평가 6뷰</td><td><b>2뷰</b>/평가 42뷰 [§4]</td><td>가설 104 렌더 [Appx D]</td><td>단일 뷰 렌더 [§3.3]</td><td>42시점 중 매칭 [§3.1]</td><td>템플릿 특징 뱅크 [§3.3]</td></tr>
+<tr><td>정규화</td><td>좌표 ÷ 직경</td><td>단위구 ÷ scale [보충 B.1.1]</td><td>깊이 D/z−1 [Appx C Eq.19]</td><td>물체 5–30cm 리스케일+정규화 [보충 5.2]</td><td>명시 없음</td><td>—</td></tr>
+<tr><td>데이터</td><td>MegaPose-GSO 168종·47k(+스케일 보정 실측)</td><td>MegaPose 2M·~5만 종 [§4]</td><td>자체 2M (SN20k+GSO1k) [§3.2]</td><td>Objaverse40k+GSO·1.2M(포화 ~1M) [보충 5.2, Fig.7]</td><td>MegaPose 셋 [§3.4]</td><td>불필요 [§2]</td></tr>
+<tr><td>옵티마이저</td><td>AdamW 3e-4 OneCycle bs48 · 29.6k step</td><td>Adam 1e-4 cosine bs28 · 600k [§4]</td><td>명시 없음(검증)</td><td>명시 없음(검증)</td><td>AdamW 2e-5→2e-6 warmup50 bs64/32/16 [보충 §6]</td><td>—</td></tr>
+</table>
+<p class="cap">각 셀의 [ ]는 해당 열 논문 내 위치. "명시 없음(검증)"은 전문 검색으로 부재를 확인한 항목.</p>
+
+<h2 id="s5"><span class="no">5</span>정합 판정 — 일치 · 초과 · 이탈</h2>
+
+<h3>A. 문헌과 일치 <span class="badge b-ok">검증 8건</span></h3>
+<table>
+<tr><th style="width:34%">항목</th><th>근거</th></tr>
+<tr class="g"><td>대응 소프트 할당 + <b>bg 토큰</b> + CE 계열 감독</td><td>SAM-6D Eq.(5)(12)<sup class="r"><a href="#ref1">[1]</a></sup>; Co-op no-match 클래스<sup class="r"><a href="#ref5">[5, §3.1]</a></sup></td></tr>
+<tr class="g"><td>coarse <b>196점</b></td><td>SAM-6D §4 동일 수치<sup class="r"><a href="#ref1">[1]</a></sup></td></tr>
+<tr class="g"><td>라벨 규칙: GT 변환 최근접 + 거리 임계 초과 시 bg</td><td>SAM-6D Eq.(13) 동형 (δ 0.15 단위구 vs 당측 0.10D)<sup class="r"><a href="#ref1">[1]</a></sup></td></tr>
+<tr class="g"><td>포즈는 비학습 SVD로 산출 (망은 대응만 학습)</td><td>SAM-6D weighted SVD<sup class="r"><a href="#ref1">[1, §3.2.3]</a></sup></td></tr>
+<tr class="g"><td>학습 템플릿 <b>2뷰</b> (경량) / 평가 다뷰</td><td>SAM-6D 학습 2뷰·평가 42뷰<sup class="r"><a href="#ref1">[1, §4]</a></sup></td></tr>
+<tr class="g"><td>물체 스케일 정규화 (÷직경)</td><td>SAM-6D 단위구<sup class="r"><a href="#ref1">[1]</a></sup>; FoundationPose 정규화<sup class="r"><a href="#ref4">[4]</a></sup></td></tr>
+<tr class="g"><td>합성 전용 학습 + 미학습 물체 평가 (zero-shot 규약)</td><td>MegaPose<sup class="r"><a href="#ref3">[3, §3.2]</a></sup>; FoundationPose<sup class="r"><a href="#ref4">[4, §1]</a></sup>; Co-op 테스트 도메인 학습 이미지 미사용<sup class="r"><a href="#ref5">[5, §4.1]</a></sup></td></tr>
+<tr class="g"><td>평가식 min-over-G · 42뷰 온보딩 · 사전학습 초기화 우위</td><td>BOP MSSD Eq.(2)<sup class="r"><a href="#ref12">[12]</a></sup> · CNOS §3.1 외 4편<sup class="r"><a href="#ref8">[8]</a></sup> · Co-op Table 2(58.4→46.4) ↔ 당측 a1/a0(26.6/18.3%)<sup class="r"><a href="#ref5">[5]</a></sup></td></tr>
+</table>
+
+<h3>B. 문헌 초과 — 우리가 더 나간 부분 <span class="badge b-up">3건</span></h3>
+<table>
+<tr><th style="width:34%">항목</th><th>정당화</th></tr>
+<tr><td><b>학습 라벨의 대칭 처리(g*)</b> — 직접 비교 3편 모두 없음</td><td>CosyPose 대칭 거리 손실과 동치<sup class="r"><a href="#ref13">[13, Eq.(2)]</a></sup>; MegaPose가 실증한 회귀 붕괴<sup class="r"><a href="#ref3">[3, Appx F]</a></sup>의 원인(모호 그래디언트)을 라벨에서 제거. MegaPose가 포기한 사유(주석 부재<sup class="r"><a href="#ref3">[3, Appx B]</a></sup>)를 메시 자동 검출로 해소 — BOP 주석 제작법<sup class="r"><a href="#ref12">[12, §2.3]</a></sup>의 자동화판</td></tr>
+<tr><td><b>센서 사양 희소화 증강</b> (ML-X 격자·σ3mm·npt U[256,4096])</td><td>MegaPose 깊이 증강(blur·dropout·노이즈)<sup class="r"><a href="#ref3">[3, Appx E]</a></sup>의 도메인 특화 확장 — 문헌은 밀집 depth 전제, 희소 LiDAR 정식 대응은 당측 고유(문서 17 §5.5)</td></tr>
+<tr><td><b>학습 데이터 스케일 결함 보정</b> (물체별 s 실측·역보정)</td><td>MegaPose 논문에 리스케일 서술 없음(부재 검증) — 당측 실측(s∈[0.10,1.43], <code>recover_gso_scale.py</code>, 164/168 복원). 스케일 오류의 위해는 MegaPose도 인정<sup class="r"><a href="#ref3">[3, Appx H]</a></sup></td></tr>
+</table>
+
+<h3>C. 이탈 — 검토와 처분 <span class="badge b-dev">유지 3</span><span class="badge b-fix">수정 1</span><span class="badge b-dev">실험 1</span></h3>
+<table>
+<tr><th style="width:5%" class="c">#</th><th style="width:26%">이탈</th><th>문헌</th><th style="width:30%">처분</th></tr>
+<tr class="y"><td class="c">C1</td><td>포즈 손실 0.5·(rot+2·trans/D) 추가</td><td>SAM-6D는 InfoNCE 단독<sup class="r"><a href="#ref1">[1, Eq.14]</a></sup></td><td><b>유지</b> — 리파이너 계열(MegaPose<sup class="r"><a href="#ref3">[3]</a></sup>·Co-op γ=20<sup class="r"><a href="#ref5">[5, Eq.10]</a></sup>)은 포즈 손실 사용. 당측은 SVD가 미분가능해 혼합이 자연스러움. Phase B에서 w_pose 절제 1회 계획</td></tr>
+<tr class="y"><td class="c">C2</td><td>대응 감독을 CE로 (circle loss 아님)</td><td>GeoTransformer는 CE의 양성 억제를 논증하고 circle loss 채택<sup class="r"><a href="#ref2">[2, §3.5, Appx C]</a></sup></td><td><b>유지</b> — 동일 과제(모델-장면 대응)의 SAM-6D<sup class="r"><a href="#ref1">[1]</a></sup>·Co-op<sup class="r"><a href="#ref5">[5]</a></sup>은 CE로 성공. FoundationPose의 InfoNCE 폐기<sup class="r"><a href="#ref4">[4, Table 6]</a></sup>는 랭킹 과제라 대응 감독의 반증 아님. 대응 학습 정체 시 재방문 조건으로 등재</td></tr>
+<tr class="y"><td class="c">C3</td><td>fine 매칭 단계 부재 (coarse 196 단독)</td><td>SAM-6D는 fine 2048 SDPT 필수 구성<sup class="r"><a href="#ref1">[1, 보충 B.1.3]</a></sup></td><td><b>유보(의도적)</b> — Phase A는 최소 매칭부 검증이 목적(문서 20 C-3). 희소 입력(≤4096점)에선 2048 fine의 이득 자체가 미검증 — Phase B 설계 항목</td></tr>
+<tr class="r"><td class="c">C4</td><td><b>g* 기준점이 학습 2뷰 P_o</b> (뷰 조합 따라 라벨 요동, 마스터 대비 일치율 0.73 실측)</td><td>CosyPose 대칭 거리는 고정 모델점에서 계산<sup class="r"><a href="#ref13">[13, Eq.(2)]</a></sup> — 기준점이 뷰 무관</td><td><b>수정 (R1)</b> — 스펙 03 §9.3대로 마스터 2048 기준 전환. CE 최근접 타깃은 P_o 기준 유지(SAM-6D Eq.13과 동형이므로)</td></tr>
+<tr class="y"><td class="c">C5</td><td>학습 뷰 2→6 증설 계획(R2)</td><td>SAM-6D 학습은 2뷰<sup class="r"><a href="#ref1">[1, §4]</a></sup></td><td><b>실험으로 표기</b> — 문헌 관례 이탈임을 인지하고 A/B로만 채택 판단. 가설: 희소 장면점의 비가시면 대응 불가→bg 덤핑 완화</td></tr>
+</table>
+<p>최적화 하이퍼는 공개된 두 사례 범위 안이다: lr는 SAM-6D 1e-4<sup class="r"><a href="#ref1">[1]</a></sup>와 Co-op 2e-5<sup class="r"><a href="#ref5">[5]</a></sup> 대비 당측 3e-4가 높지만, 스텝 수가 600k 대비 29.6k(1/20)인 소규모 실험 국면의 선택이며 발산 이력은 lr 정책(C-7)에 반영됨. 총 학습량 격차(2M·5만 종 vs 47k·132종)는 Phase A의 의도된 축소이고, 확장 상한 근거는 §6.</p>
+
+<h2 id="s6"><span class="no">6</span>실행 반영</h2>
+<ul>
+<li><b>R1 (g* 마스터 기반) 정당성 상승</b>: C4는 유일한 "수정" 판정 — 문헌 정전(CosyPose 고정 모델점)과 스펙(03 §9.3) 모두 위반 상태였음이 확인됨. 다음 런에서 수정.</li>
+<li><b>R2 (뷰 6) 지위 조정</b>: 문헌 관례(2뷰)를 벗어나는 가설 검증 실험으로 등급 조정 — 채택은 리포트 Δ(특히 bg 덤핑률·비대칭 ≤30°)로만 판단.</li>
+<li><b>Phase B 데이터 상한 근거 확보</b>: 물체 수는 GSO 1k에서 수확 체감<sup class="r"><a href="#ref3">[3, Table 3(b)]</a></sup>, 이미지 수는 ~1M 포화<sup class="r"><a href="#ref4">[4, Fig.7]</a></sup> — GSO 잔여 861종 확보(계 1,029종)로 물체 축은 문헌 포화점 도달, 이미지 축은 47k→수십만 구간이 증분 구간.</li>
+<li><b>백본 라이선스 재확인</b>: DINOv3 증류 ConvNeXt는 자체 라이선스 확정 — timm Apache 경로 유지(문서 19 결정 불변).</li>
+<li><b>문서 정정</b>: 문서 11의 Co-op 백본 서술(DINOv2)을 본 문서로 정정 갈음(원문은 CroCo 파인튜닝<sup class="r"><a href="#ref5">[5, §3.5]</a></sup>).</li>
+</ul>
+
+<h2 id="s7"><span class="no">7</span>미확인 항목 대장 (정직성 원칙)</h2>
+<div class="warnbox">아래는 원문에서 <b>확인하지 못한</b> 것들이다. 보고서 본문은 이 항목들에 대해 어떤 값도 가정하지 않았다.</div>
+<ul class="tiny" style="font-size:12.6px">
+<li>SAM-6D: 소프트 할당 온도 τ 값 · PEM ViT-Base의 사전학습 출처/동결 여부 · 이미지 증강 유무 · epoch/wd/GPU<sup class="r"><a href="#ref1">[1]</a></sup></li>
+<li>GeoTransformer: circle loss 스케일 γ 값 · overlap ratio 명시 산식 · 증강 세부(Predator 준거로만 기술)<sup class="r"><a href="#ref2">[2]</a></sup></li>
+<li>MegaPose: 옵티마이저·lr·배치 전체 · 리파이너 섭동 단위 표기 불일치(원문 "(0.02,0.02,0.05) centimeters"[sic] vs FoundationPose의 동일 수치 "m" 표기<sup class="r"><a href="#ref4">[4, 보충 5.2]</a></sup> — 어느 쪽이 오기인지 논문만으로 판정 불가)</li>
+<li>FoundationPose: 옵티마이저·lr·배치(리파이너/선택기)</li>
+<li>Co-op: selector weight decay · 학습 이미지 총수(“million” 표기 전문 0회)</li>
+<li>FreeZe: 사용 GeDi 체크포인트의 학습 데이터 직접 지목 없음("indoor scenes"만) — 3DMatch 판이라는 것은 GeDi 원문<sup class="r"><a href="#ref7">[7, §4]</a></sup>과 잇는 추론</li>
+<li>DINOv3: 논문 §7.2 본문 내 ConvNeXt 사이즈 열거 문장(HTML 절단) — GitHub/HF 모델카드로 대체 확증 · "DINOv3 License" 상업 조항 원문 미열람</li>
+<li>당측 유보: EPOS/SurfEmb 등 대칭 인지 손실 추가 계보 미조사(CosyPose·PoseCNN·BOP로 충분하다고 판단)</li>
+</ul>
+
+<h2 id="s8"><span class="no">참고문헌</span></h2>
+<ol class="refs">
+<li id="ref1">Jiehong Lin, Lihua Liu, Dekun Lu, Kui Jia. "SAM-6D: Segment Anything Model Meets Zero-Shot 6D Object Pose Estimation". CVPR 2024. arXiv:2311.15707 (v2 대조).</li>
+<li id="ref2">Zheng Qin, Hao Yu, Changjian Wang, Yulan Guo, Yuxing Peng, Kai Xu. "Geometric Transformer for Fast and Robust Point Cloud Registration". CVPR 2022. arXiv:2202.06688 (v2 대조).</li>
+<li id="ref3">Yann Labbé, Lucas Manuelli, Arsalan Mousavian, Stephen Tyree, Stan Birchfield, Jonathan Tremblay, Justin Carpentier, Mathieu Aubry, Dieter Fox, Josef Sivic. "MegaPose: 6D Pose Estimation of Novel Objects via Render &amp; Compare". CoRL 2022. arXiv:2212.06870 (v1 대조).</li>
+<li id="ref4">Bowen Wen, Wei Yang, Jan Kautz, Stan Birchfield. "FoundationPose: Unified 6D Pose Estimation and Tracking of Novel Objects". CVPR 2024. arXiv:2312.08344 (v2 대조).</li>
+<li id="ref5">Sungphill Moon, Hyeontae Son, Dongcheol Hur, Sangwook Kim. "Co-op: Correspondence-based Novel Object Pose Estimation". CVPR 2025. arXiv:2503.17731 (v1 대조).</li>
+<li id="ref6">Andrea Caraffa, Davide Boscaini, Amir Hamza, Fabio Poiesi. "FreeZe: Training-free zero-shot 6D pose estimation with geometric and vision foundation models". ECCV 2024. arXiv:2312.00947 (v3 대조).</li>
+<li id="ref7">Fabio Poiesi, Davide Boscaini. "Learning general and distinctive 3D local deep descriptors for point cloud registration". IEEE TPAMI. arXiv:2105.10382 (v3 대조).</li>
+<li id="ref8">Van Nguyen Nguyen, Thibault Groueix, Georgy Ponimatkin, Vincent Lepetit, Tomas Hodan. "CNOS: A Strong Baseline for CAD-based Novel Object Segmentation". ICCVW 2023. arXiv:2307.11067.</li>
+<li id="ref9">Maxime Oquab, Timothée Darcet, Théo Moutakanni, Huy V. Vo, Marc Szafraniec, et al. "DINOv2: Learning Robust Visual Features without Supervision". TMLR 2024. arXiv:2304.07193.</li>
+<li id="ref10">Yu Xiang, Tanner Schmidt, Venkatraman Narayanan, Dieter Fox. "PoseCNN: A Convolutional Neural Network for 6D Object Pose Estimation in Cluttered Scenes". RSS 2018. arXiv:1711.00199.</li>
+<li id="ref11">Yi Zhou, Connelly Barnes, Jingwan Lu, Jimei Yang, Hao Li. "On the Continuity of Rotation Representations in Neural Networks". CVPR 2019. (MegaPose·FoundationPose가 회전 표현으로 인용<sup class="r"><a href="#ref3">[3]</a></sup><sup class="r"><a href="#ref4">[4]</a></sup>)</li>
+<li id="ref12">Tomáš Hodaň, Martin Sundermeyer, Bertram Drost, Yann Labbé, Eric Brachmann, Frank Michel, Carsten Rother, Jiří Matas. "BOP Challenge 2020 on 6D Object Localization". ECCVW 2020. arXiv:2009.07378.</li>
+<li id="ref13">Yann Labbé, Justin Carpentier, Mathieu Aubry, Josef Sivic. "CosyPose: Consistent multi-view multi-object 6D pose estimation". ECCV 2020. arXiv:2008.08465.</li>
+<li id="ref14">Oriane Siméoni, Huy V. Vo, Maximilian Seitzer, Federico Baldassarre, Maxime Oquab, et al. "DINOv3". arXiv:2508.10104. 2025. (+ 공개 가중치: github.com/facebookresearch/dinov3, HF dinov3-convnext-* 모델카드)</li>
+</ol>
+
+<p class="tiny">작성: Shape6D R&amp;D · 원문 대조 방법론은 §1 · 우리 측 수치의 재현 경로는 <code>reports/</code>와 git <code>0ccb5dc</code>.</p>
+
+</div>
+</body>
+</html>

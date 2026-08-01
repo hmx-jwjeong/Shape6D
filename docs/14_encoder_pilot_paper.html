@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>희소 LiDAR geo_maps 인코더 통제 비교 — E-BB 파일럿 (v2)</title>
+<style>
+  :root {
+    --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb;
+    --accent:#0b5fff; --good:#0a7d43; --good-soft:#e6f5ec;
+    --warn:#a05a00; --warn-soft:#fdf3e3; --bad:#b4232a; --bad-soft:#fdecec;
+    --shape:#6d28d9; --shape-soft:#f1eafd;
+    --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+         color:var(--ink); background:var(--bg); line-height:1.7; font-size:15px; }
+  .wrap { max-width:1080px; margin:0 auto; padding:44px 28px 110px; }
+  h1 { font-size:26px; margin:0 0 6px; letter-spacing:-0.5px; line-height:1.35; }
+  h2 { font-size:19px; margin:52px 0 12px; padding-top:16px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:26px 0 8px; }
+  h3 .no { color:var(--sub); font-weight:700; margin-right:6px; }
+  p { margin:9px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  .abs { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:16px 20px; margin:18px 0 26px; font-size:14px; }
+  .abs b.t { display:block; font-size:15px; margin-bottom:6px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.6px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 9px; font-weight:600; }
+  th.c, td.c { text-align:center; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.best td { background:var(--good-soft); }
+  tr.best td:first-child { border-left:3px solid var(--good); }
+  tr.me td { background:var(--shape-soft); }
+  tr.me td:first-child { border-left:3px solid var(--shape); }
+  .cap { font-size:12.3px; color:var(--sub); margin:4px 0 22px; }
+  .cap b { color:var(--ink); }
+  figure { margin:22px 0 8px; }
+  figure img { width:100%; border:1px solid var(--line); border-radius:8px; display:block; }
+  code { font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace; font-size:12.3px;
+         background:var(--panel); padding:1px 5px; border-radius:4px; }
+  pre { background:#12151b; color:#e6e9ef; padding:13px 16px; border-radius:9px; overflow-x:auto;
+        font-size:12.2px; line-height:1.6; margin:10px 0; }
+  .box { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; }
+  .crit { border:1px solid var(--line); border-left:4px solid var(--bad); background:var(--bad-soft);
+          border-radius:8px; padding:13px 17px; margin:16px 0; font-size:13.5px; }
+  .crit .h { font-weight:800; color:var(--bad); margin-bottom:5px; font-size:14.5px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; font-size:14px; }
+  .warnbox { border:1.5px dashed var(--warn); background:var(--warn-soft); border-radius:10px;
+             padding:11px 16px; margin:14px 0; font-size:13.2px; }
+  .note { border:1.5px dashed var(--shape); background:var(--shape-soft); border-radius:10px;
+          padding:11px 16px; margin:14px 0; font-size:13.2px; }
+  ul, ol { margin:8px 0; padding-left:22px; } li { margin:5px 0; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 20px;
+         margin:18px 0 6px; font-size:13.3px; column-count:2; column-gap:30px; }
+  .toc a { display:block; padding:2px 0; break-inside:avoid; }
+  .tiny { font-size:11.8px; color:var(--sub); }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:18px 0 6px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:19px; letter-spacing:-0.5px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good b { color:var(--good); } .stat.bad b { color:var(--bad); } .stat.warn b { color:var(--warn); }
+  .swatch { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; vertical-align:0; }
+  @media (max-width:820px){ .toc{column-count:1;} .hero{grid-template-columns:repeat(2,1fr);} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>희소 LiDAR <code>geo_maps</code> 인코더 통제 비교<br>— S3 coarse 프록시 과제에서의 초기화 ablation (E-BB 파일럿 v2)</h1>
+<div class="meta">v2.0 · 2026-07-29 · 장비 RTX PRO 6000 Blackwell · torch 2.10.0+cu128 · timm 1.0.27<br>
+대상 설계: <a href="03_implementation_design.html">03 §6.2</a>(기하 인코더 3후보) · 판정 계획: <a href="12_backbone_survey_dino.html">12 §8</a> · 선행 실측: <a href="13_backbone_pilot_report.html">13</a></div>
+
+<div class="abs">
+<b class="t">요약</b>
+Shape6D S3의 기하 인코더 후보를 고르기 위해, <b>희소 LiDAR 관측에서 물체의 coarse 자세를 맞히는 프록시 과제</b>를 만들어 세 인코더를 동일 조건에서 학습·비교했다.
+데이터는 프로젝트 자체 S0 렌더러로 SKID CAD의 42뷰 관측을 합성하고 <b>UAM 실기 로그에서 추출한 LiDAR 유효마스크 156종</b>을 곱해 만들었다(물체당 중앙 653pt).
+비교 대상은 <b>a0</b> ResNet18-lite(정본·스크래치), <b>a1</b> 절단 ConvNeXt-T(ImageNet), <b>a1d</b> 절단 ConvNeXt-T(DINOv3)이며 셋 다 예산 1.33~1.37M / 1.73~1.77 GMACs로 정합했다.<br><br>
+<b>결과는 밀도에 따라 갈린다.</b> 운용 밀도(653pt)에서는 세 후보 모두 top-1 0.98~0.99로 <b>포화해 판별력이 없다</b>(정본이 근소 우위).
+그러나 관측을 솎아 <b>163pt로 낮추면 DINOv3가 오답률을 28.2%→14.7%로 절반</b>으로 줄이고, 65pt에서는 top-1이 0.194→0.415로 <b>2.1배</b>가 된다.
+즉 <b>사전학습의 가치는 정확도 상한이 아니라 희소 강건성에서 나타나며, 운용 밀도에서만 평가하면 이 차이가 보이지 않는다.</b>
+</div>
+
+<div class="hero">
+  <div class="stat"><b>653pt</b><span>물체당 유효 포인트 중앙값 (실기 마스크 적용)</span></div>
+  <div class="stat warn"><b>0.98~0.99</b><span>운용 밀도 top-1 — 세 후보 모두 포화</span></div>
+  <div class="stat good"><b>2.1×</b><span>65pt에서 DINOv3의 top-1 배율 (vs 정본)</span></div>
+  <div class="stat bad"><b>15.9°</b><span>42뷰 이산화가 남기는 이론 하한</span></div>
+</div>
+
+<div class="toc">
+<a href="#s1">1. 문제 설정 — 무엇을 판정해야 하는가</a>
+<a href="#s2">2. 방법 — 데이터·과제·모델·통제</a>
+<a href="#s3">3. 결과</a>
+<a href="#s4">4. 논의</a>
+<a href="#s5">5. 한계</a>
+<a href="#s6">6. 선행 보고(13)에 대한 정정</a>
+</div>
+
+<h2 id="s1"><span class="no">1</span>문제 설정 — 무엇을 판정해야 하는가</h2>
+
+<p><a href="12_backbone_survey_dino.html">12 서베이</a>는 S3 기하 인코더로 <b>DINOv3 ConvNeXt-Tiny의 stem+stage1~2를 잘라 쓰는 안</b>을 제안했고, 그 근거는 ① 출력 격자(stride-4, 56²)가 설계 요구와 일치하고 ② 예산에 들어오며 ③ 사전학습이 학습 물체 다양성 부족을 보상할 수 있다는 것이었다. ①②는 계산으로 확인됐으나(<a href="13_backbone_pilot_report.html">13 §2</a>) <b>③은 측정된 적이 없었다.</b></p>
+
+<p>이 실험이 답해야 하는 질문은 셋이다.</p>
+<ol>
+<li><b>Q1</b> RGB 도메인 사전학습이 10채널 <code>geo_maps</code> 도메인으로 전이되는가? — a1/a1d vs 스크래치</li>
+<li><b>Q2</b> DINOv3(17억 장 SSL)가 ImageNet(지도학습)보다 나은가? — a1d vs a1</li>
+<li><b>Q3</b> 그 차이가 <b>희소 조건</b>에서 어떻게 변하는가? — 밀도 스윕(<a href="10_network_design_and_critique.html">10 권고 2</a>)</li>
+</ol>
+
+<h2 id="s2"><span class="no">2</span>방법</h2>
+
+<h3><span class="no">2.1</span>학습 데이터 — 무엇을 어떻게 만들었는가</h3>
+
+<p>실기 UAM 로그에는 6D 포즈 GT가 없다(로그된 SAM-6D 포즈는 GT가 아님 — <a href="13_backbone_pilot_report.html">13</a>, 하네스 docstring). 따라서 <b>라벨은 합성에서, 희소 패턴은 실기에서</b> 가져오는 하이브리드를 구성했다.</p>
+
+<figure>
+  <img src="assets_14/fig1_pipeline.png" alt="입력 생성 파이프라인">
+</figure>
+<div class="cap"><b>Fig 1.</b> 입력 생성 4단계와 <code>geo_maps</code> 채널. (a) SKID CAD를 표면 20만점 샘플 후 <code>splat_depth</code>로 42뷰 중 하나에서 렌더 — 물체가 프레임의 약 20%를 차지한다. (b) UAM robot_log에서 물체 crop을 잡아 추출한 <b>실제 LiDAR 유효마스크</b> — 스캔라인 구조가 그대로 보인다. (c) (a)×(b)가 학습 입력. (d) 그 결과 <b>4×4 stem 셀의 57.8%가 통째로 빈다</b> — 유효 픽셀이 균일 분포가 아니라 줄무늬로 뭉치기 때문이며, 이것이 13 §3에서 이항 가정이 11배 빗나간 이유다.</div>
+
+<table>
+<tr><th style="width:22%">항목</th><th style="width:30%">설정</th><th>근거 / 실측</th></tr>
+<tr><td>CAD</td><td>SKID (실 타깃), 표면 균일 샘플 200,000점</td><td>03 §3.2의 <code>surface_pts</code> M≥5만 규약</td></tr>
+<tr><td>뷰</td><td><code>icosphere42()</code> 중 균등 무작위</td><td>S0 42뷰 규약과 동일</td></tr>
+<tr><td>in-plane 각 θ</td><td>U(−180°, +180°)</td><td>연속 — 회귀 대상</td></tr>
+<tr><td>거리 지터</td><td>±12% (가산)</td><td>스케일 불변성 강제</td></tr>
+<tr><td><b>희소화</b></td><td><b>UAM 실기 유효마스크 156종에서 무작위 선택 후 곱</b></td><td>마스크 평균 유효율 17.4% (범위 3.3~41.8%)</td></tr>
+<tr><td>결과 관측 밀도</td><td><b>물체당 653pt (중앙값)</b>, p10 530 / p90 912</td><td>설계 분포 <code>N_obj ~ U[32,2000]</code> 내부</td></tr>
+<tr><td>규모</td><td>학습 12,000 / 검증 3,000</td><td>검증은 별도 시드(999)로 생성</td></tr>
+</table>
+
+<figure>
+  <img src="assets_14/fig2_samples.png" alt="학습 입력 샘플">
+</figure>
+<div class="cap"><b>Fig 2.</b> 학습 입력 12종. 뷰·in-plane 각·거리·실기 마스크가 모두 독립적으로 무작위이므로, 같은 뷰라도 관측 패턴이 전혀 다르다. 프레임 기준 유효율은 0.6~2.5% 수준이다.</div>
+
+<h3><span class="no">2.2</span>과제와 라벨</h3>
+
+<p>실제 S3 PEM은 점-점 대응을 학습하지만, 그것을 그대로 돌리려면 매칭부·손실·가설생성까지 전부 구현해야 한다(현재 리포에 <b>nn.Module 0개</b>). 인코더만 비교하려면 <b>인코더 출력만으로 풀 수 있는 최소 과제</b>가 필요하다. 그래서 S3 coarse의 이산화 근사를 썼다.</p>
+
+<pre>입력  geo_maps (10, 224, 224)   XYZ(3) + 노멀(3) + 유효마스크(1) + 정규화깊이(1) + flags(2)
+출력  ① 뷰 인덱스 42-way 분류      ← out-of-plane 자세
+      ② in-plane 각 (cos θ, sin θ) ← 연속 회귀
+손실  L = CrossEntropy(뷰) + MSE(cos·sin)</pre>
+
+<div class="note"><b>이 과제가 잰다고 주장하는 것과 아닌 것.</b> 뷰 42-way + in-plane 회귀는 <b>"희소 관측에서 물체의 방향을 읽어낼 수 있는가"</b>를 잰다 — 인코더가 해야 할 일의 핵심이다. 그러나 <b>점-점 대응의 정밀도</b>는 재지 않는다. 따라서 결과는 <b>인코더 간 상대 비교</b>로만 유효하며 최종 포즈 정확도의 예측치가 아니다.</div>
+
+<h3><span class="no">2.3</span>비교 대상 — 무엇이 같고 무엇이 다른가</h3>
+
+<table>
+<tr><th style="width:9%">후보</th><th style="width:26%">인코더</th><th style="width:17%">초기화</th><th class="c" style="width:10%">Params</th><th class="c" style="width:11%">GMACs</th><th class="c" style="width:9%">GPU ms</th><th>비고</th></tr>
+<tr class="me"><td><b>a0</b></td><td>ResNet18-lite (w=80) + FPN</td><td>스크래치</td><td class="n">1.367M</td><td class="n">1.774</td><td class="n">0.69</td><td>03 §6.2 후보 (a)의 재구성 — 정본 대조군</td></tr>
+<tr><td><b>a1</b></td><td>ConvNeXt-T <code>stem+s1+s2</code> 절단</td><td>ImageNet 지도학습</td><td class="n">1.330M</td><td class="n">1.726</td><td class="n">0.72</td><td>12 §7.1 권고안 (사전학습 대리)</td></tr>
+<tr><td><b>a1d</b></td><td>동일 구조</td><td><b>DINOv3</b> (LVD-1689M SSL)</td><td class="n">1.330M</td><td class="n">1.726</td><td class="n">0.72</td><td>가중치 매핑 검증 완료 (오차 0.000e+00)</td></tr>
+</table>
+<div class="cap"><b>Table 1.</b> 후보 구성. 셋 다 <b>중첩 partial-conv stem</b>(비중첩 4×4 patchify는 희소 입력에서 붕괴 — 13 §3)과 <b>1×1 lateral FPN</b>(3×3 full은 1.97 GMACs로 예산 초과)을 공유하며, 출력은 모두 <code>(256, 56, 56)</code>이다. 파라미터·연산이 3% 이내로 정합해 <b>용량 통제</b>가 성립한다.</div>
+
+<div class="fair"><div class="h">차이의 차이 — 세 비교가 각각 다른 것을 분리한다</div>
+<b>a1 − a0</b> = 구조 변경 + 사전학습 (합)<br>
+<b>a1d − a1</b> = <b>사전학습 코퍼스·목적의 차이만</b> (구조·코드경로·데이터·스케줄 전부 동일, 가중치만 교체)<br>
+<b>a1 vs a2</b>(13 §4.2에서 측정) = 같은 구조에서 <b>사전학습 유무만</b><br>
+a1과 a1d는 <b>완전히 같은 코드 경로</b>를 탄다. transformers 체크포인트를 timm 키로 매핑한 뒤 원본 모델과 stage0·stage1 출력을 대조해 <b>최대 절대오차 0.000e+00</b>(비트 동일)을 확인했다.</div>
+
+<h3><span class="no">2.4</span>학습 설정</h3>
+<table>
+<tr><th style="width:22%">항목</th><th>값</th></tr>
+<tr><td>스케줄</td><td>60 에폭 · batch 96 · AdamW(wd 0.05) · OneCycle(pct_start 0.2) · bf16 autocast</td></tr>
+<tr><td>학습률</td><td>후보별 최적 사용 — <b>a0 1e-3, a1·a1d 3e-4</b></td></tr>
+<tr><td>헤드</td><td>뷰 = GAP → Linear(256→42) · 각 = 1×1(256→32) → 8×8 적응풀 → MLP</td></tr>
+<tr><td>동일 조건</td><td>세 후보가 <b>같은 학습셋·같은 검증셋·같은 헤드·같은 에폭 수</b></td></tr>
+</table>
+<div class="warnbox"><b>lr을 후보별로 다르게 준 이유.</b> 13 §6.2에서 <b>사전학습 가중치는 고LR에서 파괴</b>됨을 확인했다(a1d를 lr 1e-3으로 돌리면 각 MAE 90.7° = 완전한 우연). "동일 하이퍼파라미터"는 공정해 보이지만 실제로는 <b>사전학습 후보에 불리한 비교</b>이므로, 후보별 최적 lr을 쓰는 것이 통제로서 옳다.</div>
+
+<h3><span class="no">2.5</span>평가 지표 — top-1은 무엇을 뜻하는가</h3>
+
+<p>선행 보고(13)는 <b>뷰 top-1만</b> 보고했는데, 이 값은 42-way 분류 정확도일 뿐 포즈 오차를 말해주지 않는다. 이번에는 예측을 회전행렬로 복원해 측지 오차로 환산했다.</p>
+
+<table>
+<tr><th style="width:20%">지표</th><th>정의와 해석</th></tr>
+<tr><td>뷰 top-1</td><td>42-way 분류 정확도. 우연 수준 = 1/42 = <b>2.4%</b></td></tr>
+<tr><td>뷰 각거리</td><td>예측 뷰 방향 ↔ GT 뷰 방향 사이 각. <b>42뷰의 최근접 이웃 간격은 31.7°(균일)</b></td></tr>
+<tr><td><b>회전 측지 오차</b></td><td>R<sub>pred</sub> = R<sub>z</sub>(θ̂)·R<sub>view</sub>(v̂) 와 GT 사이의 측지 거리(deg). <b>실제 포즈 오차</b></td></tr>
+<tr><td>≤30° 비율</td><td>후속 ICP가 수렴할 만한 범위 안에 든 비율 (coarse 단계의 실질 성공률)</td></tr>
+</table>
+
+<div class="box"><b>이산화 하한.</b> 42뷰 이산화만으로 out-of-plane 오차가 <b>최대 약 15.9°</b>(=31.7°/2) 남는다. 다만 <b>회전 측지 오차의 중앙값은 이보다 작을 수 있다</b> — ① 15.9°는 뷰 셀 경계의 최악값이고 셀 내부 평균은 더 작으며 ② in-plane 각을 <b>연속 회귀</b>하므로 전체 회전 오차가 뷰 이산화에만 지배되지 않기 때문이다. 실제로 653pt에서 a0의 회전 오차 중앙값은 <b>2.6°</b>였다.</div>
+
+<h2 id="s3"><span class="no">3</span>결과</h2>
+
+<h3><span class="no">3.1</span>운용 밀도(653pt) — 세 후보 모두 포화</h3>
+
+<table>
+<tr><th style="width:8%">후보</th><th style="width:15%">초기화</th><th class="c" style="width:11%">뷰 top-1 ↑</th><th class="c" style="width:11%">회전 p50 ↓</th><th class="c" style="width:11%">회전 p90 ↓</th><th class="c" style="width:10%">≤30° ↑</th><th class="c" style="width:12%">in-plane MAE ↓</th><th class="c">오답률</th></tr>
+<tr class="best"><td><b>a0</b></td><td>스크래치</td><td class="n"><b>0.9930</b></td><td class="n"><b>2.6°</b></td><td class="n"><b>7.5°</b></td><td class="n"><b>98.8%</b></td><td class="n"><b>3.8°</b></td><td class="n"><b>0.70%</b></td></tr>
+<tr><td>a1</td><td>ImageNet</td><td class="n">0.9820</td><td class="n">3.8°</td><td class="n">11.1°</td><td class="n">97.5%</td><td class="n">5.5°</td><td class="n">1.80%</td></tr>
+<tr><td>a1d</td><td>DINOv3</td><td class="n">0.9830</td><td class="n">4.1°</td><td class="n">12.0°</td><td class="n">97.5%</td><td class="n">6.0°</td><td class="n">1.70%</td></tr>
+</table>
+<div class="cap"><b>Table 2.</b> 운용 밀도(물체당 653pt, 실기 마스크 그대로) 성능. 시드 0. <b>세 후보가 모두 97.5~98.8%로 포화</b>했고 정본(a0)이 근소 우위다. <b>이 동작점은 인코더를 판별하지 못한다</b> — 과제가 너무 쉽다.</div>
+
+<figure><img src="assets_14/fig6_curves.png" alt="학습 곡선"></figure>
+<div class="cap"><b>Fig 6.</b> 학습 곡선. 세 후보 모두 60에폭에서 포화했다. <b>사전학습 후보(a1·a1d)가 초반 수렴이 빠르다</b> — 13 §4.1에서 8에폭 축소 파일럿이 순위를 뒤집었던 원인이 이 곡선 모양의 차이다.</div>
+
+<h3><span class="no">3.2</span>정성 비교</h3>
+
+<figure><img src="assets_14/fig3_qualitative.png" alt="정성 비교"></figure>
+<div class="cap"><b>Fig 3.</b> 관측(희소) · GT 뷰 렌더 · 후보별 예측 뷰 렌더. 상위 3행은 a0 기준 최상위, 하위 3행은 최악 케이스. <b>최악 케이스의 실패는 전부 180° 부근의 뷰 혼동</b>이며, 마지막 행에서는 <b>예측 뷰(15)와 GT 뷰(26)의 렌더가 육안으로 구분되지 않는다</b> — 모델의 오류가 아니라 <b>물체의 대칭 모호성</b>이다. 이는 <a href="07_uam_field_log_eval_report.html">07</a>의 UAM 실기 평가에서 관측된 "플립·90°급 근사대칭 실패 34%"와 같은 유형이며, <a href="10_network_design_and_critique.html">10 §6.2</a>가 "기하만으로는 원리적으로 구분 불가"로 지목한 바로 그 실패다.</div>
+
+<div class="warnbox"><b>정량적 맥락.</b> 운용 밀도에서 오답 자체가 드물다(0.7~1.8%). 그중 &gt;135° 플립은 a0 19% · a1 37% · a1d 37%로, <b>전체 샘플 대비로는 0.13~0.90%</b>다. Fig 3은 <b>최악 케이스를 골라 본 것</b>이므로 플립이 지배적으로 보이지만, 전 구간 통계는 그렇지 않다.</div>
+
+<h3><span class="no">3.3</span>밀도 스윕 — 판별력은 희소 구간에 있다</h3>
+
+<figure><img src="assets_14/fig4_density.png" alt="밀도 스윕"></figure>
+<div class="cap"><b>Fig 4.</b> 관측 포인트 수에 따른 성능(로그 x축). <b>326pt 이상에서는 세 곡선이 겹치지만, 163pt 이하에서 갈라지며 DINOv3가 뚜렷이 앞선다.</b> 우측 회전 오차에서 점선은 42뷰 이산화 하한(15.9°)이다.</div>
+
+<table>
+<tr><th style="width:12%">유효점 수</th><th class="c" style="width:15%"><span class="swatch" style="background:var(--s1)"></span>a0 (정본)</th><th class="c" style="width:15%"><span class="swatch" style="background:var(--s2)"></span>a1 (ImageNet)</th><th class="c" style="width:15%"><span class="swatch" style="background:var(--s3)"></span>a1d (DINOv3)</th><th class="c" style="width:13%">a1d − a0</th><th>비고</th></tr>
+<tr><td>653 (운용)</td><td class="n">0.9930 / 2.6°</td><td class="n">0.9820 / 3.8°</td><td class="n">0.9830 / 4.1°</td><td class="n">−0.010</td><td>포화 — 판별 불가</td></tr>
+<tr><td>326</td><td class="n">0.9777 / 3.9°</td><td class="n">0.9243 / 5.3°</td><td class="n">0.9677 / 5.1°</td><td class="n">−0.010</td><td>—</td></tr>
+<tr class="best"><td><b>163</b></td><td class="n">0.7257 / 11.1°</td><td class="n">0.6807 / 13.7°</td><td class="n"><b>0.8563 / 9.0°</b></td><td class="n"><b>+0.131</b></td><td><b>오답률 28.2% → 14.7%</b></td></tr>
+<tr class="best"><td><b>65</b></td><td class="n">0.1937 / 92.1°</td><td class="n">0.2387 / 90.1°</td><td class="n"><b>0.4150 / 60.0°</b></td><td class="n"><b>+0.221</b></td><td><b>top-1 2.1배</b>, 회전 −32°</td></tr>
+<tr><td>33</td><td class="n">0.0763 / 111.9°</td><td class="n">0.0913 / 117.1°</td><td class="n"><b>0.1537 / 107.0°</b></td><td class="n">+0.077</td><td>전 후보 붕괴 구간</td></tr>
+</table>
+<div class="cap"><b>Table 3.</b> 밀도별 <b>뷰 top-1 / 회전 오차 중앙값</b>. 시드 0. 굵게 표시한 두 행이 <b>판별 구간</b>이다.</div>
+
+<figure><img src="assets_14/fig5_error.png" alt="오차 분포"></figure>
+<div class="cap"><b>Fig 5.</b> 운용 밀도에서의 오차 분포. 좌: 회전 측지 오차 CDF — 세 후보 모두 97% 이상이 30° 이내. 우: 예측 뷰 ↔ GT 뷰 각거리 히스토그램 — 대부분 0°(정답)에 몰려 있고, 오답은 인접 뷰(31.7°)가 아니라 <b>먼 뷰에 흩어져</b> 있다.</div>
+
+<h3><span class="no">3.4</span>실패 구조 — 판별 구간에서</h3>
+
+<table>
+<tr><th style="width:10%">후보</th><th class="c" style="width:12%">밀도</th><th class="c" style="width:12%">오답률</th><th class="c" style="width:14%">≤45° (근접실패)</th><th class="c" style="width:16%">45–135° (다른 뷰)</th><th class="c">&gt;135° (플립)</th></tr>
+<tr><td>a0</td><td class="c">163pt</td><td class="n">28.2%</td><td class="n">0.20</td><td class="n">0.61</td><td class="n">0.19</td></tr>
+<tr><td>a1</td><td class="c">163pt</td><td class="n">31.2%</td><td class="n">0.26</td><td class="n">0.49</td><td class="n">0.25</td></tr>
+<tr class="best"><td><b>a1d</b></td><td class="c">163pt</td><td class="n"><b>14.7%</b></td><td class="n">0.20</td><td class="n">0.54</td><td class="n">0.26</td></tr>
+<tr><td>a0</td><td class="c">65pt</td><td class="n">81.0%</td><td class="n">0.19</td><td class="n">0.67</td><td class="n">0.14</td></tr>
+<tr><td>a1</td><td class="c">65pt</td><td class="n">75.8%</td><td class="n">0.29</td><td class="n">0.49</td><td class="n">0.21</td></tr>
+<tr class="best"><td><b>a1d</b></td><td class="c">65pt</td><td class="n"><b>58.1%</b></td><td class="n">0.23</td><td class="n">0.61</td><td class="n">0.17</td></tr>
+</table>
+<div class="cap"><b>Table 4.</b> 판별 구간의 오답 구조. <b>실패의 종류가 아니라 양이 다르다</b> — 세 후보 모두 오답의 절반 이상이 "전혀 다른 뷰"(45–135°)이고, DINOv3의 이점은 그 오답 자체를 줄이는 데서 온다. 근접실패·플립 비율은 후보 간 큰 차이가 없다.</div>
+
+<h2 id="s4"><span class="no">4</span>논의</h2>
+
+<div class="fair"><div class="h">① 평가 동작점을 잘못 잡으면 인코더는 구분되지 않는다</div>
+운용 밀도(653pt)에서 세 후보는 97.5~98.8%로 포화했고, 정본이 오히려 근소 우위였다. <b>이 지점만 보면 "사전학습은 쓸모없다"가 결론이 된다.</b> 그러나 163pt로 내리면 DINOv3가 오답률을 절반으로 줄인다.<br>
+<b>따라서 <a href="12_backbone_survey_dino.html">12 §8</a>의 판정 축에 "밀도 스윕"을 넣은 것은 옳았고, 나아가 판정을 <b>운용 밀도가 아니라 열화 구간에서</b> 해야 한다</b>는 것이 이 실험의 방법론적 결론이다. <a href="10_network_design_and_critique.html">10 권고 2</a>가 요구한 곡선이 실제로 판정을 바꾼 첫 사례다.</div>
+
+<div class="fair"><div class="h">② 사전학습의 가치는 "정확도"가 아니라 "강건성"으로 나타난다</div>
+Q1·Q2에 대한 답: RGB 사전학습은 <code>geo_maps</code> 도메인으로 <b>전이된다</b>. 다만 그 이득은 데이터가 충분할 때(653pt) 0에 가깝고, <b>정보가 부족해질수록 커진다</b>(163pt +0.131 → 65pt +0.221). 이는 사전 지식이 데이터 부족을 보완한다는 통상적 관찰과 일치하며, <b>희소 LiDAR라는 우리 조건에서 특히 의미가 있다</b>.<br>
+그리고 <b>DINOv3 &gt; ImageNet</b>이다 — 163pt에서 0.856 vs 0.681. 우리가 가져오는 것이 stage1·2의 저·중수준 필터뿐인데도 그렇다.</div>
+
+<div class="crit"><div class="h">③ 선행 보고(13)의 결론이 뒤집힌 이유 — 동작점이 틀렸었다</div>
+13은 "DINOv3는 정본과 동률(−0.0007), ImageNet이 +0.024로 최선"이라고 보고했다. 이번에 그 실험의 <b>데이터 생성에 결함</b>이 있었음을 발견했다 — CAD 메시의 <b>정점(35,672개)</b>을 splat해서 렌더 자체가 유효율 1.5%(750px)였고, 실기 마스크를 곱한 뒤 <b>물체당 58pt</b>에 불과했다.<br>
+즉 13의 "밀도 100%"는 실제로는 <b>이번 실험의 65pt보다도 희소한, 전 후보가 붕괴하는 구간</b>이었다. 그 구간에서는 세 후보가 모두 낮은 값에 몰려 차이가 노이즈에 묻힌다. <b>13 §4.2c의 수치는 폐기하고 이 문서로 대체한다.</b><br>
+<span class="tiny">수정: 표면 균일 샘플 200,000점 → 렌더 유효율 22.7%(11,386px) → 마스크 적용 후 653pt(설계 분포 <code>U[32,2000]</code> 내부).</span></div>
+
+<div class="note"><b>④ 실패의 성질은 인코더로 바뀌지 않는다.</b> Table 4에서 보듯 오답의 구성(근접실패 / 다른 뷰 / 플립)은 후보 간 거의 같다. 특히 <b>대칭 모호성으로 인한 플립</b>(Fig 3 마지막 행)은 어떤 인코더도 원리적으로 풀 수 없다. <a href="10_network_design_and_critique.html">10 §6.2</a>가 지적한 대로 이는 인코더가 아니라 <b>직립 프라이어·free-space 증거·멀티뷰</b>로 풀어야 할 문제다.</div>
+
+<h2 id="s5"><span class="no">5</span>한계</h2>
+<ol>
+<li><b>단일 CAD·단일 과제.</b> SKID 하나이고 뷰 분류 프록시다. <b>03 §1이 지목한 팔레트 포켓(깊이 불연속)</b> 형상은 포함되지 않았다 — image-grid conv 계열(a0·a1·a1d 공통)의 탈락 조건이 이 실험에서는 걸리지 않는다.</li>
+<li><b>대응 정밀도를 재지 않는다.</b> 최종 포즈 정확도(10mm/1°)는 fine 매칭과 ICP가 결정하며, 이 실험은 그 앞단만 본다.</li>
+<li><b>후보 (b)/(c) 미포함.</b> PointNet++·sparse conv는 돌리지 않았다. §3.4의 결론(희소성은 image-grid 공통 문제)상 이들의 필요성은 오히려 커졌다.</li>
+<li><b>시드.</b> Table 2~4는 시드 0이다. 시드 3종 반복은 §6에 별도 보고한다.</li>
+<li><b>TRT 미검증.</b> 12 §8의 판정축 4번(엔진 변환·Orin 실측)은 여전히 미착수다.</li>
+<li><b>[사후 정정] 실기 마스크의 학습 사용 — 테스트 셋 유출.</b> 이 실험은 UAM 로그에서 추출한 유효마스크 156종을 <b>학습 희소화에 직접 사용</b>했다. UAM 로그는 평가 전용 테스트 셋이므로 이는 테스트 도메인 입력의 유출이며, 학습·검증이 같은 마스크 풀을 공유해 밀도 강건성 수치도 낙관 편향일 수 있다. <b>후속 실험(17 §5.5 정책)부터는 센서 스펙 기반 합성 희소화(ML-X 격자·scanline·Ruby128 레짐)로 대체</b>하고, 실기 마스크는 합성기의 통계 검증에만 쓴다.</li>
+</ol>
+
+<h2 id="s6"><span class="no">6</span>선행 보고에 대한 정정과 다음 단계</h2>
+
+<table>
+<tr><th style="width:5%">#</th><th style="width:26%">대상</th><th>조치</th></tr>
+<tr><td>①</td><td>13 §4.2 / §4.2b / §4.2c 전체 수치</td><td class="c"><b>폐기</b> — 데이터 생성 결함(물체당 58pt)으로 전 후보가 붕괴 구간에 있었다. 이 문서의 Table 2~4로 대체</td></tr>
+<tr><td>②</td><td>13 §2 예산 실측 · §3 stem 점유율</td><td class="c"><b>유효</b> — 렌더 결함과 무관한 측정이다</td></tr>
+<tr><td>③</td><td>12 §7 "절단 후 직접 사용" 기각 판정</td><td class="c"><b>재검토 필요</b> — 판별 구간에서 DINOv3가 명확히 우세하므로 기각 근거가 사라졌다</td></tr>
+<tr><td>④</td><td>12 §8 판정 기준</td><td class="c"><b>강화</b> — "밀도 스윕 포함"에서 <b>"판정은 열화 구간에서 한다"</b>로</td></tr>
+</table>
+
+<h3><span class="no">6.1</span>다음 단계</h3>
+<ol>
+<li><b>시드 3종</b> — 163pt/65pt 격차가 시드 노이즈가 아님을 확인 (진행 중, §6.2에 추가)</li>
+<li><b>팔레트형 CAD 추가</b> — 03 §1이 지목한 (a) 계열 탈락 조건을 실제로 걸어본다</li>
+<li><b>후보 (b) PointNet++ · (c) sparse conv</b> — 희소성이 image-grid 공통 문제로 확인된 이상 필수</li>
+<li><b>TRT 변환 + Orin NX 실측</b> — 12 §8 판정축 4·10 권고 9</li>
+</ol>
+
+<p class="tiny" style="margin-top:30px">재현: <code>ebb_mini.py</code>(데이터·모델) · <code>dinov3_loader.py</code>(가중치 매핑·검증) · <code>run_final.py</code>(학습·예측 덤프) · <code>fig_inputs.py</code>·<code>fig_results.py</code>(그림) — 세션 스크래치패드.<br>
+차트 팔레트는 dataviz 기본값(<code>#2a78d6</code>/<code>#eb6834</code>/<code>#1baf7a</code>), CVD 검증 통과(최악 인접쌍 ΔE 9.2 deutan).</p>
+
+</div>
+</body>
+</html>

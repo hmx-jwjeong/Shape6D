@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase A 정산 — R1·R2·R3 판정, 실패 법의학, 다중 가설 오라클 94.9%</title>
+<style>
+  :root { --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb; --accent:#0b5fff;
+          --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e3;
+          --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; } }
+  :root[data-theme="dark"] {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+         color:var(--ink); background:var(--bg); line-height:1.7; font-size:15px; }
+  .wrap { max-width:1130px; margin:0 auto; padding:44px 28px 110px; }
+  h1 { font-size:24px; margin:0 0 6px; letter-spacing:-0.5px; line-height:1.35; text-wrap:balance; }
+  h2 { font-size:19px; margin:50px 0 12px; padding-top:16px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:24px 0 8px; }
+  p { margin:9px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.6px; }
+  th { background:var(--ink); color:var(--bg); text-align:left; padding:7px 9px; font-weight:600; }
+  th.c, td.c { text-align:center; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.g td { background:var(--good-soft); } tr.g td:first-child { border-left:3px solid var(--good); }
+  tr.y td { background:var(--warn-soft); } tr.y td:first-child { border-left:3px solid var(--warn); }
+  tr.r td { background:var(--bad-soft); } tr.r td:first-child { border-left:3px solid var(--bad); }
+  tr.me td { background:var(--shape-soft); } tr.me td:first-child { border-left:3px solid var(--shape); font-weight:700; }
+  .cap { font-size:12.3px; color:var(--sub); margin:4px 0 18px; }
+  code { font-family:"JetBrains Mono",Consolas,monospace; font-size:12.3px;
+         background:var(--panel); padding:1px 5px; border-radius:4px; }
+  .abs { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:15px 19px; margin:16px 0 24px; font-size:14px; }
+  .abs b.t { display:block; font-size:15px; margin-bottom:5px; }
+  .crit { border:1px solid var(--line); border-left:4px solid var(--bad); background:var(--bad-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; }
+  .crit .h { font-weight:800; color:var(--bad); margin-bottom:4px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; }
+  ul, ol { margin:8px 0; padding-left:22px; } li { margin:4px 0; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:13px 19px;
+         margin:16px 0 6px; font-size:13.2px; column-count:2; column-gap:28px; }
+  .toc a { display:block; padding:2px 0; break-inside:avoid; }
+  .tiny { font-size:11.8px; color:var(--sub); }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0 6px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:10px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:19px; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good b { color:var(--good); } .stat.bad b { color:var(--bad); } .stat.warn b { color:var(--warn); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Phase A 정산 — R1·R2·R3 판정, 실패 법의학, 다중 가설 오라클</h1>
+<p class="meta">Shape6D 보고서 #23 · 2026-07-31 · 정본 <a href="20_final_design_plan.html">20 v1.2</a>의 C-11 정산·D-11 등재 근거 문서 ·
+선행: <a href="21_phase_a_retry_and_optimization.html">21(재시도·최적화)</a> · <a href="22_training_method_literature_audit.html">22(문헌 감사)</a> ·
+데이터: <code>reports/</code> 자동 리포트 + <code>train/multihyp_oracle.py</code></p>
+
+<div class="abs"><b class="t">요약 — 학습 실험 둘은 죽고, 추론 구조 발견이 살아남았다</b>
+C-11 규칙에 따라 Phase A 재학습 큐를 정산한다. <b>R1(g* 마스터 기반) 기각</b> — 18.8%로 8.2%p 악화, 원인은 기준점
+불일치(bg 라벨 14→26%)이며 스펙 03 §9.3의 반증. <b>R2(학습 뷰 6) 기각</b> — 24.8%, 이득 없이 시간 1.9배.
+<b>R3(a2 절단판) 20.6% → 인코더 a1 확정</b>. 이어 실패 법의학으로 병목이 밀도가 아니라 <b>비대칭 물체의 플립(실패의
+40%가 150°+)</b>임을 규명했고, 다중 가설 오라클 측정으로 <b>대응 행렬 안에 정답이 94.9% 존재</b>함을 확인했다 —
+후보 1개 추출이 병목이며, 경량 점수 선택 any-of-8만으로 45.2→69.3%. 병행한 S1 v2 A/B(UAM 60프레임)는 마스크
+경로의 실행성(97.9%)과 구경로의 평면 제거 붕괴(10/60)를 실증했다. 다음 지렛대는 학습이 아니라 <b>다중 가설→검증기
+통합(D-11)</b>과 Phase B 데이터다.</div>
+
+<div class="hero">
+  <div class="stat bad"><b>R1·R2 기각</b><span>학습 가설 2건 — 각 −8.2%p / −2.2%p</span></div>
+  <div class="stat good"><b>a1 확정</b><span>인코더 선정 종료 (27.0% &gt; a2 20.6% &gt; a0 18.3%)</span></div>
+  <div class="stat good"><b>94.9%</b><span>오라클 상한 — 대응 행렬 내 정답 존재율</span></div>
+  <div class="stat warn"><b>플립 40%</b><span>비대칭 실패의 150°+ 비중 — 병목의 정체</span></div>
+</div>
+
+<div class="toc">
+<a href="#s1">1. 정산 표 — 전체 런 최종 비교</a>
+<a href="#s2">2. R1 기각 분석 — 기준점 불일치</a>
+<a href="#s3">3. 실패 법의학 — 병목의 정체</a>
+<a href="#s4">4. 다중 가설 오라클 — 핵심 발견</a>
+<a href="#s5">5. S1 v2 A/B — 마스크 ROI 1차 판정</a>
+<a href="#s6">6. 결정·다음 단계</a>
+</div>
+
+<h2 id="s1"><span class="no">1</span>정산 표 — 전체 런 최종 비교 (미학습 34종, sym-aware ≤30°)</h2>
+<table>
+<tr><th>런</th><th>변인</th><th class="c">ep</th><th class="c">≤30°</th><th class="c">rot p50</th><th>판정</th></tr>
+<tr><td>a0_s0</td><td>스크래치 ResNet, lr 3e-4</td><td class="c">30</td><td class="c n">18.3%</td><td class="c n">68.8°</td><td>기준선 — 사전학습 이득 증명용</td></tr>
+<tr class="g"><td><b>a1_s0</b></td><td>사전학습 ConvNeXt (timm Apache)</td><td class="c">30</td><td class="c n"><b>27.0%</b></td><td class="c n">55.1°</td><td><b>동예산 기준. 인코더 확정</b></td></tr>
+<tr><td>a1_muon</td><td>Muon 하이브리드</td><td class="c">20</td><td class="c n">17.8%</td><td class="c n">66.7°</td><td>보류 지속 (재방문 조건: 스텝 벡터화 후, 21)</td></tr>
+<tr class="r"><td>a1_gm_s0 (R1)</td><td>g* 마스터 기반</td><td class="c">30</td><td class="c n">18.8%</td><td class="c n">67.3°</td><td><b>기각</b> — §2, 03 §9.3 반증</td></tr>
+<tr class="r"><td>a1_v6_s0 (R2)</td><td>학습 CAD 뷰 2→6</td><td class="c">30</td><td class="c n">24.8%</td><td class="c n">56.2°</td><td><b>기각</b> — 이득 없이 시간 1.9× (99분). 커버리지 비병목 확정 → 후보 b 기대치 하향</td></tr>
+<tr class="r"><td>a2_s0 (R3)</td><td>절단 ConvNeXt, lr 3e-4</td><td class="c">30</td><td class="c n">20.6%</td><td class="c n">61.4°</td><td><b>a1에 열세</b> — 경량화는 Phase C 증류로</td></tr>
+<tr class="me"><td>a1_cosine_ext2_s0</td><td>a1 + 웜리스타트 ×2 (누적 90ep)</td><td class="c">90</td><td class="c n"><b>43.0%</b></td><td class="c n">37.5°</td><td><b>현 최고</b> — 43~44% 포화, 수렴 예산 소진</td></tr>
+</table>
+<div class="cap"><b>Table 1.</b> 수치는 각 런의 자동 리포트(<code>reports/{tag}/metrics.json</code>, val 3008) 기준 — 학습 로그의 4000샘플 평가와 ±1%p 내 일치.
+C-11 연장 조건 검토: ① ext2에서 수렴 포화 기확인 ② R1·R2 동반 기각으로 조합 런 무의미 → <b>학습 축 종료</b>.</div>
+
+<h2 id="s2"><span class="no">2</span>R1 기각 분석 — "스펙 준수"가 학습을 망가뜨린 메커니즘</h2>
+<p>수정 내용: g* 대칭 선택 기준점을 학습 뷰 코어셋 P_o → 마스터 512점(고정)으로 전환 (03 §9.3 정본 준수, 22 C4 처분).
+결과는 <b>27.0 → 18.8%</b>. 로그의 두 수치가 원인을 특정한다:</p>
+<table>
+<tr><th>진단 지표</th><th class="c">뷰 기반 (기존)</th><th class="c">마스터 기반 (R1)</th><th>해석</th></tr>
+<tr><td>bg 라벨 비율 (라벨 자체는 ~14%)</td><td class="c n">0.14</td><td class="c n"><b>0.26</b></td><td>장면점이 τ 안에서 P_o 이웃을 못 찾음 — 감독 신호 기아</td></tr>
+<tr><td>g* ≠ I 비율</td><td class="c n">0.83</td><td class="c n">0.66</td><td>라벨 분포 자체가 크게 변형됨</td></tr>
+</table>
+<div class="crit"><div class="h">원리 — 기준점 불일치 (reference mismatch)</div>
+g*는 마스터(전 표면) 기준 최적 브랜치를 고르지만, CE 타깃은 그 스텝에 샘플된 <b>2뷰 가시면(P_o)</b> 최근접이다.
+마스터 기준 최적 브랜치가 뷰 비가시면에 정렬되면 대응 타깃이 무더기로 bg로 전락한다. 뷰 기반 g*의 "요동"(마스터
+대비 일치율 0.73)은 결함이 아니라 <b>보이는 브랜치를 골라 라벨 밀도를 최대화하는 적응적 선택</b>이었다.
+CosyPose의 대칭 min 손실(22 [13])은 선택과 손실이 <b>같은 고정 점집합</b>에서 계산되기에 성립하는 것 — 두 점집합이
+분리된 우리 구조에는 그대로 이식되지 않는다. <b>03 §9.3은 "뷰 기반 + (필요시) 결정적 타이브레이크"로 개정</b>하며,
+마스터 기반은 CAD측이 마스터를 직접 소비하는 구조(후보 b)에서만 재평가한다.</div>
+
+<h2 id="s3"><span class="no">3</span>실패 법의학 — 병목의 정체 (최고 모델 ext2, n=3008)</h2>
+<table>
+<tr><th>축</th><th>결과</th><th>함의</th></tr>
+<tr class="r"><td><b>대칭 클래스</b></td><td>비대칭 <b>14.2%</b> (p50 119°) ≪ 고대칭 43.2% &lt; 저대칭 <b>55.1%</b> (p50 26°)</td><td>병목은 비대칭 — 지표를 지배하는 진짜 결손</td></tr>
+<tr class="r"><td><b>오차 모드</b></td><td>비대칭 실패의 <b>40%가 150°+</b> — 최악 물체들 p50 130~157°</td><td><b>플립(앞뒤 반전) 모드 집중 실패</b> — 무작위 아님 → 후보 다중화로 회수 가능</td></tr>
+<tr class="g"><td>점 밀도</td><td>npt 사분위별 39.7~45.1% — <b>완전 평평</b> (비대칭 한정도 무추세)</td><td>희소성은 이 범위(256~4096)에서 비병목 — 관련 증강·구조 투자 후순위</td></tr>
+<tr class="y"><td>물체 편차</td><td>32종 중 13종만 ≥50% — 이봉분포. 최악 8종 중 5종이 비대칭+플립</td><td>형상 다양성 부족 — Phase B 데이터 확장 근거</td></tr>
+<tr><td>병진</td><td>회전 성공 시 0.120D / 실패 시 0.168D</td><td>회전 종속 — 독립 병목 아님</td></tr>
+</table>
+
+<h2 id="s4"><span class="no">4</span>다중 가설 오라클 — 핵심 발견 (학습 변경 없음)</h2>
+<p><b>방법</b> (<code>train/multihyp_oracle.py</code>): 소프트 대응 A에서 하드 대응(argmax)·신뢰도 가중으로 삼중쌍
+T=256개를 샘플 → 3점 Kabsch → 가중 정렬 잔차로 순위 → 회전 15° 중복 제거 후 상위 k개의 sym-aware ≤30° any-of-k.
+SAM-6D의 6,000 삼중쌍 가설 방식(22 [1, Eq.10])의 경량 재현. n=1440.</p>
+<table>
+<tr><th>추출 방식</th><th class="c">전체</th><th class="c">비대칭</th><th class="c">저대칭</th><th class="c">고대칭</th></tr>
+<tr><td>현행 top-1 (soft P_hat → SVD 1개)</td><td class="c n">45.2%</td><td class="c n">13.7%</td><td class="c n">—</td><td class="c n">—</td></tr>
+<tr><td>any-of-4 (점수 선택)</td><td class="c n">62.5%</td><td class="c n">20.2%</td><td class="c n">77.4%</td><td class="c n">64.0%</td></tr>
+<tr class="g"><td><b>any-of-8 (점수 선택)</b></td><td class="c n"><b>69.3%</b></td><td class="c n"><b>24.0%</b></td><td class="c n">82.6%</td><td class="c n">73.4%</td></tr>
+<tr><td>any-of-16 (점수 선택)</td><td class="c n">76.6%</td><td class="c n">30.9%</td><td class="c n">87.3%</td><td class="c n">83.6%</td></tr>
+<tr class="me"><td><b>오라클 상한 (T=256 전부)</b></td><td class="c n"><b>94.9%</b></td><td class="c n"><b>71.7%</b></td><td class="c n">—</td><td class="c n">—</td></tr>
+</table>
+<div class="fair"><div class="h">해석 — 43%는 모델의 천장이 아니라 추출의 천장이었다</div>
+정답 포즈는 이미 대응 행렬 안에 94.9% 존재한다. 문헌 관례(가설 수: SAM-6D 6,000 → 300 · MegaPose 520 ·
+FoundationPose 504 — 22 §4)에 비해 우리만 1개를 추출해 왔다. 경량 점수만으로 any-of-8 = 69.3%이고, 실제
+선택기는 S4(ICP 잔차·free-space·보정 확률)이므로 <b>현실 기대 구간은 69~95% 사이</b>다. 특히 §3의 플립 실패는
+"바른 후보와 뒤집힌 후보가 모두 행렬에 존재"함이 확인되어(비대칭 오라클 71.7%) 정확히 회수 대상이다.</div>
+
+<h2 id="s5"><span class="no">5</span>S1 v2 A/B — 마스크 ROI 1차 판정 (UAM t0 60프레임, C-9)</h2>
+<table>
+<tr><th>항목</th><th class="c">B (구경로: 평면 제거+클러스터)</th><th class="c">C (v2: 마스크 ROI)</th></tr>
+<tr class="g"><td>S1 기계적 동작</td><td class="c">평면 제거 실패 → <b>5,000pt+ 장면덩어리 후보 10/60</b></td><td class="c">마스크 성공 <b>97.9%</b> (1690/1726) · 폴백 2.1% · 물체 스케일 유지(중앙값 1,221pt)</td></tr>
+<tr><td>검증 통과(ACCEPT)</td><td class="c">20/60</td><td class="c">25/58 (+all_planar 2)</td></tr>
+<tr><td>매칭 품질(양측 ACCEPT 11쌍)</td><td class="c">inlier 0.837 · cov 0.757</td><td class="c">free_viol 0.063 (우세) · cov 0.684</td></tr>
+<tr class="y"><td>정확도 판정</td><td colspan="2" class="c"><b>불가</b> — 장면 내 팔레트 다수로 타겟 모호(양측 ACCEPT 11쌍의 포즈 상호 합의 2/11, 로그 기준점과 양측 모두 5~7m)</td></tr>
+</table>
+<div class="cap"><b>Table 4.</b> 결론: ① 실행성·삭제식 취약성은 실증 완료(C-9의 방향 타당) ② 정확도 축은 GT 있는 합성
+외부셋으로 이관 ③ UAM 지표는 "최근접 참조 매칭 다중 인스턴스 평가"로 재정의 필요. 세그멘터는 하네스 대체
+(HF <code>facebook/sam-vit-base</code>, Apache) — 배포 경로는 EViT-SAM 유지.</div>
+
+<h2 id="s6"><span class="no">6</span>결정·다음 단계</h2>
+<ul>
+<li><b>확정</b>: 인코더 a1 (C-11 정산) · g* 정본 = 뷰 기반(03 §9.3 개정 사유 확보) · Phase A 학습 축 종료</li>
+<li><b>D-11 (구현 승인 대기)</b>: 다중 가설 → S4 검증기 선택 통합 — 가설 생성(삼중쌍+대칭 브랜치)·후보 k(예: 8)·S4 배선. 기대: 43 → 70%대 (동일 가중치)</li>
+<li><b>Phase B 준비 병행</b>: 스텝 벡터화(fps_torch) → 재벤치 → bs/Muon 재검토 · GSO 861종 확보(스케일 보정 포함) · fine 단계 설계</li>
+<li><b>학습 측 후속 처방</b>(법의학 근거): 비대칭 물체 플립 판별 강화 — 대칭 브랜치 간 마진 손실 후보. 다중 가설 통합 후 잔여 결손으로 재평가</li>
+<li><b>평가 정의 갱신</b>: 리포트 시스템에 any-of-k 지표 추가(G-A 게이트의 시스템 정합화) · UAM 다중 인스턴스 평가 재정의</li>
+</ul>
+
+<p class="tiny">재현 경로 — 정산 수치: <code>reports/*/metrics.json</code> · 오라클: <code>python3 train/multihyp_oracle.py --tag a1_cosine_ext2_s0</code> ·
+S1 A/B: <code>eval/external_test/out_s1v2_ab/uam_results.json</code> · 법의학 절차는 본 문서 §3(스크립트는 make_run_report의 run_eval 재사용 인라인).</p>
+
+</div>
+</body>
+</html>

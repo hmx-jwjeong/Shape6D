@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>슬롯별 네트워크 · 사전학습 데이터 결정 계획</title>
+<style>
+  :root { --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --panel:#f6f8fb; --accent:#0b5fff;
+          --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e3;
+          --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+         color:var(--ink); background:#fff; line-height:1.7; font-size:15px; }
+  .wrap { max-width:1170px; margin:0 auto; padding:44px 28px 110px; }
+  h1 { font-size:25px; margin:0 0 6px; letter-spacing:-0.5px; line-height:1.35; }
+  h2 { font-size:19px; margin:52px 0 12px; padding-top:16px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:26px 0 8px; }
+  p { margin:9px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  .abs { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:16px 20px; margin:18px 0 26px; font-size:14px; }
+  .abs b.t { display:block; font-size:15px; margin-bottom:6px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.3px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 9px; font-weight:600; }
+  th.c, td.c { text-align:center; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.me td { background:var(--shape-soft); } tr.me td:first-child { border-left:3px solid var(--shape); font-weight:700; }
+  tr.hi td { background:var(--bad-soft); } tr.hi td:first-child { border-left:3px solid var(--bad); }
+  tr.ok td { background:var(--good-soft); } tr.ok td:first-child { border-left:3px solid var(--good); }
+  tr.wa td { background:var(--warn-soft); }
+  .cap { font-size:12.3px; color:var(--sub); margin:4px 0 20px; }
+  .cap b { color:var(--ink); }
+  code { font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace; font-size:12.3px;
+         background:var(--panel); padding:1px 5px; border-radius:4px; }
+  .crit { border:1px solid var(--line); border-left:4px solid var(--bad); background:var(--bad-soft);
+          border-radius:8px; padding:13px 17px; margin:16px 0; font-size:13.6px; }
+  .crit .h { font-weight:800; color:var(--bad); margin-bottom:5px; font-size:14.5px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.6px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; font-size:14px; }
+  .box { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.6px; }
+  .note { border:1.5px dashed var(--shape); background:var(--shape-soft); border-radius:10px;
+          padding:11px 16px; margin:14px 0; font-size:13.3px; }
+  .warnbox { border:1.5px dashed var(--warn); background:var(--warn-soft); border-radius:10px;
+             padding:11px 16px; margin:14px 0; font-size:13.3px; }
+  ul, ol { margin:8px 0; padding-left:22px; } li { margin:5px 0; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 20px;
+         margin:18px 0 6px; font-size:13.3px; column-count:2; column-gap:30px; }
+  .toc a { display:block; padding:2px 0; break-inside:avoid; }
+  .tiny { font-size:11.8px; color:var(--sub); }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:18px 0 6px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:19px; letter-spacing:-0.5px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good b { color:var(--good); } .stat.bad b { color:var(--bad); } .stat.warn b { color:var(--warn); }
+  .lic { font-size:11px; padding:1px 6px; border-radius:20px; font-weight:700; white-space:nowrap; }
+  .lic.ok { background:var(--good-soft); color:var(--good); }
+  .lic.chk { background:var(--warn-soft); color:var(--warn); }
+  .lic.no { background:var(--bad-soft); color:var(--bad); }
+  @media (max-width:820px){ .toc{column-count:1;} .hero{grid-template-columns:repeat(2,1fr);} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>슬롯별 네트워크 · 사전학습 데이터 결정 계획<br>— v3 라인의 각 칸을 무엇으로 채우고 무엇으로 학습하는가</h1>
+<div class="meta">v1.0 · 2026-07-30 · 상위 문서: <a href="17_full_line_redesign_and_training_plan.html">17</a>(v3 라인·Phase 계획) — 본 문서는 그 <b>구성요소 조달 명세</b>다 · 실측 근거: <a href="13_backbone_pilot_report.html">13</a>·<a href="14_encoder_pilot_paper.html">14</a>·<a href="15_network_and_training_scope.html">15</a> · <b>UAM = 평가 전용</b>(17 §5.5) 전제 하에 작성</div>
+
+<div class="abs">
+<b class="t">요약</b>
+v3 파이프라인의 <b>학습 가능 슬롯은 5개뿐</b>이다 — S3 기하 인코더·RGB 보조·매칭 디코더(SGD), S2 기하 디스크립터(증류), S4 보정기(로지스틱 적합). 나머지는 전부 동결 NN이거나 비학습 알고리즘이며, <b>이것이 이 설계의 특징이다</b>(학습 실패가 파이프라인 전체를 무너뜨리지 않는다).<br><br>
+사전학습 결정의 원칙은 셋이다: ① <b>온라인 슬롯에는 사전학습을 "직접 탑재"하지 않고 초기화·증류로만 유입</b>시킨다(예산 실측 근거). ② 태스크 학습 데이터는 <b>MegaPose-GSO + 센서 스펙 합성 희소화</b> 단일 계보로 통일한다(UAM 배제). ③ 라이선스가 미확정인 자산(DINOv3·SAM 3·ShapeNet)은 전부 <b>폴백이 있는 보조 경로</b>에만 둔다 — 기본 경로는 Apache/MIT급 자산만으로 성립한다.
+</div>
+
+<div class="hero">
+  <div class="stat"><b>5 / 13</b><span>학습 가능 슬롯 / 전체 슬롯</span></div>
+  <div class="stat good"><b>1 계보</b><span>태스크 학습 데이터: MegaPose-GSO + 합성 희소화</span></div>
+  <div class="stat warn"><b>3건</b><span>라이선스 미확정 자산 — 전부 보조 경로</span></div>
+  <div class="stat bad"><b>0</b><span>UAM 로그의 학습 사용 (평가 전용)</span></div>
+</div>
+
+<div class="toc">
+<a href="#s1">1. 슬롯 맵 — 한눈 결정표</a>
+<a href="#s2">2. 슬롯별 검토 (후보 · 사전학습 · 결정 · 폴백)</a>
+<a href="#s3">3. 데이터셋 인벤토리 — 보유·수급·라이선스</a>
+<a href="#s4">4. 학습 데이터 흐름 — Phase별 매핑</a>
+<a href="#s5">5. 라이선스 리스크 매트릭스</a>
+<a href="#s6">6. 결정 대기 · 실행 순서</a>
+</div>
+
+<h2 id="s1"><span class="no">1</span>슬롯 맵 — 한눈 결정표</h2>
+
+<table>
+<tr><th style="width:13%">슬롯</th><th style="width:19%">채택 (v3)</th><th class="c" style="width:9%">파라미터</th><th style="width:17%">사전학습 (출처 데이터)</th><th style="width:19%">우리 쪽 학습 데이터</th><th class="c" style="width:8%">학습 상태</th><th>확정도</th></tr>
+<tr><td>S1 클러스터·프롬프트</td><td>평면 제거 + voxel BFS</td><td class="c">0</td><td class="c">—</td><td class="c">—</td><td class="c">비학습</td><td class="c">확정 (구현됨)</td></tr>
+<tr><td>S1 분할기</td><td><b>EfficientViT-SAM-L0</b> 계열</td><td class="n">~30M</td><td>SA-1B (SAM 증류 계열)</td><td class="c"><b>없음 — 동결</b></td><td class="c">동결</td><td class="c">M1 확정분</td></tr>
+<tr><td>S2 ①크기 ②TDF+cov</td><td>metric 게이트 + TDF 조회</td><td class="c">0</td><td class="c">—</td><td class="c">—</td><td class="c">비학습</td><td class="c">확정 (coverage는 Phase 0)</td></tr>
+<tr class="ok"><td>S2 ③기하 디스크립터</td><td><b>PointNet-lite 학생</b></td><td class="n">0.35M</td><td>교사 GeDi ← 3DMatch</td><td>GSO 표면·부분뷰 합성 (특징 회귀 — 라벨 불요)</td><td class="c"><b>증류</b></td><td class="c">Phase C</td></tr>
+<tr><td>S2 ④의미 보조</td><td>DINOv3 ViT-S/16 CLS</td><td class="n">21M(동결)</td><td>LVD-1689M</td><td class="c">없음 — 동결</td><td class="c">동결</td><td class="c">조건부 (라이선스·텍스처)</td></tr>
+<tr class="ok"><td><b>S3 기하 인코더</b></td><td>기본 <b>절단 ConvNeXt-T</b> (a1)</td><td class="n">1.33M</td><td><b>ImageNet-1k</b> (기본) / 스크래치 대조군</td><td rowspan="3"><b>MegaPose-GSO 1,030종 + 센서 스펙 합성 희소화</b><br>물체분할 750/194 · g* 대칭 라벨</td><td class="c">SGD</td><td class="c"><b>Phase A 재선정</b></td></tr>
+<tr class="ok"><td>S3 RGB 보조</td><td>MBConv</td><td class="n">0.4M</td><td>스크래치 (Phase C: 교사 증류)</td><td class="c">SGD</td><td class="c">확정</td></tr>
+<tr class="ok"><td><b>S3 매칭 디코더</b></td><td>coarse 2blk + fine 2blk</td><td class="n">5.5M</td><td><b>없음 (신규 구조)</b> — Phase C: 자체 full-size 유사도 증류</td><td class="c">SGD</td><td class="c">확정 (구조)</td></tr>
+<tr><td>S4 ICP·잔차</td><td>projective p2pl + free-space</td><td class="c">0</td><td class="c">—</td><td class="c">—</td><td class="c">비학습</td><td class="c">확정 (구현됨)</td></tr>
+<tr class="ok"><td>S4 보정기</td><td>10-d 로지스틱</td><td class="n">11</td><td class="c">—</td><td><b>자체 희소 합성 + sparsified-BOP</b> (UAM = 홀드아웃)</td><td class="c">적합</td><td class="c">Phase C (라벨 진단 선행)</td></tr>
+<tr><td>S0 렌더·TDF·대칭</td><td>splat 렌더 + 해석 알고리즘</td><td class="c">0</td><td class="c">—</td><td class="c">—</td><td class="c">비학습</td><td class="c">확정 (구현됨)</td></tr>
+<tr class="wa"><td>교사 (오프라인)</td><td>자체 full-size PEM · DINOv3 ViT-L · CroCo v2 · GeDi · SAM 3</td><td class="c">—</td><td>각자 (§2.7)</td><td class="c">—</td><td class="c">동결 사용</td><td class="c">Phase C ablation</td></tr>
+</table>
+<div class="cap"><b>Table 1.</b> 전 슬롯 결정표. 학습 가능 슬롯은 5개(초록), 그중 SGD 본학습은 S3의 3개뿐이다. "사전학습" 열이 비어 있는 칸이 많은 것은 결함이 아니라 설계다 — v0-geo 폴백과 비학습 검증이 파이프라인의 바닥을 지킨다.</div>
+
+<h2 id="s2"><span class="no">2</span>슬롯별 검토</h2>
+
+<h3>2.1 S1 분할기 — 후보 대조와 결정</h3>
+<table>
+<tr><th style="width:18%">후보</th><th class="c" style="width:10%">규모</th><th style="width:26%">사전학습 출처</th><th style="width:14%">엣지 적합성</th><th>판정</th></tr>
+<tr class="ok"><td><b>EfficientViT-SAM-L0</b></td><td class="n">~30M</td><td>SA-1B (SAM ViT-H 증류)</td><td class="c">◎ (TRT 사례 다수)</td><td><b>채택</b> — 설계 M1 확정분. 포인트 프롬프트 주도라 LiDAR 시드와 정합</td></tr>
+<tr><td>EdgeSAM / MobileSAM</td><td class="n">~10M</td><td>SA-1B 증류</td><td class="c">◎</td><td>백업 — L0가 Orin 예산 초과 시 (M0-2 실측 후 판정)</td></tr>
+<tr><td>SAM 2-small</td><td class="n">~46M</td><td>SA-1B + SA-V</td><td class="c">○</td><td>비디오 추적 필요 시 재론 — 현 운용(정지 촬영 A3)엔 불요</td></tr>
+<tr class="hi"><td>SAM 3</td><td class="n">840M</td><td>SA-Co (4M 개념 라벨)</td><td class="c">✕ (H200 30ms)</td><td><b>온라인 기각</b> — PC 평가 앵커 + 데이터 엔진(평가 주석·향후 현장분)만 (17 R1-1)</td></tr>
+</table>
+<p><b>우리 쪽 학습: 없음.</b> 분할기는 동결이 원칙이다 — 재학습하면 SA-1B급 일반성을 우리 데이터로 훼손할 뿐이다. 장기 옵션(백로그): SAM 3 마스크를 교사로 한 엣지 분할기 증류 — 단 증류 데이터는 합성 렌더 + 향후 현장분이며 UAM은 제외.</p>
+
+<h3>2.2 S2 판별 — 4신호의 조달</h3>
+<table>
+<tr><th style="width:16%">신호</th><th style="width:22%">구현</th><th style="width:26%">사전학습/적합 데이터</th><th>비고</th></tr>
+<tr><td>① s_size</td><td>클러스터 extent vs CAD bbox</td><td class="c">불요</td><td>구현됨</td></tr>
+<tr><td>② s_depth</td><td>TDF 정합 + <b>coverage 항(신설)</b></td><td class="c">불요</td><td>Phase 0에서 A-4 수정 — 단방향 만점 취약점 차단</td></tr>
+<tr class="ok"><td>③ s_gsem</td><td><b>GeDi → PointNet-lite 증류</b> (0.35M, TRT-safe)</td><td>교사: GeDi(3DMatch 사전학습, 동결) · 학생 증류 데이터: <b>GSO 1,030종 표면 샘플 + 부분뷰 희소 합성</b> — 특징 회귀라 포즈 라벨 불요</td><td>dGeDi 선례(170×, AR 62.2). <b>PTv3 학생은 TRT 불가라 배제</b> — 학생 구조는 우리 후보 (b) 재활용. 임계는 합성 보정셋으로 적합</td></tr>
+<tr class="wa"><td>④ s_sem (보조)</td><td>DINOv3 ViT-S/16 CLS cos (동결)</td><td>LVD-1689M (동결 사용, 학습 없음) · 폴백: <b>DINOv2-S (LVD-142M, Apache-2.0)</b></td><td>이중 조건부: (i) DINOv3 상업 약관 (ii) <b>CAD에 텍스처가 있어야 템플릿 비교가 성립</b> — 무텍스처 CAD면 이 항 자체를 제외(특징 벡터에서 0 처리, s2_sem=0 문제의 정식 해소)</td></tr>
+</table>
+
+<h3>2.3 S3 기하 인코더 — 초기화(사전학습)의 결정</h3>
+<table>
+<tr><th style="width:16%">초기화 옵션</th><th style="width:22%">사전학습 데이터</th><th class="c" style="width:12%">라이선스</th><th style="width:28%">측정된 증거 (13·14·15)</th><th>판정</th></tr>
+<tr class="ok"><td><b>ImageNet ConvNeXt-T 절단</b></td><td>ImageNet-1k (지도)</td><td class="c"><span class="lic chk">확인 필요</span><br><span class="tiny">공식 가중치 약관</span></td><td>단일 CAD 레짐: 사전학습 기여 +0.186, 희소할수록 이득↑. DINOv3 대비 열세 없음</td><td><b>기본안</b> — 단 제로샷 이득은 미측정 (아래 주의)</td></tr>
+<tr><td>스크래치 (ResNet18-lite / 동일 ConvNeXt)</td><td class="c">없음</td><td class="c"><span class="lic ok">자체</span></td><td>수렴 시 0.87~0.88 (단일 CAD) — 사전학습과 격차 작음</td><td><b>대조군 필수 유지</b> — 라이선스 무풍지대 폴백</td></tr>
+<tr><td>DINOv3 ConvNeXt-T 절단</td><td>LVD-1689M (증류판)</td><td class="c"><span class="lic chk">gated</span></td><td>stage1·2 전이 수준에서 ImageNet 대비 −0.025 — <b>긍정 증거 없음</b> (13 §4.2c)</td><td>후보 유지하되 우선순위 하향</td></tr>
+<tr><td>(b) PointNet++ lite / (c) sparse conv</td><td class="c">없음 (스크래치)</td><td class="c"><span class="lic ok">자체</span></td><td>미측정 — 희소성이 image-grid 공통 문제로 확인돼(13 §3) 필요성 상승</td><td>Phase A 동시 비교</td></tr>
+</table>
+<div class="warnbox"><b>주의 — 인코더 초기화의 제로샷 이득은 아직 아무도 모른다.</b> 13·14의 순위는 전부 분류 정식화(단일 물체 암기 레짐)에서 나왔고, 매칭 정식화의 제로샷 실험(15 §4)에서는 세 초기화가 전부 붕괴 구간이라 판별 불가였다. <b>따라서 "ImageNet 기본안"은 편의상 기본값이지 측정된 승자가 아니며, Phase A(최소 매칭부 + 미학습 194종 + 밀도 스윕)가 진짜 판정이다.</b> 본학습 데이터는 초기화와 무관하게 동일: MegaPose-GSO + 합성 희소화, lr은 초기화별(사전학습 3e-4 / 스크래치 1e-3).</div>
+
+<h3>2.4 S3 RGB 보조 branch</h3>
+<p><b>스크래치 MBConv 0.4M로 시작</b>한다 — 이 크기에 유효한 사전학습 가중치가 없고, modality dropout(p=0.3)이 있어 초기 성능 의존도가 낮다. Phase C에서 <b>교사 증류 A/B</b>: DINOv3 ViT-L(시각 일반) vs <b>CroCo v2(크로스뷰 대응 — Co-op이 DINO 대신 택한 계보</b>, 대응 태스크 적합 가설). 증류 데이터는 MegaPose 렌더의 RGB 뷰 — 추가 수집 불요.</p>
+
+<h3>2.5 S3 매칭 디코더 — 사전학습이 존재하지 않는 슬롯</h3>
+<div class="box">
+<b>구조가 신규(H=192·2블록·1024pt)라 직접 얹을 사전학습 가중치가 없다.</b> SAM-6D 공개 가중치(H=256·3블록·2048pt)는 차원이 달라 직접 초기화 불가. 조달 경로는 두 가지다:<br>
+① <b>본학습 (Phase B)</b> — MegaPose-GSO에서 g* 대칭 손실로 스크래치 학습. 이것이 주 경로.<br>
+② <b>자기 증류 (Phase C, M2-D)</b> — 03 정본이 규정한 경로: full-size(H=192·필요시 3블록)로 본학습한 <b>자체 교사</b>의 유사도행렬을 축소판(H=128·2블록·1024pt)에 정렬. 256-d 유사도 공간을 유지한 이유가 이 정렬이다. 각 1/3 스케줄, 총 ~5일.<br>
+<span class="tiny">외부 교사 옵션: SAM-6D PEM(MegaPose 2M 사전학습, 공개 가중치)의 유사도행렬 정렬 — 단 RGB 주도 특징이라 A1과 상충하는 성분이 섞인다. Phase C ablation의 한 팔로만 두고 기본은 자체 교사. 가중치 라이선스 확인 필요.</span>
+</div>
+
+<h3>2.6 S4 보정기 — 적합 데이터의 교체 (§5.5 정책 반영)</h3>
+<table>
+<tr><th style="width:22%">보정셋 (05 간과점 #4의 3단)</th><th style="width:34%">구성</th><th>역할</th></tr>
+<tr class="ok"><td>1단 — 자체 희소 합성 (주력)</td><td>팔레트 스위트 + GSO 합성 씬에 v0-geo/PEM을 돌려 10-d 특징 + 정오 라벨 생성. 오염·RGB차단·희소도 스윕 포함</td><td>보정기 적합의 본체</td></tr>
+<tr><td>2단 — sparsified-BOP (보조)</td><td>BOP 코어(T-LESS 등)에 동일 격자 희소화 적용</td><td>도메인 폭 확장 · 공정 비교</td></tr>
+<tr class="hi"><td>3단 — 현장 약라벨</td><td><b>향후 배포지 수집분만</b> (데이터 엔진) — <b>UAM 아님</b></td><td>배포 후 갱신 루프</td></tr>
+<tr><td>홀드아웃</td><td><b>UAM 70샘플 하네스</b> — 적합에 불사용</td><td>보정기의 유일한 실기 성적표</td></tr>
+</table>
+<p class="tiny">선행 조건: 라벨 진단 2종(log10_n_obs 제거 재학습·z-규칙 행 제외 — 10 권고 1). 09의 UAM-적합 calib_v1 계열은 진단 실험 기록으로만 유지.</p>
+
+<h3>2.7 오프라인 교사 목록 (온라인 미탑재 — 배포물에 포함되지 않음)</h3>
+<table>
+<tr><th style="width:20%">교사</th><th style="width:22%">사전학습 출처</th><th style="width:24%">증류 대상 (학생)</th><th>채용 조건</th></tr>
+<tr class="ok"><td><b>자체 full-size PEM</b></td><td>MegaPose-GSO (Phase B 산출)</td><td>매칭 디코더 축소판 (M2-D)</td><td>기본 — 조건 없음</td></tr>
+<tr><td>GeDi</td><td>3DMatch (실내 RGB-D 정합)</td><td>S2 PointNet-lite 디스크립터</td><td>가중치 라이선스 확인</td></tr>
+<tr><td>DINOv3 ViT-L</td><td>LVD-1689M</td><td>RGB 보조 branch</td><td>gated 동의 완료 · 상업 약관 확인</td></tr>
+<tr><td>CroCo v2</td><td>크로스뷰 완성 (Habitat+실사)</td><td>RGB 보조 branch (A/B 대안)</td><td>라이선스 확인 · Phase C ablation</td></tr>
+<tr><td>SAM-6D PEM</td><td>MegaPose 2M</td><td>매칭 디코더 (외부 교사 옵션)</td><td>A1 상충 성분 유의 · ablation 한 팔</td></tr>
+<tr><td>SAM 3</td><td>SA-Co</td><td>(장기) 엣지 분할기 · 평가 주석</td><td>라이선스 확인 · UAM은 평가 주석만</td></tr>
+</table>
+
+<h2 id="s3"><span class="no">3</span>데이터셋 인벤토리 — 보유 · 수급 · 라이선스</h2>
+
+<table>
+<tr><th style="width:17%">데이터셋</th><th class="c" style="width:12%">규모</th><th class="c" style="width:11%">보유 상태</th><th class="c" style="width:11%">라이선스</th><th style="width:28%">파이프라인 내 역할</th><th>수급 조치</th></tr>
+<tr class="ok"><td><b>MegaPose-GSO</b></td><td class="c">1,030종 · 508GB · 샤드 1,040</td><td class="c"><b>디스크 보유</b></td><td class="c"><span class="lic ok">CC-BY 4.0 (GSO)</span></td><td><b>태스크 학습의 본체</b> — S3 본학습 · S2 증류 · 보정셋 1단 원료. 로더 검증 772 samples/s, 물체분할 750/194 구축 완료</td><td>없음 (완료)</td></tr>
+<tr class="hi"><td>MegaPose-ShapeNet</td><td class="c">~5만 종 · 1M img</td><td class="c">미수신</td><td class="c"><span class="lic no">비상업 리스크 (D4)</span></td><td>다양성 확장 후보 — 08 §3.2 "나란히 측정"의 한 팔</td><td>D4 결정 대기 · 대안 Objaverse(CC0/CC-BY 필터)</td></tr>
+<tr><td>BOP 코어 (T-LESS 등)</td><td class="c">수십 GB</td><td class="c">미수신</td><td class="c"><span class="lic ok">공개 (셋별 상이)</span></td><td>sparsified-BOP — 평가 + 보정셋 2단</td><td>Phase 0~A 중 다운로드</td></tr>
+<tr><td>자체 팔레트 합성</td><td class="c">CAD 수 종 × 렌더</td><td class="c">생성 가능 (S0 렌더러)</td><td class="c"><span class="lic ok">자체</span></td><td>평가 스위트(C4·C2 대칭) + 보정셋 1단. <b>학습용 CAD와 평가용 CAD는 분리</b>(05 "팔레트류 학습 셋 부재" 해소 시)</td><td>Phase A에서 평가분 우선 생성</td></tr>
+<tr><td>ImageNet-1k</td><td class="c">가중치만 사용</td><td class="c">가중치 확보</td><td class="c"><span class="lic chk">가중치 약관 확인</span></td><td>S3 인코더 초기화 (a1)</td><td>공식 ConvNeXt 가중치 약관 확인 (D-5)</td></tr>
+<tr><td>LVD-1689M (DINOv3)</td><td class="c">가중치만 사용</td><td class="c">동의 완료</td><td class="c"><span class="lic chk">DINOv3 Lic.</span></td><td>S2 의미 보조(ViT-S) · 교사(ViT-L)</td><td>상업 약관 검토 (D-2) · 폴백 DINOv2-S 확보됨</td></tr>
+<tr><td>SA-1B / SA-Co / 3DMatch / CroCo</td><td class="c">가중치만 사용</td><td class="c">—</td><td class="c"><span class="lic chk">각자 확인</span></td><td>상류 사전학습 (우리는 동결 사용만)</td><td>교사 채용 시점에 확인</td></tr>
+<tr class="wa"><td><b>UAM 로그</b></td><td class="c">410+242건</td><td class="c">보유</td><td class="c">내부</td><td><b>평가 전용 홀드아웃</b> (17 §5.5) — 70샘플 하네스 + 보정기 홀드아웃</td><td>사용 금지 항목 준수</td></tr>
+<tr><td>D2-a 실측 (실기종)</td><td class="c">—</td><td class="c">센서 RFQ 대기</td><td class="c">자체</td><td>센서 특성화의 정본 — 합성 희소화 파라미터의 검증·갱신</td><td>ML-X 수령 후 즉시</td></tr>
+</table>
+
+<h2 id="s4"><span class="no">4</span>학습 데이터 흐름 — Phase별 매핑</h2>
+
+<table>
+<tr><th style="width:10%">Phase</th><th style="width:24%">학습되는 것</th><th style="width:36%">데이터 (전부 UAM 비사용)</th><th>평가 (UAM은 여기만)</th></tr>
+<tr><td><b>0</b> 위생</td><td>없음 (보정기 라벨 진단만)</td><td>기존 calib npz 재분석</td><td>—</td></tr>
+<tr><td><b>A</b> 파일럿</td><td>최소 매칭부 + 인코더 5후보</td><td>MegaPose-GSO 10% 서브셋 (750종 학습) + <b>합성 희소화</b>(ML-X 격자 δh·δv σ3mm · scanline · Ruby128 레짐, N_obj~U[32,2000])</td><td>미학습 194종 + 팔레트 평가 스위트 + <b>UAM 70샘플</b> + 밀도 스윕</td></tr>
+<tr><td><b>B</b> 본학습</td><td>인코더(확정 1종) + RGB branch + 매칭 디코더 — full-size</td><td>MegaPose-GSO 전량(~104만 샘플 계획) + 증강 5종 + 격자 레짐 2종 · g* 대칭 라벨(S0 sym_rots)</td><td>500 iter val / 10k BOP-미니 / 25k 오염+희소 스윕 · G-B에서 UAM</td></tr>
+<tr><td><b>C</b> 증류·보정</td><td>① 매칭 축소판(자체 교사) ② RGB branch(DINOv3 vs CroCo) ③ S2 디스크립터(GeDi 교사) ④ S4 보정기</td><td>①② MegaPose 렌더 재사용 ③ GSO 표면+부분뷰 합성 ④ 자체 희소 합성 + sparsified-BOP</td><td>보정기 홀드아웃 = <b>UAM</b> · E2E Orin 실측</td></tr>
+</table>
+
+<div class="fair"><div class="h">이 흐름의 성질</div>
+① <b>새로 수집해야 할 학습 데이터가 없다</b> — 전 Phase가 디스크의 MegaPose-GSO와 합성 생성물로 돌아간다. 수급 리스크는 학습이 아니라 <b>평가 보조(BOP 다운로드)와 다양성 확장(D4)</b>에만 있다.<br>
+② <b>라이선스 최악 시나리오에도 기본 경로가 성립한다</b> — DINOv3·SAM 3·ShapeNet·ImageNet 가중치가 전부 불가로 판명돼도, 남는 구성(스크래치 인코더 + GSO 학습 + DINOv2-S 보조 + 자체 교사 증류)으로 파이프라인 전체가 완성된다. 잃는 것은 성능 후보이지 기능이 아니다.<br>
+③ <b>UAM은 세 지점에서만 등장한다</b> — Phase A/B 게이트 평가, 보정기 홀드아웃, (평가 주석 강화). 전부 읽기 전용이다.
+</div>
+
+<h2 id="s5"><span class="no">5</span>라이선스 리스크 매트릭스</h2>
+
+<table>
+<tr><th style="width:20%">자산</th><th class="c" style="width:14%">상태</th><th style="width:30%">막히면 잃는 것</th><th>폴백</th></tr>
+<tr><td>GSO (CC-BY 4.0)</td><td class="c"><span class="lic ok">안전</span></td><td class="c">— (기본 경로의 축)</td><td>—</td></tr>
+<tr><td>DINOv2-S (Apache-2.0)</td><td class="c"><span class="lic ok">안전</span></td><td class="c">—</td><td>—</td></tr>
+<tr><td>DINOv3 (gated)</td><td class="c"><span class="lic chk">D-2</span></td><td>S2 의미 보조 상급판 · RGB 교사 후보 1</td><td>DINOv2-S(보조) · CroCo(교사)</td></tr>
+<tr><td>ImageNet ConvNeXt 가중치</td><td class="c"><span class="lic chk">D-5</span></td><td>인코더 기본 초기화</td><td>스크래치 (측정상 격차 작음 — 13 §4.2b)</td></tr>
+<tr><td>ShapeNet (비상업)</td><td class="c"><span class="lic no">D-4/D-1</span></td><td>다양성 확장 한 팔</td><td>Objaverse CC0/CC-BY 서브셋</td></tr>
+<tr><td>SAM 3 · SAM-6D 가중치 · GeDi · CroCo</td><td class="c"><span class="lic chk">확인 필요</span></td><td>각 교사/앵커 역할</td><td>각 대안 교사 · 자체 교사(매칭)는 무조건 성립</td></tr>
+</table>
+
+<h2 id="s6"><span class="no">6</span>결정 대기 · 실행 순서</h2>
+
+<table>
+<tr><th style="width:8%">ID</th><th style="width:38%">결정</th><th class="c" style="width:12%">기한</th><th>비고</th></tr>
+<tr><td>D-1/4</td><td>ShapeNet 수신 vs Objaverse 대체</td><td class="c">Phase A 전</td><td>없으면 "나란히 측정"(08 §3.2)이 기정사실화됨</td></tr>
+<tr><td>D-2</td><td>DINOv3·SAM 3 상업 약관</td><td class="c">Phase C 전</td><td>기본 경로 비의존 — 급하지 않음</td></tr>
+<tr><td>D-5</td><td>ImageNet ConvNeXt 공식 가중치 약관</td><td class="c">Phase A 전</td><td>불가 시 스크래치 기본화</td></tr>
+<tr><td>D-6</td><td>SAM-6D·GeDi·CroCo 가중치 라이선스</td><td class="c">Phase C 전</td><td>교사 채용 조건</td></tr>
+<tr><td>D-7</td><td>팔레트류 <b>학습용</b> CAD 소싱 (평가용과 분리)</td><td class="c">Phase B 전</td><td>05 "팔레트류 학습 셋 부재" — 평가 CAD 재사용 금지</td></tr>
+</table>
+
+<div class="box"><b>실행 순서 (즉시 착수 가능분).</b> ① Phase 0 위생 4건(코드) ② 합성 희소화 생성기(ML-X 격자 δh·δv 파라미터화)를 <code>sparsify_fixed_grid</code> 기반으로 정식화 — 실기 마스크 의존 제거 ③ BOP 코어 다운로드 개시 ④ D-5·D-1 라이선스 확인 발주 ⑤ Phase A 최소 매칭부 구현. <b>①~③은 라이선스 결정과 무관하게 오늘 시작할 수 있다.</b></div>
+
+<p class="tiny" style="margin-top:26px">내부 — <a href="03_implementation_design.html">03 §5·§6.3·§6.5·§9</a>(ViT-S 강등·E2·M2-D 증류·학습 스케줄) · <a href="05_concept_review.html">05 간과점 #4·#6</a> · <a href="08_training_plan.html">08 §3.2·E2</a> · <a href="10_network_design_and_critique.html">10 권고 1·3·6</a> · <a href="12_backbone_survey_dino.html">12</a> · <a href="13_backbone_pilot_report.html">13</a> · <a href="17_full_line_redesign_and_training_plan.html">17 §5.5·§9</a><br>
+외부 — GeDi/dGeDi(<a href="https://arxiv.org/abs/2503.15106">arXiv:2503.15106</a>) · <a href="https://arxiv.org/abs/2212.06870">MegaPose</a> · CroCo v2 · <a href="https://ai.meta.com/research/publications/sam-3-segment-anything-with-concepts/">SAM 3</a></p>
+
+</div>
+</body>
+</html>

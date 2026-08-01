@@ -33,10 +33,26 @@ def make_features(scorer_diag: dict, icp_diag: dict, s2_scores: dict,
 
 
 class ConfidenceCalibrator:
-    def __init__(self, w: np.ndarray | None = None, b: float | None = None):
+    def __init__(self, w: np.ndarray | None = None, b: float | None = None,
+                 version: str | None = None):
         self.w = _W0.copy() if w is None else np.asarray(w, np.float64)
         self.b = _B0 if b is None else float(b)
         self.calibrated = w is not None
+        # 판정 재현성: 어떤 보정기로 판정했는지 VerifyResult.diag에 기록 (05 간과점 #4)
+        self.version = version or ("heuristic_w0" if w is None else "fitted_unversioned")
+
+    @classmethod
+    def load(cls, path) -> "ConfidenceCalibrator":
+        """npz(w[10], b) 로드 (A-2 배선). 17 §5.5: 합성+sparsified-BOP 적합본만 주입할 것 —
+        UAM-적합 calib_v1 계열은 진단 실험 전용이며 프로덕션 주입 금지."""
+        import os
+        z = np.load(path)
+        if "w" not in z or "b" not in z:
+            raise KeyError(f"보정기 파일에 w/b 키 없음: {path} (keys={list(z.keys())})")
+        w = np.asarray(z["w"], np.float64)
+        if w.shape != (len(FEATURE_NAMES),):
+            raise ValueError(f"보정기 w 차원 {w.shape} ≠ ({len(FEATURE_NAMES)},)")
+        return cls(w=w, b=float(z["b"]), version=os.path.basename(str(path)))
 
     def __call__(self, x: np.ndarray) -> float:
         return float(1.0 / (1.0 + np.exp(-(self.w @ x + self.b))))

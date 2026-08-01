@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shape6D — UAM 전시장 로그 학습 전(v0-geo) 성능 평가 (v1.0)</title>
+<style>
+  :root {
+    --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb;
+    --accent:#0b5fff; --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00;
+    --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif; color:var(--ink); background:var(--bg); line-height:1.65; font-size:15px; }
+  .wrap { max-width:1080px; margin:0 auto; padding:40px 28px 80px; }
+  h1 { font-size:28px; margin:0 0 4px; letter-spacing:-0.5px; }
+  h2 { font-size:20px; margin:48px 0 12px; padding-top:18px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:16px; margin:26px 0 8px; }
+  p { margin:8px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:22px; }
+  table { width:100%; border-collapse:collapse; margin:12px 0 8px; font-size:12.8px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 10px; font-weight:600; }
+  td { padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.c, th.c { text-align:center; }
+  .r { font-weight:700; } .r.g { color:var(--good); } .r.b { color:var(--bad); }
+  figure { margin:18px 0; }
+  figure img { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; }
+  figcaption { font-size:12.6px; color:var(--sub); margin-top:6px; line-height:1.55; }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:20px; letter-spacing:-0.5px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good { border-left:4px solid var(--good); }
+  .stat.bad { border-left:4px solid var(--bad); }
+  .note { border:1.5px dashed var(--shape); border-radius:10px; background:var(--shape-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  .warnbox { border:1.5px solid var(--bad); border-radius:10px; background:var(--bad-soft); padding:11px 16px; margin:12px 0; font-size:13px; }
+  pre { background:#14161b; color:#d6dbe4; border-radius:10px; padding:12px 15px; font-size:11.8px; overflow-x:auto; }
+  code { background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:12px; }
+  .small { font-size:12.5px; color:var(--sub); }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:760px) { .grid2 { grid-template-columns:1fr; } .hero { grid-template-columns:repeat(2,1fr); } }
+  @media print { .wrap { max-width:100%; } h2 { break-before:page; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>UAM 전시장 로봇 로그 — v0-geo 학습 전 성능 평가</h1>
+<p class="meta">v1.0 · 2026-07-22 · 대상: v0-geo(무학습 기하 파이프라인) · 데이터: <code>/mnt/disk/UAM TEST DATA</code> robot_log + robot_log_essential, <b>70샘플</b>(폴더당 35, 시간순 균등) ·
+CAD: <code>SKID_Scalled_Upright_Widnshield.obj</code> · 결과 정본: <code>eval/external_test/uam_results/uam_results.json</code> ·
+러너: <code>eval/external_test/run_uam_log.py</code> · 선행 보고서: <a href="04_synthetic_validation_report.html">04(합성)</a> · <a href="06_external_eval_visual_report.html">06(MegaPose)</a></p>
+
+<div class="hero">
+  <div class="stat good"><b>97%</b><span>모드 A(ROI): 기체 1m 이내 안착 (36/37, 중앙 0.78m)</span></div>
+  <div class="stat good"><b>49%</b><span>모드 B(풀): S1이 기체 클러스터를 정선택 (18/37)</span></div>
+  <div class="stat bad"><b>87% 기각</b><span>기체 안착 정포즈 54건 중 47건이 free-space 가드에 REJECT</span></div>
+  <div class="stat bad"><b>오수락 95%</b><span>모드 B ACCEPT 37건 중 35건이 배경 구조물 (게시판·부스·바닥)</span></div>
+</div>
+
+<div class="note"><b>한 줄 요약</b> — 기하 스택(S1→S2→coarse→ICP)은 실환경 로그에서도 기체를 꾸준히 찾아내지만
+(모드 A 97%, 모드 B 49%), <b>검증기(S4)의 판정이 사실상 역전</b>되어 있다: CAD에 없는 실물 구조(로터 마스트·전시
+받침대) 때문에 <b>정포즈가 free-space 가드에 걸려 기각</b>되고, 클러터의 대형 평면(게시판·부스)은 위반 없이 정합되어
+<b>고신뢰로 오수락</b>된다. 06(MegaPose)에서 실증한 "검증기 도메인 이전 실패"가 실기 데이터에서 재확인 + <b>부분
+CAD(모델-실물 불일치)라는 새 축</b>이 추가된 결과다.</div>
+
+<h2><span class="no">1</span>데이터 — 무엇을 평가했나</h2>
+
+<p>2026-07-10~17 전시장에서 취득된 모바일 로봇 인식 로그 2종. 타깃은 전시장 중앙의 <b>UAM 기체 목업</b>
+(H-PORT 캐빈 + 상부 로터 마스트 + 4로터, 전시 받침대 위 거치)이며 로봇과의 거리는 4~11m이다.</p>
+
+<table>
+<tr><th>폴더</th><th class="c">스냅샷</th><th>구성</th><th>비고</th></tr>
+<tr><td><code>robot_log</code> (3.3GB)</td><td class="c">sam6d 152 · icp_only 258</td><td>rgb/depth/lidar + estimate.json (+SAM-6D 오버레이)</td><td>SAM-6D 검출 성공 세션 위주 — <b>150/152 검출</b>, 로그 포즈를 참조로 사용</td></tr>
+<tr><td><code>robot_log_essential</code> (4.5GB)</td><td class="c">sam6d 222 · icp_only 20</td><td>rgb/depth/lidar/segmentation + fg(mcap 스냅샷)</td><td>SAM-6D <b>검출 실패 세션</b> (6/222) — 참조 포즈 없음, 육안 판정</td></tr>
+</table>
+
+<figure><img src="assets_07/scene_grid.jpg" alt="장면 샘플">
+<figcaption><b>그림 1 — 장면 개관.</b> 두 폴더 모두 동일한 UAM 목업이 타깃. 위: robot_log(0714~0717), 아래: robot_log_essential(0710).
+거리 4~11m, 조명·시점이 세션마다 다르다. 클러터: 좌우 게시판·부스 벽·펜스·바닥.</figcaption></figure>
+
+<h3>1.1 입력 재구성 — 카메라 내참 자체 캘리브레이션</h3>
+<p>로그에 CameraInfo가 없어 내참을 알 수 없었다. <code>depth.png</code>(uint16 mm, 충전율 ~10%)가
+Ruby128 LiDAR의 카메라 투영임을 확인하고, mcap의 <code>tf_static</code> 외참으로 LiDAR 점군을 후보 K로 투영해
+depth와의 잔차를 최소화하는 4-파라미터 최적화로 내참을 복원했다:</p>
+<p><b>K = (fx 608.58, fy 608.86, cx 647.71, cy 407.74)</b> @1280×800 — inlier(5cm) <b>96.5%</b>, 잔차 중앙 <b>4.2mm</b>.
+이후 모든 평가는 depth.png 역투영 점군(프레임당 ~9만pt, 0.3~12m 크롭)을 입력으로 사용.</p>
+
+<div class="warnbox"><b>참조 포즈의 한계</b> — 이 데이터에는 GT가 없다. 정량 비교의 기준으로 robot_log에 기록된
+<b>SAM-6D 포즈</b>를 쓰지만, 그 자체 검출 점수가 0.02~0.15로 낮고 오버레이상 ~0.5m급 오프셋이 보인다(그림 2).
+따라서 ‖Δt‖&lt;1m는 "기체 클러스터에 정확히 안착"의 의미이지 mm급 정밀도 지표가 아니다. 05 간과점의
+"태깅된 실측 평가셋" 필요성이 여기서도 확인된다.</div>
+
+<figure><img src="assets_07/reference_sam6d_overlay.jpg" alt="SAM-6D 참조">
+<figcaption><b>그림 2 — 참조로 쓴 로봇 탑재 SAM-6D의 자체 오버레이</b> (robot_log, 0710 18:41). 바운딩박스가 기체가 아닌
+전방 바닥에 떠 있다 — 검출 점수 0.15. 참조가 이 수준이므로 본 평가의 Δt는 "클러스터 선택이 맞았는가" 해상도로만 해석한다.</figcaption></figure>
+
+<h2><span class="no">2</span>평가 대상 CAD — 그리고 모델-실물 불일치</h2>
+
+<figure><img src="assets_07/model_views.png" alt="CAD 3면도">
+<figcaption><b>그림 3 — SKID_Scalled_Upright_Widnshield.obj 3면도</b> (표면 샘플 3만pt). 캐빈(윈드실드 포함)+스키드+
+마스트 스텁만 모델링되어 있다. 대칭 없음(회전 대칭 1개=항등, 연속축 0). 온보딩 결과 직경 2.808m.</figcaption></figure>
+
+<div class="warnbox"><b>핵심 제약: CAD는 실물의 부분집합이다.</b> 실물 목업에는 CAD에 없는 <b>상부 로터 마스트+4로터</b>(캐빈 위 ~1.5m)와
+<b>전시 받침대</b>(하부 프레임)가 있다. 관측 클러스터에는 이 미모델 구조의 포인트가 항상 섞이므로 — ① S2 템플릿 매칭 점수 저하,
+② 어떤 정포즈든 미모델 구조 관측과 충돌해 <b>free-space 위반이 구조적으로 발생</b>한다. §5의 판정 역전은 대부분 여기서 나온다.</div>
+
+<h2><span class="no">3</span>프로토콜</h2>
+<table>
+<tr><th>항목</th><th>내용</th></tr>
+<tr><td><b>모드 B — 풀 파이프라인</b></td><td>S1(평면제거+클러스터) → 크기 게이트 → 상위 5후보 각각 S2 TDF 매칭 → coarse → projective ICP → S4 검증, 증거 최상 후보 채택. S1은 실내 장면에 맞춰 튜닝: <code>ransac_dist 0.03 / max_planes 3 / voxel 0.15</code> (기본값에선 바닥 링 잔재가 후보를 지배).</td></tr>
+<tr><td><b>모드 A — ROI 보조</b></td><td>로그된 SAM-6D 위치 반경 2.1m(0.75×직경) crop으로 S1 우회 — S2·coarse·S4를 절연 평가 (06의 모드 A와 동일 취지). SAM-6D 검출이 있는 37샘플에서만 가능.</td></tr>
+<tr><td><b>판정</b></td><td>S4 검증기 원 설정 그대로: free_viol &gt; 0.15 무조건 REJECT(하드 가드), p≥θ<sub>acc</sub> ACCEPT. 직립 프리이어 OFF.</td></tr>
+<tr><td><b>정합 판단 기준</b></td><td>참조 있는 샘플: ‖Δt‖ 대 SAM-6D 로그 위치(&lt;1m = 기체 안착). 참조 없는 essential: 추정 위치·오버레이 육안 판정.</td></tr>
+</table>
+
+<h2><span class="no">4</span>집계 결과</h2>
+
+<table>
+<tr><th>지표</th><th class="c">모드 A (ROI 보조, n=37)</th><th class="c">모드 B (풀, n=70)</th></tr>
+<tr><td>기체 안착률 (‖Δt‖&lt;1m, 참조 있는 37건)</td><td class="c r g">36/37 (97%) · 중앙 0.78m</td><td class="c">18/37 (49%) · 중앙 3.73m</td></tr>
+<tr><td>판정 분포</td><td class="c">ACCEPT 5 · REJECT 32</td><td class="c">ACCEPT 37 · REJECT 32 · UNCERTAIN 1</td></tr>
+<tr><td>ACCEPT 중 기체 정위치</td><td class="c r g">5/5 (오수락 0)</td><td class="c r b">2/37 — <b>오수락 35건(95%)</b></td></tr>
+<tr><td>기체 안착인데 REJECT (free 가드)</td><td class="c r b">31/36 (86%)</td><td class="c r b">16/18 (89%)</td></tr>
+<tr><td>성공례 정합 통계 (중앙)</td><td class="c">inlier 0.73 · 커버리지 0.54</td><td class="c">inlier 0.79 · 커버리지 0.61</td></tr>
+<tr><td>프레임당 시간 (중앙, 데스크톱 CPU)</td><td class="c">15.5s</td><td class="c">28.9s</td></tr>
+</table>
+
+<p class="small">essential(참조 없음) 모드 B 35건 상세: ACCEPT 21건의 추정 위치는 원거리 부스·구조물(z≈10.7~11.2m) 17건 ·
+바닥 스트립(z≈1.0m) 3건 · 우측 구조물(8.2m) 1건 — <b>전부 오수락</b>(기체는 해당 세션에서 z≈4.4m). REJECT 13 · UNCERTAIN 1.</p>
+
+<figure><img src="assets_07/dt_hist.png" alt="dt 분포">
+<figcaption><b>그림 4 — 로그된 SAM-6D 위치와의 편차 분포</b> (참조 있는 37샘플). 모드 A(주황 채움)는 사실상 전부 1m 구간 —
+ROI만 주면 정합 스택은 기체에 안착한다. 모드 B(초록 빗금)는 1m 구간(정선택 49%)과 5~7m 구간(게시판·부스 오선택)으로 양분된다.</figcaption></figure>
+
+<figure><img src="assets_07/quality_scatter.png" alt="품질-free 산점도">
+<figcaption><b>그림 5 — 판정 역전의 구조.</b> 가로: 정합 품질(inlier비×커버리지), 세로: free-space 위반율, 빨간 점선: 하드 가드(0.15).
+기체에 안착한 모드 A(주황 삼각)는 미모델 로터·받침대 때문에 거의 전부 <b>가드선 위</b>(=기각)에 있고, 배경 평면에 정합한
+모드 B 오수락(왼쪽 아래 초록 군집)은 위반 없이 <b>가드선 아래</b>로 통과한다. 위반율이 정/오답을 가르는 방향이 뒤집혀 있다.</figcaption></figure>
+
+<h2><span class="no">5</span>케이스 패널</h2>
+<p class="small">각 패널: 파랑=LiDAR 관측(1/4 샘플) · 초록=모드 B 추정 포즈의 모델 투영 · 주황=모드 A · 빨간 ×=SAM-6D 로그 위치.
+전체 70장은 <code>eval/external_test/uam_results/*.jpg</code>.</p>
+
+<h3>5.1 성공 — 풀 파이프라인이 기체를 찾고 ACCEPT (드묾: 2/37)</h3>
+<figure><img src="assets_07/case_robot_log__20260710_185048_607_sam6d.jpg" alt="성공 케이스">
+<figcaption><b>robot_log 0710 18:50</b> — 모드 A·B 모두 캐빈에 안착(겹쳐서 황록색), 둘 다 ACCEPT p=1.00, Δt=0.76m.
+가까운 거리(~4m)에서 기체 클러스터가 최대이고 free 위반이 낮게 나온 경우.</figcaption></figure>
+
+<h3>5.2 발견-기각 — 정포즈가 free-space 가드에 걸림 (기체 안착의 87%)</h3>
+<figure><img src="assets_07/case_robot_log__20260717_104956_828_sam6d.jpg" alt="발견-기각 케이스">
+<figcaption><b>robot_log 0717 10:49</b> — 모드 B가 기체 클러스터를 정선택하고 Δt=0.26m까지 붙었으나(주황·초록 모두 캐빈 위)
+free_viol 0.283 &gt; 0.15로 <b>REJECT</b>. 미모델 로터 마스트 관측과 CAD 캐빈이 충돌한 전형.</figcaption></figure>
+
+<h3>5.3 오수락 A — 게시판을 기체로 수락 (모드 B 오수락 35건의 전형)</h3>
+<figure><img src="assets_07/case_robot_log__20260715_105918_364_sam6d.jpg" alt="게시판 오수락">
+<figcaption><b>robot_log 0715 10:59</b> — 모드 B(초록)가 좌측 게시판 평면에 정합해 <b>ACCEPT p=0.99</b> (Δt=6.6m).
+평면 클러스터는 CAD의 큰 면과 잘 맞고 free 위반이 없어 검증기를 통과한다. 같은 프레임에서 모드 A(주황)는 기체에 안착했지만 REJECT.</figcaption></figure>
+
+<h3>5.4 오수락 B — 참조 없는 세션, 부스 벽 수락</h3>
+<figure><img src="assets_07/case_robot_log_essential__20260710_182410_897_sam6d.jpg" alt="부스 오수락">
+<figcaption><b>essential 0710 18:24</b> — SAM-6D조차 검출을 못 낸 세션. 모드 B는 10.7m 부스 진열대에 ACCEPT p=0.98.
+essential ACCEPT 21건 중 17건이 이 패턴(동일 구조물)이다.</figcaption></figure>
+
+<h3>5.5 오수락 C — 바닥 스트립 수락 (p=1.00)</h3>
+<figure><img src="assets_07/case_robot_log_essential__20260710_182816_880_sam6d.jpg" alt="바닥 오수락">
+<figcaption><b>essential 0710 18:28</b> — 평면 제거 후 남은 바닥 잔재(카메라 앞 1.0m, 대부분 화면 밖)에 inlier 0.99로
+ACCEPT p=1.00. 관측이 극히 적은 근거리 클러스터가 만점을 받는 것은 커버리지 항이 시야 밖을 변별하지 못하기 때문.</figcaption></figure>
+
+<h3>5.6 ROI 보조의 전형 — 근접하나 기각</h3>
+<figure><img src="assets_07/case_robot_log_essential__20260710_192818_093_sam6d.jpg" alt="ROI 근접-기각">
+<figcaption><b>essential 0710 19:28</b> (essential에서 SAM-6D 검출이 있던 6건 중 하나) — 모드 A(주황)가 캐빈·마스트·스키드를
+덮으며 Δt=0.51m까지 근접(inlier 0.77·커버리지 0.57)했지만 free_viol 0.299로 REJECT. 모드 B(초록)는 우측 펜스로 이탈.</figcaption></figure>
+
+<h2><span class="no">6</span>해석 — 5가지 교훈</h2>
+
+<table>
+<tr><th style="width:26%">관찰</th><th>해석 · 로드맵 연결</th></tr>
+<tr><td class="r g">① 기하 스택의 리콜은 실환경에서도 산다</td><td>ROI만 주어지면 97%가 기체에 안착(중앙 0.78m — 참조 자체 오프셋 수준). 04 합성(4.9mm/0.71°)·06 모드 A(56%/90%)에 이어, <b>S2 TDF 정합→coarse→ICP 사슬은 무학습 상태에서도 재사용 가능한 자산</b>임을 실기 데이터로 3번째 확인.</td></tr>
+<tr><td class="r b">② 검증기 판정이 역전됨 — 부분 CAD가 방아쇠</td><td>free-space 가드가 정포즈의 87%를 기각하고 배경 평면 오포즈의 95%를 통과시켰다. 06의 "도메인 이전 실패(오수락 40%)"보다 심한 형태 — 원인이 가림이 아니라 <b>CAD에 없는 실물 구조(로터·받침대)</b>라서, 정포즈일수록 위반이 커진다. → M3-3 보정 셋에 "부분 CAD/부착물" 유형 필수, free-space 검사에 <b>미모델 영역 마스크</b> 또는 소프트 가드 필요. 05 간과점 6-A(오포즈 카탈로그)의 신규 항목.</td></tr>
+<tr><td class="r b">③ S1 클러터 한계 — 그러나 06보다는 낫다</td><td>클러스터 정선택 49% (06 모드 B 5% 대비 개선 — 바닥 평면 제거가 유효한 장면 구조 덕). 실패는 게시판·부스 등 <b>대형 평면이 크기 게이트를 통과</b>해서다. → M1 EViT-SAM 마스크 경로(RGB 증거로 후보 압축)의 근거 재확인.</td></tr>
+<tr><td>④ 속도: 후보 소진이 지배</td><td>프레임 중앙 28.9s = 후보 5개 × (ICP+검증 6~10s). S2 매칭은 후보당 0.3s로 문제없다. 후보가 1개로 압축되면(M1) 그것만으로 ~5×, ICP/free-space 벡터화·조기 종료로 추가 여지. 이 러너는 정확도 평가용 — Jetson 지연 평가는 <code>eval/latency</code> 별도.</td></tr>
+<tr><td>⑤ 참조 품질이 평가 해상도를 제한</td><td>탑재 SAM-6D 포즈(점수 0.02~0.15, ~0.5m 오프셋)가 유일한 참조라 mm급 검증 불가. essential 세션은 참조가 거의 없다(222건 중 검출 6건). → 실기 정밀도 주장에는 <b>태깅된 평가셋</b>(마커/토탈스테이션 GT)이 선행돼야 한다 (05 간과점 3-1).</td></tr>
+</table>
+
+<div class="note"><b>로봇 탑재 파이프라인과의 대조</b> — 같은 로그에서 탑재 SAM-6D(RGB 주도)는 robot_log 세션 150/152 검출
+(점수 0.02~0.15, 4.3~4.5s/frame), essential 세션 6/222로 <b>조명·시점에 따라 전멸</b>했다. 탑재 ICP 추적(257건, 기각 0,
+inlier 중앙 0.82, 수렴 854ms)은 맵 시드가 있을 때만 성립한다. v0-geo의 자리는 정확히 그 사이 — <b>시드 없는 재획득</b>이며,
+이번 평가는 그 재획득의 병목이 기하 정합이 아니라 검증·후보 선택임을 보여준다.</div>
+
+<h2><span class="no">7</span>재현</h2>
+<pre>
+# 평가 (폴더당 35샘플, ~35분 @데스크톱 CPU) — 결과 JSON + 샘플별 오버레이
+python3 eval/external_test/run_uam_log.py --n 35
+
+# 집계 + 보고서 그림 (docs/assets_07)
+python3 eval/external_test/make_uam_report_figs.py
+
+# 내참 캘리브레이션 근거: LiDAR(pcd)+tf_static(mcap)↔depth.png 정합 (스크래치, 수치는 run_uam_log.py에 고정)
+# K = (608.581, 608.858, 647.712, 407.744) — inlier@5cm 96.5%, 잔차 중앙 4.2mm
+</pre>
+
+<p class="small">본 보고서 수치 정본: <code>eval/external_test/uam_results/uam_results.json</code> (70레코드 — 모드별 포즈·검증 통계·시간 포함).
+케이스 오버레이 원본 70장: <code>eval/external_test/uam_results/*.jpg</code>.</p>
+
+</div>
+</body>
+</html>

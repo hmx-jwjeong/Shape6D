@@ -8,3 +8,6 @@ Data/
 *.npz
 !tests/fixtures/*.npz
 .DS_Store
+reports
+.vscode/
+.dashboard.out

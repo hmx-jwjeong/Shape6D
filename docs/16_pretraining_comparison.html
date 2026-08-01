@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사전학습 방식 대조 — SAM 2 · SAM-6D · MegaPose · FoundationPose · Co-op vs Shape6D</title>
+<style>
+  :root { --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --panel:#f6f8fb; --accent:#0b5fff;
+          --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e3;
+          --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+         color:var(--ink); background:#fff; line-height:1.7; font-size:15px; }
+  .wrap { max-width:1140px; margin:0 auto; padding:44px 28px 110px; }
+  h1 { font-size:25px; margin:0 0 6px; letter-spacing:-0.5px; line-height:1.35; }
+  h2 { font-size:19px; margin:52px 0 12px; padding-top:16px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:26px 0 8px; }
+  p { margin:9px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  .abs { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:16px 20px; margin:18px 0 26px; font-size:14px; }
+  .abs b.t { display:block; font-size:15px; margin-bottom:6px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.4px; }
+  th { background:var(--ink); color:#fff; text-align:left; padding:7px 9px; font-weight:600; }
+  th.c, td.c { text-align:center; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.me td { background:var(--shape-soft); } tr.me td:first-child { border-left:3px solid var(--shape); font-weight:700; }
+  tr.hi td { background:var(--bad-soft); } tr.hi td:first-child { border-left:3px solid var(--bad); }
+  tr.ok td { background:var(--good-soft); } tr.ok td:first-child { border-left:3px solid var(--good); }
+  .cap { font-size:12.3px; color:var(--sub); margin:4px 0 20px; }
+  .cap b { color:var(--ink); }
+  code { font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace; font-size:12.3px;
+         background:var(--panel); padding:1px 5px; border-radius:4px; }
+  .crit { border:1px solid var(--line); border-left:4px solid var(--bad); background:var(--bad-soft);
+          border-radius:8px; padding:13px 17px; margin:16px 0; font-size:13.6px; }
+  .crit .h { font-weight:800; color:var(--bad); margin-bottom:5px; font-size:14.5px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.6px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; font-size:14px; }
+  .box { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.6px; }
+  .note { border:1.5px dashed var(--shape); background:var(--shape-soft); border-radius:10px;
+          padding:11px 16px; margin:14px 0; font-size:13.3px; }
+  .warnbox { border:1.5px dashed var(--warn); background:var(--warn-soft); border-radius:10px;
+             padding:11px 16px; margin:14px 0; font-size:13.3px; }
+  ul, ol { margin:8px 0; padding-left:22px; } li { margin:5px 0; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 20px;
+         margin:18px 0 6px; font-size:13.3px; column-count:2; column-gap:30px; }
+  .toc a { display:block; padding:2px 0; break-inside:avoid; }
+  .tiny { font-size:11.8px; color:var(--sub); }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:18px 0 6px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:19px; letter-spacing:-0.5px; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good b { color:var(--good); } .stat.bad b { color:var(--bad); } .stat.warn b { color:var(--warn); }
+  @media (max-width:820px){ .toc{column-count:1;} .hero{grid-template-columns:repeat(2,1fr);} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>사전학습 방식 대조<br>— SAM 2 · SAM-6D · MegaPose · FoundationPose · Co-op vs Shape6D</h1>
+<div class="meta">v1.0 · 2026-07-29 · 선행: <a href="11_sota_approach_comparison.html">11</a>(Co-op·FreeZe 네트워크 대조) · <a href="15_network_and_training_scope.html">15</a>(현재 학습 범위)<br>
+<span class="tiny">※ "sam2"는 SAM 2(분할 파운데이션, 우리 S1의 후보 계열)와 SAM-6D(우리 기준선) 둘 다로 읽힐 수 있어 <b>양쪽 모두</b> 다룬다.</span></div>
+
+<div class="abs">
+<b class="t">요약</b>
+다섯 방법의 사전학습을 대조한 결과, <b>공통 구조가 하나 드러난다 — 이들은 "물체를 인식하는 법"이 아니라 "두 입력을 비교하는 법"을 학습한다.</b>
+MegaPose·FoundationPose·SAM-6D·Co-op 전부 render-and-compare 또는 대응(correspondence) 정식화이고, CAD/템플릿이 항상 <b>입력의 절반</b>이다. 학습되는 것은 물체가 아니라 <b>비교 연산자</b>이므로 처음 보는 물체로 일반화된다.<br><br>
+이 사실이 우리에게 갖는 함의는 양날이다. <b>좋은 쪽</b>: 학습 물체 1,030종(SOTA의 1/50~1/100)이라는 열세가 생각보다 작을 수 있다 — 배우는 것이 물체가 아니기 때문이다. <b>나쁜 쪽</b>: 그 이점은 <b>매칭 정식화를 지킬 때만</b> 성립한다. <a href="15_network_and_training_scope.html">15 §4</a>에서 우리 파일럿이 분류 정식화로 바꾸자 미학습 물체 top-1이 0.99 → 0.147로 무너진 것이 그 증거다.<br><br>
+컴퓨트는 정직하게 비교 불가다 — MegaPose 32×V100, Co-op 8×A100 6.5일 vs 우리 <b>RTX PRO 6000 1장</b>. <b>따라서 우리 M2의 정당한 목표는 "SOTA 재현"이 아니라 "증류·경량화"</b>이며, 이는 <a href="10_network_design_and_critique.html">10 §9</a>의 결론과 같다.
+</div>
+
+<div class="hero">
+  <div class="stat"><b>비교 연산자</b><span>다섯 방법이 공통으로 학습하는 것</span></div>
+  <div class="stat bad"><b>1/50</b><span>우리 학습 물체 다양성 (1,030 vs 5만+)</span></div>
+  <div class="stat bad"><b>1 GPU</b><span>vs MegaPose 32×V100 · Co-op 8×A100</span></div>
+  <div class="stat warn"><b>0.147</b><span>분류 정식화로 바꿨을 때 미학습 물체 top-1</span></div>
+</div>
+
+<div class="toc">
+<a href="#s1">1. 방법별 사전학습 요약</a>
+<a href="#s2">2. 대조표 — 무엇을 어떻게 배웠는가</a>
+<a href="#s3">3. 공통 구조 — 전부 비교기를 배운다</a>
+<a href="#s4">4. "사전학습"이라는 말의 세 가지 다른 뜻</a>
+<a href="#s5">5. 우리와의 격차 — 정직한 회계</a>
+<a href="#s6">6. 가져올 것 · 버릴 것</a>
+</div>
+
+<h2 id="s1"><span class="no">1</span>방법별 사전학습 요약</h2>
+
+<h3>SAM 2 (Meta, 2024) — 분할 파운데이션 · 우리 S1의 후보 계열</h3>
+<ul>
+<li><b>2단 구성</b>: ① 정지 이미지 사전학습 — SA-1B(<b>1,100만 장 / 10억 마스크</b>), MAE 자기지도로 사전학습된 Hiera 인코더 ② 비디오 학습 — SA-V</li>
+<li><b>SA-V</b>: 50.9K 비디오 · <b>3,550만 마스크</b> · 642.6K masklet (수동 190.9K + <b>자동 451.7K</b>). 기존 비디오 분할 데이터셋 대비 53배</li>
+<li><b>핵심은 데이터 엔진</b> — 모델을 사람 주석 루프에 넣어(model-in-the-loop) 주석 → 재학습 → 재주석을 3단계로 반복. <b>데이터를 모델로 만든다</b></li>
+<li>우리 관련성: S1의 EViT-SAM 계열이 여기서 나온다. 포즈 자체와는 무관</li>
+</ul>
+
+<h3>MegaPose (CoRL 2022) — 신규 물체 render-and-compare의 원형</h3>
+<ul>
+<li>BlenderProc으로 <b>200만 장</b> 생성 (<code>gso_1M</code> + <code>shapenet_1M</code>), <b>물체 5만 종 이상</b></li>
+<li><b>coarse를 분류로 정식화</b> — "렌더와 관측 사이의 포즈 오차를 refiner가 고칠 수 있는가"를 판정. (회귀형 coarse는 대칭 때문에 붕괴한다고 보고)</li>
+<li>refiner: render-and-compare 반복</li>
+<li>컴퓨트: <b>32× V100</b>, coarse 32시간 + refiner 48시간</li>
+<li><b>우리가 지금 쓰는 데이터가 바로 이것</b>(MegaPose-GSO 508GB)</li>
+</ul>
+
+<h3>FoundationPose (CVPR 2024 Highlight) — 합성 데이터 생성 자체를 설계</h3>
+<ul>
+<li>Isaac Sim으로 생성, <b>Objaverse 41K + GSO 1K = 42K 물체</b></li>
+<li><b>67.8만 장</b>(GT 포함), 학습 시 8가지 순열 증강 → 실효 <b>540만 장</b></li>
+<li><b>LLM + diffusion을 데이터 생성 파이프라인에 투입</b> — 텍스처·장면 다양성을 언어 모델이 생성</li>
+<li>대조학습(contrastive) + 트랜스포머 refine/score. model-based와 model-free(참조 이미지 → 신경 암시 표현)를 통합</li>
+</ul>
+
+<h3>Co-op (CVPR 2025) — 대응 + 확률 flow</h3>
+<ul>
+<li>출발점이 다르다 — <b>CroCo</b>(크로스뷰 완성) 사전학습 ViT-L(enc)/ViT-B(dec). DINO 계열이 아니다</li>
+<li>학습 데이터는 MegaPose 셋(ShapeNet + GSO), BlenderProc</li>
+<li>컴퓨트: <b>8× A100</b> — coarse 2일 + refiner 3일 + selection 1.5일 ≈ <b>6.5일</b></li>
+<li>42뷰 icosphere 템플릿 (우리 S0와 동일 규약)</li>
+</ul>
+
+<h3>SAM-6D (CVPR 2024) — 우리 기준선</h3>
+<ul>
+<li><b>ISM은 학습 전무</b> — SAM + 동결 DINOv2로 인스턴스 분할·판별</li>
+<li><b>PEM만 학습</b> — MegaPose 200만 장. 2단 매칭(coarse/fine), 온라인 104M</li>
+<li>대칭 처리 없음(단일 GT 최근접 CE) — <a href="10_network_design_and_critique.html">10 §8-①</a></li>
+</ul>
+
+<h2 id="s2"><span class="no">2</span>대조표 — 무엇을 어떻게 배웠는가</h2>
+
+<table>
+<tr><th style="width:12%">방법</th><th style="width:17%">학습 정식화</th><th style="width:13%">물체 다양성</th><th style="width:13%">렌더 규모</th><th style="width:14%">컴퓨트</th><th style="width:13%">출발 가중치</th><th>데이터 생성</th></tr>
+<tr><td><b>SAM 2</b></td><td>promptable 분할 (포즈 아님)</td><td class="c">—</td><td class="c">11M img<br>+ 50.9K video</td><td class="c">미공개</td><td>MAE 사전학습 Hiera</td><td><b>데이터 엔진</b> (모델-인-더-루프 3단계)</td></tr>
+<tr><td><b>MegaPose</b></td><td>render&amp;compare<br>(coarse=분류, refiner)</td><td class="c"><b>5만+</b></td><td class="c">2M</td><td class="c"><b>32× V100</b><br>32h+48h</td><td>ImageNet급 초기화</td><td>BlenderProc</td></tr>
+<tr><td><b>FoundationPose</b></td><td>대조학습 + render&amp;compare 랭킹</td><td class="c"><b>42K</b><br>(Objaverse41K+GSO1K)</td><td class="c">678K<br>(증강 5.4M)</td><td class="c">대규모<br>(미상세)</td><td>—</td><td><b>Isaac Sim + LLM + diffusion</b></td></tr>
+<tr><td><b>Co-op</b></td><td>패치 대응 + 확률 flow + 가설선택</td><td class="c">MegaPose 셋</td><td class="c">2M</td><td class="c"><b>8× A100</b><br>6.5일</td><td><b>CroCo</b> (크로스뷰 완성)</td><td>BlenderProc</td></tr>
+<tr><td><b>SAM-6D</b></td><td>2단 점-점 대응<br>(ISM은 무학습)</td><td class="c">MegaPose 셋</td><td class="c">2M</td><td class="c">미공개</td><td>ViT-B / 동결 DINOv2</td><td>BlenderProc</td></tr>
+<tr><td>FreeZe <span class="tiny">(참고)</span></td><td class="c" colspan="4"><b>학습 전무</b> — 동결 DINOv2 ViT-g + 동결 GeDi + RANSAC + ICP</td><td>동결 foundation</td><td>—</td></tr>
+<tr class="me"><td><b>Shape6D<br>(계획)</b></td><td>2단 점-점 대응<br>+ <b>대칭군 g* 손실</b></td><td class="c"><b>1,030</b><br>(GSO만, ShapeNet 보류)</td><td class="c">~104만<br>(계획)</td><td class="c"><b>RTX PRO 6000<br>×1</b>, 7~9주</td><td>후보: 스크래치 /<br>ImageNet / DINOv3</td><td>MegaPose-GSO 재사용<br>+ ML-X 격자 희소화</td></tr>
+<tr class="hi"><td><b>Shape6D<br>(현재 파일럿)</b></td><td class="c" style="color:var(--bad)"><b>42뷰 분류</b><br>— 대응 아님</td><td class="c">750</td><td class="c">6.4만</td><td class="c">1 GPU<br>10분/런</td><td>동상</td><td>동상</td></tr>
+</table>
+<div class="cap"><b>Table 1.</b> 사전학습 대조. 마지막 두 행이 우리다 — <b>계획은 대응 정식화인데 현재 파일럿은 분류 정식화</b>이며, 이 불일치가 <a href="15_network_and_training_scope.html">15 §4</a>의 실패 원인이다.</div>
+
+<h2 id="s3"><span class="no">3</span>공통 구조 — 전부 "비교기"를 배운다</h2>
+
+<div class="fair">
+<div class="h">다섯 방법의 학습 목표를 한 줄로 쓰면</div>
+<b>MegaPose</b> — "이 렌더와 이 관측의 포즈 차이를 refiner가 고칠 수 있는가?"<br>
+<b>FoundationPose</b> — "이 포즈 가설이 이 관측과 얼마나 맞는가?" (랭킹)<br>
+<b>SAM-6D / Co-op / Shape6D</b> — "이 관측점은 CAD의 어느 점/패치에 대응하는가?"<br>
+<b>FreeZe</b> — (학습 없이) "이 두 특징이 얼마나 닮았는가?"<br><br>
+<b>전부 입력이 두 개(관측 + 템플릿/렌더)인 함수를 배운다.</b> 물체의 정체성이 아니라 <b>비교 방법</b>을 배우므로, 학습에 없던 물체도 템플릿만 주면 처리된다.
+</div>
+
+<div class="crit">
+<div class="h">이것이 우리 파일럿이 무너진 이유를 설명한다</div>
+우리 파일럿은 입력이 <b>하나(관측)</b>인 함수를 배웠다 — "이 관측은 42뷰 중 몇 번인가?". 이 정식화에서는 <b>물체의 정준 좌표계를 네트워크가 외워야</b> 하고, 따라서:<br>
+· 물체가 1종이면 잘 된다 (외울 게 하나뿐) → top-1 <b>0.993</b><br>
+· 물체가 750종이고 검증이 <b>미학습 194종</b>이면 원리적으로 불가능 → top-1 <b>0.147</b>(우연 0.024)<br><br>
+<b>물체 다양성을 늘려도 이 정식화로는 해결되지 않는다.</b> 1만 종으로 늘려도 1만 개의 정준 좌표계를 외울 뿐, 1만 1번째 물체는 여전히 못 푼다. <b>정식화를 바꿔야 한다.</b>
+</div>
+
+<div class="note">
+<b>역설적 함의 — 물체 다양성 열세는 생각보다 작을 수 있다.</b>
+<a href="10_network_design_and_critique.html">10 §6.4</a>는 "학습 물체 1,030종은 SOTA의 1/50~1/100"을 높음 등급 리스크로 올렸다. 그러나 §3의 관찰대로 이들이 배우는 것이 <b>비교 연산자</b>라면, 필요한 다양성은 "모든 물체를 보는 것"이 아니라 <b>"비교가 성립하는 형상·재질 조건을 충분히 보는 것"</b>이다.<br>
+실제로 <b>SAM-6D·Co-op은 GSO+ShapeNet으로 학습하고 T-LESS·ITODD 같은 전혀 다른 산업 물체에서 동작</b>한다. 우리 조건(기하만 사용, 외형 무시)에서는 필요한 다양성이 <b>더 작을 수도</b> 있다 — 텍스처·재질 다양성이 애초에 입력에 없기 때문이다.<br>
+<b>단, 이는 가설이며 08 §3.2의 "GSO-only vs GSO+ShapeNet 나란히 측정"으로 검증해야 한다.</b> 그리고 그 측정은 <b>대응 정식화에서</b> 해야 의미가 있다.
+</div>
+
+<h2 id="s4"><span class="no">4</span>"사전학습"이라는 말의 세 가지 다른 뜻</h2>
+
+<p>같은 단어가 이 다섯 방법에서 서로 다른 것을 가리킨다. 우리 계획을 어디에 놓을지 정하려면 구분이 필요하다.</p>
+
+<table>
+<tr><th style="width:16%">유형</th><th style="width:22%">뜻</th><th style="width:26%">사례</th><th>우리 상황</th></tr>
+<tr><td><b>Ⅰ. 표현 사전학습</b></td><td>태스크와 무관한 대규모 자기지도로 <b>특징 추출기</b>를 먼저 만든다</td><td>SAM 2의 MAE-Hiera · Co-op의 CroCo · FreeZe의 DINOv2/GeDi(동결 사용)</td><td>우리 인코더 후보 <b>a1(ImageNet)·a1d(DINOv3)</b>가 여기. <a href="14_encoder_pilot_paper.html">14</a>에서 측정 중</td></tr>
+<tr><td><b>Ⅱ. 태스크 사전학습</b></td><td>대규모 <b>합성 포즈 데이터</b>로 태스크 자체를 학습해 신규 물체 일반화를 얻는다</td><td>MegaPose · FoundationPose · SAM-6D · Co-op의 본학습</td><td><b>M2가 여기</b>. 우리 자원으로는 규모를 못 맞춘다</td></tr>
+<tr><td><b>Ⅲ. 증류</b></td><td>큰 모델/동결 foundation의 지식을 작은 배포용 모델로 옮긴다</td><td>DINOv3 ConvNeXt(ViT-7B→증류) · dGeDi(GeDi→PTv3, 170×)</td><td><a href="10_network_design_and_critique.html">10 §9</a>가 <b>M2를 여기로 재정의</b>하라고 권고</td></tr>
+</table>
+
+<div class="warnbox"><b>우리가 지금 하고 있는 것은 Ⅰ의 검증뿐이다.</b> Ⅱ는 매칭부가 없어 시작조차 안 됐고(<a href="15_network_and_training_scope.html">15 §3</a>), Ⅲ은 교사 선정도 안 끝났다. <b>세 가지를 같은 단어로 부르면 진척도를 착각하게 된다.</b></div>
+
+<h2 id="s5"><span class="no">5</span>우리와의 격차 — 정직한 회계</h2>
+
+<table>
+<tr><th style="width:18%">축</th><th style="width:26%">SOTA 수준</th><th style="width:22%">Shape6D</th><th>판정</th></tr>
+<tr class="hi"><td>컴퓨트</td><td>MegaPose 32×V100 · Co-op 8×A100 6.5일</td><td>RTX PRO 6000 ×1</td><td class="r"><b>재현 불가</b> — 목표로 삼아서도 안 된다. Ⅲ(증류)이 정당한 경로</td></tr>
+<tr class="hi"><td>물체 다양성</td><td>4.2만~5만+</td><td>1,030 (GSO만)</td><td>열세이나 <b>§3에 따라 과대평가일 수 있음</b> — 대응 정식화 전제로 재평가 필요</td></tr>
+<tr class="hi"><td>렌더 규모</td><td>2M~5.4M</td><td>~104만 (계획)</td><td>1/2~1/5. 물체당 샘플 수는 오히려 많다</td></tr>
+<tr><td>데이터 생성</td><td>Isaac Sim+LLM(FP) · 데이터 엔진(SAM 2)</td><td>MegaPose 재사용 + <b>ML-X 격자 희소화</b></td><td><b>우리 고유 증강</b>이 있다 — 남들에게 없는 축</td></tr>
+<tr class="ok"><td>대칭 처리</td><td>대부분 <b>없음</b> (10 §8-①)</td><td>손실단 g* 단일선택</td><td class="r"><b>우위</b></td></tr>
+<tr class="ok"><td>accept/reject</td><td>없음 (BOP가 요구 안 함)</td><td>10-d 보정 + 하드가드</td><td class="r"><b>우위</b></td></tr>
+<tr class="ok"><td>엣지 예산</td><td>0.9~1.1B 파라미터</td><td>~8M / 7 GFLOPs</td><td class="r"><b>다른 문제를 푼다</b></td></tr>
+</table>
+
+<h2 id="s6"><span class="no">6</span>가져올 것 · 버릴 것</h2>
+
+<table>
+<tr><th style="width:16%">출처</th><th style="width:30%">가져올 것</th><th>이유 / 적용 방법</th></tr>
+<tr class="ok"><td><b>MegaPose</b></td><td><b>coarse를 분류로 정식화한 이유</b></td><td>"회귀형 coarse는 대칭 때문에 학습이 붕괴한다"는 보고는 우리 g* 손실 설계의 근거다. <b>단 그 분류는 "뷰 분류"가 아니라 "이 렌더-관측 쌍이 교정 가능한가"</b> — 여전히 두 입력 함수다</td></tr>
+<tr class="ok"><td><b>SAM 2</b></td><td><b>데이터 엔진 (모델-인-더-루프)</b></td><td>09가 지적한 "현장 약라벨 수집 루프"가 정확히 이 방법론이다 — 파이프라인으로 라벨을 만들고, 사람이 검수하고, 재학습한다. <b>451.7K/642.6K가 자동 생성이었다는 비율이 실현 가능성의 근거</b>. 단 적용 대상은 <b>향후 현장(배포지) 수집분과 평가셋 참조 주석</b>이다 — <b>UAM 로그는 평가 전용 테스트 셋이므로 학습·보정 루프에 넣지 않는다</b>(17 §5.5)</td></tr>
+<tr><td><b>FoundationPose</b></td><td>합성 데이터 생성 자체를 설계 대상으로 삼는 태도</td><td>우리에게 이미 있다 — ML-X 격자 희소화·σ 노이즈·고정 격자 앨리어싱(05 간과점 #6). <b>다만 LLM/diffusion급 다양성 생성은 자원상 불가</b></td></tr>
+<tr><td><b>Co-op</b></td><td>출발 가중치를 <b>DINO가 아닌 CroCo</b>에서 고른 판단</td><td>대응 태스크에는 크로스뷰 완성 사전학습이 더 맞을 수 있다. <a href="12_backbone_survey_dino.html">12 §9-7</a>에 결정 항목으로 등재돼 있으며, <b>15 §5-①(목적함수 불일치)을 고려하면 우선순위를 올릴 근거가 생겼다</b></td></tr>
+<tr class="hi"><td>공통</td><td class="c" colspan="2"><b>버릴 것 — 규모로 이기려는 시도.</b> 컴퓨트 30~50배, 물체 40배 차이는 자원 배분으로 메울 수 없다. 우리 정당성은 <b>다른 입력(희소 LiDAR)·다른 배포 조건(엣지 1초)·다른 출력(보정된 accept/reject)</b>에 있다</td></tr>
+</table>
+
+<div class="box">
+<b>한 문장 결론.</b> 다섯 방법 모두 <b>비교기를 배우고</b>, 그래서 신규 물체로 일반화한다. 우리 설계도 같은 계열이지만 <b>현재 파일럿만 분류 정식화로 이탈해 있고</b>, 그 대가를 <a href="15_network_and_training_scope.html">15 §4</a>에서 실측했다.
+따라서 다음 조치는 물체를 더 모으는 것이 아니라 <b>정식화를 되돌리는 것</b>(최소 매칭부 구현)이며, 그 다음이 <b>증류로 컴퓨트 격차를 우회하는 것</b>이다.
+</div>
+
+<p class="tiny" style="margin-top:26px">출처 — <a href="https://arxiv.org/abs/2408.00714">SAM 2 (arXiv:2408.00714)</a> · <a href="https://arxiv.org/abs/2212.06870">MegaPose (CoRL 2022)</a> · <a href="https://nvlabs.github.io/FoundationPose/">FoundationPose (CVPR 2024)</a> · <a href="https://arxiv.org/abs/2503.17731">Co-op (CVPR 2025)</a> · SAM-6D (CVPR 2024) · <a href="https://arxiv.org/abs/2312.00947">FreeZe (ECCV 2024)</a><br>
+내부: <a href="10_network_design_and_critique.html">10 §6.4·§8·§9</a> · <a href="11_sota_approach_comparison.html">11</a> · <a href="12_backbone_survey_dino.html">12 §9-7</a> · <a href="14_encoder_pilot_paper.html">14</a> · <a href="15_network_and_training_scope.html">15</a></p>
+
+</div>
+</body>
+</html>
