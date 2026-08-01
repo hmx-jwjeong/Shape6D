@@ -14,6 +14,8 @@ docs/03 §6.5(자체 언어 재기술), docs/15 §6(최소 요건). 코드 표�
 """
 from __future__ import annotations
 
+import os
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -24,8 +26,8 @@ N_TOK = 196          # coarse 토큰 수 (03 §6.5)
 
 # ── 기하 텐서 유틸 ────────────────────────────────────────────────────────────
 
-def fps_torch(pts: torch.Tensor, valid: torch.Tensor, n: int) -> torch.Tensor:
-    """[B,N,3] + 유효 [B,N] → FPS 인덱스 [B,n]. 패딩점은 거리 -inf로 배제."""
+def _fps_eager(pts: torch.Tensor, valid: torch.Tensor, n: int) -> torch.Tensor:
+    """정확 FPS — 원본 eager 루프 (기준 구현, 커널 시퀀스 변경 금지)."""
     B, N, _ = pts.shape
     idx = torch.zeros(B, n, dtype=torch.long, device=pts.device)
     d = torch.where(valid, torch.full((B, N), torch.inf, device=pts.device),
@@ -38,6 +40,75 @@ def fps_torch(pts: torch.Tensor, valid: torch.Tensor, n: int) -> torch.Tensor:
         d = torch.where(valid, d, torch.full_like(d, -torch.inf))
         cur = d.argmax(-1)
     return idx
+
+
+# CUDA graph 캐시: (device, B, N, n, dtype) → (s_pts, s_valid, s_idx, graph).
+# 근사 아님 — eager와 동일한 커널 시퀀스를 캡처해 1회 리플레이로 실행하므로
+# 결과 인덱스는 비트단위 동일. Python/커널 런치 오버헤드(반복당 ~7회 × n)만 제거.
+_FPS_GRAPHS: dict = {}
+_FPS_GRAPH_MAX = 16                       # 형상 조합 캐시 상한 (초과 시 eager 폴백)
+_FPS_GRAPH_ON = os.environ.get("SHAPE6D_FPS_GRAPH", "1") != "0"
+
+
+def _fps_body(pts: torch.Tensor, valid: torch.Tensor, n: int) -> torch.Tensor:
+    """_fps_eager와 산술 동일(거리·argmax 커널 시퀀스 불변) — 반복당 인덱스
+    쓰기 196회를 말미 stack 1회로 대체(정수 이동뿐, 결과 비트단위 동일)."""
+    B, N, _ = pts.shape
+    d = torch.where(valid, torch.full((B, N), torch.inf, device=pts.device),
+                    torch.full((B, N), -torch.inf, device=pts.device))
+    cur = valid.float().argmax(-1)
+    sel = []
+    for _ in range(n):
+        sel.append(cur)
+        diff = pts - pts.gather(1, cur.view(B, 1, 1).expand(B, 1, 3))
+        d = torch.minimum(d, diff.pow(2).sum(-1))
+        d = torch.where(valid, d, torch.full_like(d, -torch.inf))
+        cur = d.argmax(-1)
+    return torch.stack(sel, -1)
+
+
+def _fps_build_graph(pts: torch.Tensor, valid: torch.Tensor, n: int):
+    s_pts = pts.clone()
+    s_valid = valid.clone()
+    s_idx = torch.zeros(pts.shape[0], n, dtype=torch.long, device=pts.device)
+    side = torch.cuda.Stream(device=pts.device)
+    side.wait_stream(torch.cuda.current_stream())
+    with torch.no_grad(), torch.cuda.stream(side):      # 웜업 (캡처 전 필수)
+        for _ in range(2):
+            s_idx.copy_(_fps_body(s_pts, s_valid, n))
+    torch.cuda.current_stream().wait_stream(side)
+    graph = torch.cuda.CUDAGraph()
+    with torch.no_grad(), torch.cuda.graph(graph, capture_error_mode="thread_local"):
+        s_idx.copy_(_fps_body(s_pts, s_valid, n))
+    return s_pts, s_valid, s_idx, graph
+
+
+def fps_torch(pts: torch.Tensor, valid: torch.Tensor, n: int) -> torch.Tensor:
+    """[B,N,3] + 유효 [B,N] → FPS 인덱스 [B,n]. 패딩점은 거리 -inf로 배제.
+
+    CUDA 텐서면 형상별 CUDA graph 리플레이(정확·비트단위 동일), 그 외 eager.
+    비활성화: SHAPE6D_FPS_GRAPH=0.
+    """
+    global _FPS_GRAPH_ON
+    if (not _FPS_GRAPH_ON or not pts.is_cuda or pts.requires_grad
+            or torch.cuda.is_current_stream_capturing()):
+        return _fps_eager(pts, valid, n)
+    key = (pts.device.index, pts.shape[0], pts.shape[1], n, pts.dtype)
+    ent = _FPS_GRAPHS.get(key)
+    if ent is None:
+        if len(_FPS_GRAPHS) >= _FPS_GRAPH_MAX:
+            return _fps_eager(pts, valid, n)
+        try:
+            ent = _fps_build_graph(pts, valid, n)
+        except Exception:
+            _FPS_GRAPH_ON = False                       # 캡처 불가 환경 → 영구 폴백
+            return _fps_eager(pts, valid, n)
+        _FPS_GRAPHS[key] = ent
+    s_pts, s_valid, s_idx, graph = ent
+    s_pts.copy_(pts)
+    s_valid.copy_(valid)
+    graph.replay()
+    return s_idx.clone()
 
 
 def make_geo_maps(pts: torch.Tensor, valid: torch.Tensor, domain_flag: float
