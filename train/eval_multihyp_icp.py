@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import time
 from pathlib import Path
@@ -37,8 +38,11 @@ def main():
     enc.load_state_dict(ck["enc"]); enc.eval()
     mat = MiniMatcher().to(T.DEV)
     mat.load_state_dict(ck["matcher"]); mat.eval()
-    bank = T.ObjBank()
-    z = np.load(T.DATA / "phase_a_val.npz")
+    _cfgf = T.DATA / "runs" / f"cfg_{a.tag}.json"
+    _pref = (json.load(open(_cfgf)).get("data_prefix", "phase_a")
+             if _cfgf.exists() else "phase_a")
+    bank = T.ObjBank(_pref)
+    z = np.load(T.DATA / f"{_pref}_val.npz")
     va = {k: torch.from_numpy(z[k]) for k in z.files}
     g = torch.Generator(device=T.DEV); g.manual_seed(0)
 

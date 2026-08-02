@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>데이터 무결성 사건과 재기준선 — 스케일 오염 61/168 수정, 클린 66.5%</title>
+<style>
+  :root { --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb; --accent:#0b5fff;
+          --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e3;
+          --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; } }
+  :root[data-theme="dark"] {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+         color:var(--ink); background:var(--bg); line-height:1.7; font-size:15px; }
+  .wrap { max-width:1130px; margin:0 auto; padding:44px 28px 110px; }
+  h1 { font-size:24px; margin:0 0 6px; letter-spacing:-0.5px; line-height:1.35; text-wrap:balance; }
+  h2 { font-size:19px; margin:46px 0 12px; padding-top:16px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  p { margin:9px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.6px; }
+  th { background:var(--ink); color:var(--bg); text-align:left; padding:7px 9px; font-weight:600; }
+  th.c, td.c { text-align:center; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.g td { background:var(--good-soft); } tr.g td:first-child { border-left:3px solid var(--good); }
+  tr.r td { background:var(--bad-soft); } tr.r td:first-child { border-left:3px solid var(--bad); }
+  tr.me td { background:var(--shape-soft); } tr.me td:first-child { border-left:3px solid var(--shape); font-weight:700; }
+  .cap { font-size:12.3px; color:var(--sub); margin:4px 0 18px; }
+  code { font-family:"JetBrains Mono",Consolas,monospace; font-size:12.3px;
+         background:var(--panel); padding:1px 5px; border-radius:4px; }
+  .abs { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:15px 19px; margin:16px 0 24px; font-size:14px; }
+  .abs b.t { display:block; font-size:15px; margin-bottom:5px; }
+  .crit { border:1px solid var(--line); border-left:4px solid var(--bad); background:var(--bad-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; }
+  .crit .h { font-weight:800; color:var(--bad); margin-bottom:4px; }
+  ul { margin:8px 0; padding-left:22px; } li { margin:4px 0; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0 6px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:10px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:19px; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good b { color:var(--good); } .stat.bad b { color:var(--bad); }
+  .tiny { font-size:11.8px; color:var(--sub); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>데이터 무결성 사건과 재기준선 — 스케일 오염 61/168 수정, 클린 체제 66.5%</h1>
+<p class="meta">Shape6D 보고서 #24 · 2026-08-02 · 선행: <a href="23_phase_a_settlement_multihyp.html">23(Phase A 정산·다중 가설)</a> ·
+관련 결정: <a href="20_final_design_plan.html">20 v1.2</a> C-11/D-11 · 재현: <code>tools/recover_gso_scale_b.py</code> · <code>phase_a2_*</code></p>
+
+<div class="abs"><b class="t">요약 — Phase B 준비가 Phase A의 숨은 결함을 찾아냈다</b>
+GSO 신규 862종 스케일 복원 중 발견된 sim-ICP <b>붕괴 국소해</b>(s→0인데 전방 잔차가 무의미하게 낮아 필터 통과)를
+기존 168종에 역적용 검증한 결과, <b>61종(36%)의 프레임 보정이 오염</b>돼 있었다(예: s 0.096 vs 진값 1.296).
+법의학(23 §3)의 최악 8종 중 5종이 오염 물체 — "물체 이봉분포"의 상당 부분은 모델이 아니라 <b>라벨 오염</b>이었다.
+v2 보정(다중 시작 + 양방향 잔차)으로 데이터를 재구축(<code>phase_a2</code>, 149종)하고 전 체인을 재실행한 결과:
+수렴판 top-1 43.2 → <b>47.9%</b>, 다중 가설 k=16 최종 <b>66.5%</b> (p50 14.1°). 교훈: <b>전방 잔차 단독은 붕괴를
+못 잡는다 — 역방향 커버 잔차 필수</b>. Phase B 884종은 처음부터 v2 규약으로 간다.</div>
+
+<div class="hero">
+  <div class="stat bad"><b>61/168</b><span>오염 물체 (36%) — s 최대 13배 오차</span></div>
+  <div class="stat"><b>5/8</b><span>법의학 "최악" 물체 중 오염 비율</span></div>
+  <div class="stat good"><b>47.9%</b><span>클린 수렴판 top-1 (구 43.2%)</span></div>
+  <div class="stat good"><b>66.5%</b><span>클린 + 다중 가설 k=16 (p50 14.1°)</span></div>
+</div>
+
+<h2><span class="no">1</span>사건 — 발견·검증·수정</h2>
+<table>
+<tr><th style="width:14%">단계</th><th>내용</th></tr>
+<tr><td>발견</td><td>신규 862종 복원 1차에서 s&lt;0.1 오답 다수(예: Pepsi 12캔팩 s=0.000, 진값 1.88) — 원인: s=1 단일 시작 ICP가 진값 s가 1에서 먼 물체에서 <b>s→0 붕괴 국소해</b>로 수렴, 전방 잔차(P→M)는 trivially 낮아져 res&gt;0.05 필터 무통과</td></tr>
+<tr><td>해법(v2)</td><td>스케일 그리드 다중 시작(0.10~2.50) + <b>양방향 잔차</b>(전방 P→M ∧ 역방향 M→Q 커버) 선택 — <code>tools/recover_gso_scale_b.py</code></td></tr>
+<tr class="r"><td>역적용 검증</td><td>기존 168종 v2 재복원 → 구판 대비 <b>Δs&gt;5%가 61종</b>. s 분포 [0.10,1.43]→[0.14,2.20] — 구 범위는 소표본+붕괴의 산물. 법의학 최악 8종 중 5종(gso 260·275·565·670·985)이 오염, 최선 5종 중엔 1종</td></tr>
+<tr class="g"><td>수정</td><td>빌더에 v2 우선 로드 + <code>res_bwd_rel&gt;0.05</code> 필터 → <code>phase_a2_*</code> 재구축 (149종 = 168 − 의심 19 · train 43,818 · val 10,006 · 물체 교집합 0). 구판 파일은 참조용 보존</td></tr>
+</table>
+
+<h2><span class="no">2</span>재기준선 — 클린 체제 전 체인 재실행</h2>
+<table>
+<tr><th>단계 (phase_a2, 미학습 27종)</th><th class="c">≤30°</th><th class="c">rot p50</th><th class="c">train CE</th><th>비고</th></tr>
+<tr><td>a1_d2 30ep (onecycle)</td><td class="c n">27.0%</td><td class="c n">59.0°</td><td class="c n">2.90</td><td>구 27.0%와 동급이나 CE는 유의미 하락(3.13→2.90)</td></tr>
+<tr><td>+ ext (cosine, 누적 60ep)</td><td class="c n">43.8%</td><td class="c n">36.0°</td><td class="c n">2.20</td><td>구판이 90ep에 도달한 수준을 60ep 통과</td></tr>
+<tr class="g"><td>+ ext2 (누적 90ep) — <b>클린 수렴판</b></td><td class="c n"><b>47.9%</b></td><td class="c n">32.5°</td><td class="c n">1.78</td><td>구 수렴판 43.2% 대비 +4.7%p — 라벨 정합이 천장을 올림</td></tr>
+<tr><td>+ top-1 + ICP</td><td class="c n">54.9%</td><td class="c n">24.4°</td><td class="c n">—</td><td>공정 비교 기준</td></tr>
+<tr class="me"><td><b>+ 다중 가설 k=16 + ICP 선택 (신 대표)</b></td><td class="c n"><b>66.5%</b></td><td class="c n"><b>14.1°</b></td><td class="c n">—</td><td>+5.4ms/샘플 · λ_fs=0 재확인(23 §7 기각 유지)</td></tr>
+</table>
+<div class="cap"><b>Table 2.</b> 주의: val 모집단이 바뀌어(34→27종) 구판 수치와의 직접 비교는 경향 참고용 — 이후 모든 비교는 phase_a2 기준.
+비대칭만 top-1 4.6% → k16 11.1%: 플립이 여전히 지배 잔여 결손 — 학습형 가설 랭커가 차기 처방.</div>
+
+<h2><span class="no">3</span>결정·다음 단계</h2>
+<ul>
+<li><b>정본 데이터 = phase_a2</b> (구 phase_a_*는 오염 참조본) · 보정 채택 규칙 = <b>전방 ∧ 역방향 잔차 ≤5%</b> — Phase B 884종에 동일 적용</li>
+<li><b>신 대표 수치 66.5%</b> (클린 ext2 + 다중 가설 k=16) — 이론 상한(대응 내 정답 존재율) 94.9%(23 §4) 대비 잔여 28%p의 주성분은 비대칭 플립 → <b>학습형 가설 랭커</b> 착수 근거 강화</li>
+<li>Phase B 2단계(884종 팩 빌드): v2 보정 + 양방향 필터 + <b>uv/K 저장</b>(실표면 free-space 대비) 규약으로 진행</li>
+<li>교훈 등재: 검증 필터는 "정답이면 통과"가 아니라 "<b>오답이 통과할 수 없는가</b>"로 설계한다 — 전방 잔차 단독 필터의 실패는 그 반례였다</li>
+</ul>
+
+<p class="tiny">재현 — 오염 대조: <code>frame_correction.npz</code>(구) vs <code>frame_correction_a_v2.npz</code>(v2) · 재구축: <code>python3 train/build_phase_a_data.py --prefix phase_a2</code> ·
+재학습: <code>--data-prefix phase_a2</code> · 다중 가설 평가: <code>python3 train/eval_multihyp_icp.py --tag a1_cosine_ext2_d2_s0 --k 16</code></p>
+
+</div>
+</body>
+</html>
