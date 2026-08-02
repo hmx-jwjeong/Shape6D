@@ -71,12 +71,15 @@ _CORR = None
 
 def _load_corr(out_dir: Path):
     global _CORR
-    p = out_dir / "frame_correction.npz"
+    # v2 우선 (다중 시작 + 양방향 잔차 — 구판은 붕괴 국소해로 61/168 오염 실증)
+    p2 = out_dir / "frame_correction_a_v2.npz"
+    p = p2 if p2.exists() else out_dir / "frame_correction.npz"
     if p.exists():
         z = np.load(p)
-        _CORR = {int(o): (float(s), R, t, float(r)) for o, s, R, t, r in
-                 zip(z["obj_id"], z["s"], z["R"], z["t"], z["res_rel"])}
-        print(f"[corr] 물체별 렌더 프레임 보정 로드: {len(_CORR)}종", flush=True)
+        bwd = z["res_bwd_rel"] if "res_bwd_rel" in z.files else np.zeros(len(z["s"]))
+        _CORR = {int(o): (float(s), R, t, float(r), float(b)) for o, s, R, t, r, b in
+                 zip(z["obj_id"], z["s"], z["R"], z["t"], z["res_rel"], bwd)}
+        print(f"[corr] 렌더 프레임 보정 로드({p.name}): {len(_CORR)}종", flush=True)
 
 
 def _pack_object(args):
@@ -89,9 +92,10 @@ def _pack_object(args):
     # X_render = ((X_rawC − t_o) / s_o) @ R_o  — 미회수/고잔차 물체는 None 반환(제외)
     if _CORR is not None:
         e = _CORR.get(int(obj_id))
-        if e is None or not np.isfinite(e[0]) or not np.isfinite(e[3]) or e[3] > 0.05:
+        if (e is None or not np.isfinite(e[0]) or not np.isfinite(e[3])
+                or e[3] > 0.05 or e[4] > 0.05):     # 양방향 잔차 필터 (붕괴 검출)
             return None
-        s_o, R_o, t_o, _ = e
+        s_o, R_o, t_o, _, _ = e
         surf = ((surf - surf.mean(0) - t_o) / s_o) @ R_o
     c = surf.mean(0)
     r_b = float(np.linalg.norm(surf - c, axis=1).max())
@@ -136,7 +140,7 @@ def build_objects(out: Path, workers: int = 8) -> dict[int, int]:
     G[:, :] = np.eye(3)
     for i, q in enumerate(packs):
         G[i, :q["gn"]] = q["g"]
-    np.savez(out / "phase_a_objs.npz",
+    np.savez(out / f"{a.prefix}_objs.npz",
              obj_id=np.array([q["obj_id"] for q in packs], np.int32),
              master=np.stack([q["master"] for q in packs]),   # centroid 센터링된 모델계
              c=np.stack([q["c"] for q in packs]),             # 원 모델계 centroid (GT 병진 보정용)
@@ -191,7 +195,7 @@ def build_scenes(out: Path, order: dict[int, int], obj_ids: np.ndarray,
     cat = {k: np.concatenate([q[k] for q in parts if len(q[k])]) for k in parts[0]}
     is_val = (obj_ids[cat["oi"]] % 5 == 0)
     for split, sel in (("train", ~is_val), ("val", is_val)):
-        np.savez(out / f"phase_a_{split}.npz", **{k: v[sel] for k, v in cat.items()})
+        np.savez(out / f"{a.prefix}_{split}.npz", **{k: v[sel] for k, v in cat.items()})
         no = len(np.unique(cat["oi"][sel]))
         print(f"[{split}] {int(sel.sum())}샘플 · 물체 {no}종 · 포인트 p50 "
               f"{int(np.median(cat['npt'][sel]))}", flush=True)
@@ -201,6 +205,7 @@ def build_scenes(out: Path, order: dict[int, int], obj_ids: np.ndarray,
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="/mnt/samsung2tb/datasets/megapose/phase_a")
+    ap.add_argument("--prefix", default="phase_a", help="출력 파일 접두 (재구축 시 phase_a2 등 — 구판 보존)")
     ap.add_argument("--shards", type=int, default=60)
     ap.add_argument("--cap", type=int, default=1200)
     a = ap.parse_args()
@@ -208,5 +213,5 @@ if __name__ == "__main__":
     out.mkdir(parents=True, exist_ok=True)
     _load_corr(out)
     order = build_objects(out)
-    obj_ids = np.load(out / "phase_a_objs.npz")["obj_id"]
+    obj_ids = np.load(out / f"{a.prefix}_objs.npz")["obj_id"]
     build_scenes(out, order, obj_ids, a.shards, a.cap)

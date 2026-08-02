@@ -52,8 +52,12 @@ def _enc_kind(tag: str) -> str:
 @torch.no_grad()
 def run_eval(tag: str, n_eval: int = 3000, bs: int = 64):
     """체크포인트 로드 → val 상세 평가 (per-sample 오차·예측·전시 소재)."""
-    bank = T.ObjBank()
-    va = {k: torch.from_numpy(v) for k, v in np.load(T.DATA / "phase_a_val.npz").items()}
+    bank = T.ObjBank(_pref)
+    _cfgf = T.DATA / "runs" / f"cfg_{tag}.json"
+    _pref = (json.load(open(_cfgf)).get("data_prefix", "phase_a")
+             if _cfgf.exists() else "phase_a")
+    va = {k: torch.from_numpy(v) for k, v in
+          np.load(T.DATA / f"{_pref}_val.npz").items()}
     enc = build_encoder(_enc_kind(tag)).to(T.DEV)
     mat = PM.MiniMatcher().to(T.DEV)
     ck = torch.load(T.DATA / "runs" / f"ckpt_{tag}.pt")

@@ -36,8 +36,8 @@ LR = {"a0": 1e-3, "a1": 3e-4, "a2": 1e-3}   # C-7 후보별 lr 정책
 class ObjBank:
     """오브젝트 팩 전량 GPU 상주 (~168종, 수백 MB)."""
 
-    def __init__(self):
-        z = np.load(DATA / "phase_a_objs.npz")
+    def __init__(self, prefix: str = "phase_a"):
+        z = np.load(DATA / f"{prefix}_objs.npz")
         t = lambda k, dt: torch.from_numpy(z[k]).to(DEV).to(dt)
         self.master = t("master", torch.float32)          # [O,2048,3] centered
         self.c = t("c", torch.float32)                    # [O,3]
@@ -148,6 +148,8 @@ def main():
                     help="체크포인트에서 이어 학습(추가학습) — 태그에 ext 접미사")
     ap.add_argument("--ext-name", default="ext",
                     help="이어학습 태그 접미사 (2차 연장은 ext2 등으로 충돌 방지)")
+    ap.add_argument("--data-prefix", default="phase_a",
+                    help="데이터 파일 접두 (phase_a2 = v2 보정 재구축본)")
     ap.add_argument("--gstar", choices=["view", "master"], default="view",
                     help="g* 기준점 — R1 실측: master 18.8%% vs view 27.0%% (기각), 기본 view")
     ap.add_argument("--views", type=int, default=2, help="학습 CAD 뷰 수 (R2: 6)")
@@ -173,9 +175,9 @@ def main():
         parts.append(a.suffix)
     tag = "_".join(parts) + f"_s{a.seed}"
 
-    bank = ObjBank()
+    bank = ObjBank(a.data_prefix)
     ld = lambda sp: {k: torch.from_numpy(v) for k, v in
-                     np.load(DATA / f"phase_a_{sp}.npz").items()}
+                     np.load(DATA / f"{a.data_prefix}_{sp}.npz").items()}
     tr, va = ld("train"), ld("val")
     enc = build_encoder(a.enc).to(DEV)
     matcher = MiniMatcher().to(DEV)
@@ -190,6 +192,7 @@ def main():
     # 대시보드용 설정 덤프 — 학습에 실제 사용되는 파라미터 전량
     json.dump({
         "encoder": a.enc, "epochs": a.epochs, "batch_size": a.bs, "seed": a.seed,
+        "data_prefix": a.data_prefix,
         "lr": lr, "optimizer": ("Muon(0.02·√s)+AdamW" if a.opt == "muon" else "AdamW") + "(wd=0.05)",
         "scheduler": ("const" if a.opt == "muon" else a.sched), "grad_clip": 5.0,
         "precision": "bf16 autocast + fp32(softmax/CE/SVD)",
