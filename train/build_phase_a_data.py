@@ -38,12 +38,17 @@ PTS_CAP = 4096         # 장면 샘플 포인트 상한
 SYM_MAX = 16           # g* 군 상한 (03 §9.3 — 연속축 12분할)
 
 
+MESH_ROOTS = [GSO_RAW]      # --mesh-roots로 확장 (Phase B: +gso_meshes_raw/unpacked)
+
+
 def _mesh_index() -> dict[int, str]:
     idx = {}
     for e in json.load(open(GSO_JSON)):
-        p = f"{GSO_RAW}/{e['gso_id']}/meshes/model.obj"
-        if os.path.exists(p):
-            idx[int(e["obj_id"])] = p
+        for root in MESH_ROOTS:
+            p = f"{root}/{e['gso_id']}/meshes/model.obj"
+            if os.path.exists(p):
+                idx[int(e["obj_id"])] = p
+                break
     return idx
 
 
@@ -72,14 +77,20 @@ _CORR = None
 def _load_corr(out_dir: Path):
     global _CORR
     # v2 우선 (다중 시작 + 양방향 잔차 — 구판은 붕괴 국소해로 61/168 오염 실증)
-    p2 = out_dir / "frame_correction_a_v2.npz"
-    p = p2 if p2.exists() else out_dir / "frame_correction.npz"
-    if p.exists():
+    _CORR = {}
+    for name in ("frame_correction_a_v2.npz", "frame_correction_b.npz"):
+        p = out_dir / name
+        if not p.exists():
+            continue
         z = np.load(p)
         bwd = z["res_bwd_rel"] if "res_bwd_rel" in z.files else np.zeros(len(z["s"]))
-        _CORR = {int(o): (float(s), R, t, float(r), float(b)) for o, s, R, t, r, b in
-                 zip(z["obj_id"], z["s"], z["R"], z["t"], z["res_rel"], bwd)}
-        print(f"[corr] 렌더 프레임 보정 로드({p.name}): {len(_CORR)}종", flush=True)
+        for o, s_, R, t, r, b in zip(z["obj_id"], z["s"], z["R"], z["t"],
+                                     z["res_rel"], bwd):
+            _CORR.setdefault(int(o), (float(s_), R, t, float(r), float(b)))
+    if not _CORR:
+        _CORR = None
+        return
+    print(f"[corr] 렌더 프레임 보정 병합 로드: {len(_CORR)}종", flush=True)
 
 
 def _pack_object(args):
@@ -161,6 +172,8 @@ def _scene_shard(args):
     shard, order, cap = args
     rng = np.random.default_rng(shard)
     P = np.zeros((cap, PTS_CAP, 3), np.float16)
+    UV = np.zeros((cap, PTS_CAP, 2), np.int16)
+    KV = np.zeros((cap, 4), np.float32)
     N = np.zeros(cap, np.int32)
     R = np.zeros((cap, 9), np.float32)
     T = np.zeros((cap, 3), np.float32)
@@ -173,10 +186,15 @@ def _scene_shard(args):
             oi = order.get(int(s["obj_id"]))
             if oi is None or len(s["pts"]) < 256:
                 continue
-            pts = s["pts"]
+            pts = s["pts"]; uv = s.get("uv")
             if len(pts) > PTS_CAP:
-                pts = pts[rng.choice(len(pts), PTS_CAP, replace=False)]
+                sel2 = rng.choice(len(pts), PTS_CAP, replace=False)
+                pts = pts[sel2]
+                uv = uv[sel2] if uv is not None else None
             P[n, :len(pts)] = pts.astype(np.float16)
+            if uv is not None:
+                UV[n, :len(pts)] = uv
+                KV[n] = s["K"]
             N[n] = len(pts)
             R[n] = s["R"].astype(np.float32).ravel()
             T[n] = s["t"].astype(np.float32)
@@ -184,7 +202,7 @@ def _scene_shard(args):
             n += 1
     except Exception as e:  # 샤드 단위 격리
         print(f"shard {shard}: {type(e).__name__} {e}", flush=True)
-    return dict(pts=P[:n], npt=N[:n], R=R[:n], t=T[:n], oi=O[:n])
+    return dict(pts=P[:n], uv=UV[:n], Kv=KV[:n], npt=N[:n], R=R[:n], t=T[:n], oi=O[:n])
 
 
 def build_scenes(out: Path, order: dict[int, int], obj_ids: np.ndarray,
@@ -206,9 +224,12 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="/mnt/samsung2tb/datasets/megapose/phase_a")
     ap.add_argument("--prefix", default="phase_a", help="출력 파일 접두 (재구축 시 phase_a2 등 — 구판 보존)")
+    ap.add_argument("--mesh-roots", default=GSO_RAW,
+                    help="콤마 구분 메시 루트 목록 (Phase B: +unpacked)")
     ap.add_argument("--shards", type=int, default=60)
     ap.add_argument("--cap", type=int, default=1200)
     a = ap.parse_args()
+    MESH_ROOTS[:] = a.mesh_roots.split(",")
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     _load_corr(out)
