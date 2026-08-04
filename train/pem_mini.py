@@ -364,3 +364,98 @@ def sym_aware_rot_err_deg(R_pr, R_gt, G, gn):
         (R_gt.unsqueeze(1) @ G).reshape(-1, 3, 3)).view(B, Gmax)
     m = (torch.arange(Gmax, device=R_pr.device)[None] < gn[:, None])
     return torch.where(m, errs, torch.full_like(errs, torch.inf)).min(1).values
+
+
+# ── fine 매칭 단계 (03 §6.5 fine 2blk·1024pt·linear attn·bg — 클린룸 최소판) ──
+
+def _phi(x):
+    return F.elu(x) + 1.0
+
+
+class _LinAttn(nn.Module):
+    """선형 어텐션 (elu+1 커널) — O(N·d²), 1024점 예산용."""
+
+    def __init__(self, h: int, heads: int = 4):
+        super().__init__()
+        self.h, self.nh = h, heads
+        self.qkv_q = nn.Linear(h, h)
+        self.qkv_k = nn.Linear(h, h)
+        self.qkv_v = nn.Linear(h, h)
+        self.out = nn.Linear(h, h)
+
+    def forward(self, q, kv):
+        B, Nq, _ = q.shape
+        Nk = kv.shape[1]
+        d = self.h // self.nh
+        Q = _phi(self.qkv_q(q)).view(B, Nq, self.nh, d).transpose(1, 2)
+        K = _phi(self.qkv_k(kv)).view(B, Nk, self.nh, d).transpose(1, 2)
+        V = self.qkv_v(kv).view(B, Nk, self.nh, d).transpose(1, 2)
+        KV = torch.einsum("bhnd,bhne->bhde", K, V)
+        Z = 1.0 / (torch.einsum("bhnd,bhd->bhn", Q, K.sum(2)) + 1e-6)
+        out = torch.einsum("bhnd,bhde,bhn->bhne", Q, KV, Z)
+        return self.out(out.transpose(1, 2).reshape(B, Nq, self.h))
+
+
+class _FineBlock(nn.Module):
+    """self(linear) + cross(linear) + FFN — pre-LN."""
+
+    def __init__(self, h: int):
+        super().__init__()
+        self.n1, self.n2, self.n3 = nn.LayerNorm(h), nn.LayerNorm(h), nn.LayerNorm(h)
+        self.sa = _LinAttn(h)
+        self.ca = _LinAttn(h)
+        self.ff = nn.Sequential(nn.Linear(h, h * 2), nn.GELU(), nn.Linear(h * 2, h))
+
+    def forward(self, x, other):
+        x = x + self.sa(self.n1(x), self.n1(x))
+        x = x + self.ca(self.n2(x), self.n2(other))
+        return x + self.ff(self.n3(x))
+
+
+class FineMatcher(nn.Module):
+    """포즈 조건화 fine 대응 (1024점) — coarse 초기 포즈(R0,t0)로 장면점을
+    모델계 정렬 후 좌표 결합 → 국소 대응만 학습. 출력 유사도 [B,Nf,Nf+1](+bg)."""
+
+    def __init__(self, c_in: int = 256, h: int = 192, sim_dim: int = 256,
+                 temp: float = 0.1, n_blocks: int = 2):
+        super().__init__()
+        self.in_s = nn.Linear(c_in + 3, h)
+        self.in_o = nn.Linear(c_in + 3, h)
+        self.blk_s = nn.ModuleList([_FineBlock(h) for _ in range(n_blocks)])
+        self.blk_o = nn.ModuleList([_FineBlock(h) for _ in range(n_blocks)])
+        self.out_s = nn.Linear(h, sim_dim)
+        self.out_o = nn.Linear(h, sim_dim)
+        self.bg = nn.Parameter(torch.zeros(1, 1, sim_dim))
+        self.temp = temp
+
+    def forward(self, F_s, P_s, F_o, P_o, R0, t0, diam):
+        d = diam.view(-1, 1, 1).clamp(min=1e-3)
+        Ps_m = torch.einsum("bji,bkj->bki", R0, P_s - t0.unsqueeze(1))  # 모델계 정렬
+        xs = self.in_s(torch.cat([F_s, Ps_m / d], -1))
+        xo = self.in_o(torch.cat([F_o, P_o / d], -1))
+        for bs_, bo_ in zip(self.blk_s, self.blk_o):
+            xs, xo = bs_(xs, xo), bo_(xo, xs)
+        es = F.normalize(self.out_s(xs).float(), dim=-1)
+        eo = torch.cat([self.out_o(xo).float(),
+                        self.bg.expand(len(es), 1, -1).float()], 1)
+        eo = F.normalize(eo, dim=-1)
+        return torch.einsum("bkc,bmc->bkm", es, eo) / self.temp
+
+
+@torch.no_grad()
+def perturb_pose(R, t, diam, rot_deg: float = 15.0, trans_rel: float = 0.05,
+                 gen: torch.Generator | None = None):
+    """fine 학습용 초기 포즈 = GT + 노이즈 (rot σ15°·trans σ0.05D — 22 [3][4] 관례)."""
+    B = R.shape[0]
+    dev = R.device
+    ax = torch.randn(B, 3, device=dev, generator=gen)
+    ax = ax / ax.norm(dim=-1, keepdim=True).clamp(min=1e-6)
+    ang = torch.randn(B, 1, device=dev, generator=gen) * (rot_deg * torch.pi / 180)
+    K = torch.zeros(B, 3, 3, device=dev)
+    K[:, 0, 1], K[:, 0, 2] = -ax[:, 2], ax[:, 1]
+    K[:, 1, 0], K[:, 1, 2] = ax[:, 2], -ax[:, 0]
+    K[:, 2, 0], K[:, 2, 1] = -ax[:, 1], ax[:, 0]
+    s, c = torch.sin(ang).view(B, 1, 1), torch.cos(ang).view(B, 1, 1)
+    dR = torch.eye(3, device=dev).expand(B, 3, 3) + s * K + (1 - c) * (K @ K)
+    dt = torch.randn(B, 3, device=dev, generator=gen) * (trans_rel * diam.view(B, 1))
+    return dR @ R, t + dt

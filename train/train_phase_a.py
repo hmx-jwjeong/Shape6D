@@ -22,8 +22,8 @@ sys.path.insert(0, str(Path(__file__).parents[1]))
 from shape6d.onboarding.templates import TPL_FX, TPL_RES               # noqa: E402
 from train.encoders import build_encoder                               # noqa: E402
 from train.pem_mini import (                                           # noqa: E402
-    MiniMatcher, fps_torch, make_geo_maps, phase_a_loss,
-    sample_point_features, sym_aware_rot_err_deg,
+    FineMatcher, MiniMatcher, fps_torch, make_geo_maps, perturb_pose,
+    phase_a_loss, sample_point_features, sym_aware_rot_err_deg,
 )
 
 DATA = Path("/mnt/samsung2tb/datasets/megapose/phase_a")
@@ -67,17 +67,23 @@ class ObjBank:
         return pts, valid, Rt[..., :3, :3], Rt[..., :3, 3]
 
 
-def encode_scene(enc, pts, valid):
+def encode_scene(enc, pts, valid, fine_tok: int | None = None):
     geo, uvn = make_geo_maps(pts, valid, domain_flag=1.0)
     f56 = enc(geo)
-    sel = fps_torch(pts, valid, N_TOK)
-    F_s = sample_point_features(f56, uvn.gather(1, sel.unsqueeze(-1).expand(-1, -1, 2)))
-    P_s = pts.gather(1, sel.unsqueeze(-1).expand(-1, -1, 3))
-    val_s = valid.gather(1, sel).float()
-    return F_s, P_s, val_s
+
+    def take(n):
+        sel = fps_torch(pts, valid, n)
+        F_ = sample_point_features(f56, uvn.gather(1, sel.unsqueeze(-1).expand(-1, -1, 2)))
+        P_ = pts.gather(1, sel.unsqueeze(-1).expand(-1, -1, 3))
+        return F_, P_, valid.gather(1, sel).float()
+
+    F_s, P_s, val_s = take(N_TOK)
+    if fine_tok is None:
+        return F_s, P_s, val_s
+    return F_s, P_s, val_s, take(fine_tok)
 
 
-def encode_cad(enc, bank: ObjBank, oi, rng, n_views: int = 2):
+def encode_cad(enc, bank: ObjBank, oi, rng, n_views: int = 2, fine_tok: int | None = None):
     """뷰 n개 인코딩 → 모델계 (P_o[196,3], F_o[196,C]) (03 §6.4·§9).
     학습 n=2(gradient 비용), 평가 n=6(추론은 캐시 기반이라 커버리지 정당)."""
     pts, valid, R_v, t_v = bank.cad_views(oi, rng, n_views)
@@ -98,17 +104,24 @@ def encode_cad(enc, bank: ObjBank, oi, rng, n_views: int = 2):
     Pm = Pm.reshape(B, n_views * VIEW_PX, 3)
     Fm = F_px.reshape(B, n_views * VIEW_PX, -1)
     okm = ok.reshape(B, n_views * VIEW_PX)
-    sel = fps_torch(Pm, okm, N_TOK)
-    P_o = Pm.gather(1, sel.unsqueeze(-1).expand(-1, -1, 3))
-    F_o = Fm.gather(1, sel.unsqueeze(-1).expand(-1, -1, Fm.shape[-1]))
-    return P_o, F_o
+    def take(n):
+        sel = fps_torch(Pm, okm, n)
+        return (Pm.gather(1, sel.unsqueeze(-1).expand(-1, -1, 3)),
+                Fm.gather(1, sel.unsqueeze(-1).expand(-1, -1, Fm.shape[-1])))
+
+    P_o, F_o = take(N_TOK)
+    if fine_tok is None:
+        return P_o, F_o
+    return P_o, F_o, take(fine_tok)
 
 
 @torch.no_grad()
-def evaluate(enc, matcher, bank, va, bs=96, cap=4000):
+def evaluate(enc, matcher, bank, va, bs=96, cap=4000, fine=None, fine_tok=1024):
     enc.eval(); matcher.eval()
+    if fine is not None:
+        fine.eval()
     n = min(len(va["oi"]), cap)
-    rot, tr, thirty = [], [], []
+    rot, tr, thirty, rot_f, five_f = [], [], [], [], []
     g = torch.Generator(device=DEV); g.manual_seed(0)
     for s in range(0, n, bs):
         pts = va["pts"][s:s + bs].to(DEV).float()
@@ -119,8 +132,14 @@ def evaluate(enc, matcher, bank, va, bs=96, cap=4000):
         t_eff = va["t"][s:s + bs].to(DEV) + torch.einsum(
             "bij,bj->bi", R_gt, bank.c[oi])
         with torch.autocast("cuda", dtype=torch.bfloat16):
-            F_s, P_s, val_s = encode_scene(enc, pts, valid)
-            P_o, F_o = encode_cad(enc, bank, oi, g, n_views=6)
+            if fine is None:
+                F_s, P_s, val_s = encode_scene(enc, pts, valid)
+                P_o, F_o = encode_cad(enc, bank, oi, g, n_views=6)
+            else:
+                F_s, P_s, val_s, (F_sf, P_sf, val_sf) = encode_scene(
+                    enc, pts, valid, fine_tok=fine_tok)
+                P_o, F_o, (P_of, F_of) = encode_cad(
+                    enc, bank, oi, g, n_views=6, fine_tok=fine_tok)
             sim = matcher(F_s.float(), P_s.float(), F_o.float(), P_o.float(),
                           bank.diam[oi])
         R_pr, t_pr, _ = MiniMatcher.solve(sim.float(), P_s.float(), P_o.float())
@@ -128,10 +147,25 @@ def evaluate(enc, matcher, bank, va, bs=96, cap=4000):
         rot.append(e)
         tr.append((t_pr - t_eff).norm(dim=-1) / bank.diam[oi])
         thirty.append((e <= 30).float())
+        if fine is not None:
+            with torch.autocast("cuda", dtype=torch.bfloat16):
+                sim_f = fine(F_sf.float(), P_sf.float(), F_of.float(),
+                             P_of.float(), R_pr, t_pr, bank.diam[oi])
+            R2, t2, _ = MiniMatcher.solve(sim_f.float(), P_sf.float(), P_of.float())
+            ef = sym_aware_rot_err_deg(R2, R_gt, bank.G[oi], bank.gn[oi])
+            rot_f.append(ef); five_f.append((ef <= 5).float())
     rot = torch.cat(rot); tr = torch.cat(tr); th = torch.cat(thirty)
     enc.train(); matcher.train()
-    return dict(rot_p50=float(rot.median()), rot_mean=float(rot.mean()),
-                le30=float(th.mean()), trans_rel_p50=float(tr.median()), n=int(n))
+    if fine is not None:
+        fine.train()
+    m = dict(rot_p50=float(rot.median()), rot_mean=float(rot.mean()),
+             le30=float(th.mean()), trans_rel_p50=float(tr.median()), n=int(n))
+    if rot_f:
+        rf = torch.cat(rot_f)
+        m.update(rot_p50_fine=float(rf.median()),
+                 le30_fine=float((rf <= 30).float().mean()),
+                 le5_fine=float(torch.cat(five_f).mean()))
+    return m
 
 
 def main():
@@ -153,6 +187,8 @@ def main():
     ap.add_argument("--gstar", choices=["view", "master"], default="view",
                     help="g* 기준점 — R1 실측: master 18.8%% vs view 27.0%% (기각), 기본 view")
     ap.add_argument("--views", type=int, default=2, help="학습 CAD 뷰 수 (R2: 6)")
+    ap.add_argument("--fine", action="store_true", help="fine 매칭 단계(1024pt) 결합 학습")
+    ap.add_argument("--fine-tok", type=int, default=1024)
     ap.add_argument("--suffix", default="", help="태그 접미사 (예: gm — 코드 변형 런 구분)")
     ap.add_argument("--no-dash", action="store_true", help="대시보드 자동 기동 끄기")
     a = ap.parse_args()
@@ -181,9 +217,12 @@ def main():
     tr, va = ld("train"), ld("val")
     enc = build_encoder(a.enc).to(DEV)
     matcher = MiniMatcher().to(DEV)
+    fine = FineMatcher().to(DEV) if a.fine else None
     if a.init_from:
         sd = torch.load(a.init_from, map_location=DEV)
         enc.load_state_dict(sd["enc"]); matcher.load_state_dict(sd["matcher"])
+        if fine is not None and "fine" in sd:
+            fine.load_state_dict(sd["fine"])
         print(f"[{tag}] init from {a.init_from}", flush=True)
     npar = sum(p.numel() for p in enc.parameters()) / 1e6
     npm = sum(p.numel() for p in matcher.parameters()) / 1e6
@@ -205,11 +244,15 @@ def main():
         "obj_train": int(len(torch.unique(tr["oi"]))),
         "obj_val_unseen": int(len(torch.unique(va["oi"]))),
         "sparsify": "ML-X 격자 σ3mm · npt U[256,4096] · frame_correction 적용",
+        "fine": (f"2blk linear-attn {a.fine_tok}pt τ0.05D · 초기=GT+노이즈(15°/0.05D)"
+                 if a.fine else None),
         "init_from": a.init_from,
     }, open(out / f"cfg_{tag}.json", "w"), indent=1, ensure_ascii=False)
 
     import torch.nn as nn
     net = nn.ModuleDict({"enc": enc, "matcher": matcher})
+    if fine is not None:
+        net["fine"] = fine
     steps = len(tr["oi"]) // a.bs
     if a.opt == "muon":
         from train.muon import HybridMuon
@@ -231,7 +274,7 @@ def main():
     g = torch.Generator(device=DEV); g.manual_seed(a.seed)
 
     hist = []
-    m0 = evaluate(enc, matcher, bank, va)
+    m0 = evaluate(enc, matcher, bank, va, fine=fine, fine_tok=a.fine_tok)
     print(f"[{tag}] ep0(초기) rot_p50={m0['rot_p50']:.1f}° ≤30°={m0['le30']:.3f}",
           flush=True)
     hist.append(dict(ep=0, **m0))
@@ -248,15 +291,33 @@ def main():
             R_gt = tr["R"][i].to(DEV).view(-1, 3, 3)
             t_eff = tr["t"][i].to(DEV) + torch.einsum("bij,bj->bi", R_gt, bank.c[oi])
             with torch.autocast("cuda", dtype=torch.bfloat16):
-                F_s, P_s, val_s = encode_scene(enc, pts, valid)
-                P_o, F_o = encode_cad(enc, bank, oi, g, n_views=a.views)
+                if fine is None:
+                    F_s, P_s, val_s = encode_scene(enc, pts, valid)
+                    P_o, F_o = encode_cad(enc, bank, oi, g, n_views=a.views)
+                else:
+                    F_s, P_s, val_s, (F_sf, P_sf, val_sf) = encode_scene(
+                        enc, pts, valid, fine_tok=a.fine_tok)
+                    P_o, F_o, (P_of, F_of) = encode_cad(
+                        enc, bank, oi, g, n_views=a.views, fine_tok=a.fine_tok)
                 sim = matcher(F_s.float(), P_s.float(), F_o.float(), P_o.float(),
                               bank.diam[oi])
+                if fine is not None:
+                    R0, t0_ = perturb_pose(R_gt, t_eff, bank.diam[oi])
+                    sim_f = fine(F_sf.float(), P_sf.float(), F_of.float(),
+                                 P_of.float(), R0, t0_, bank.diam[oi])
             loss, diag = phase_a_loss(sim.float(), P_s.float(), val_s, P_o.float(),
                                       R_gt, t_eff, bank.G[oi], bank.gn[oi],
                                       bank.diam[oi],
                                       P_ref=(bank.master[oi, :512]
                                              if a.gstar == "master" else None))
+            if fine is not None:
+                loss_f, diag_f = phase_a_loss(
+                    sim_f.float(), P_sf.float(), val_sf, P_of.float(),
+                    R_gt, t_eff, bank.G[oi], bank.gn[oi], bank.diam[oi],
+                    tau_rel=0.05)
+                loss = loss + loss_f
+                diag["ce_f"] = diag_f["ce"]
+                diag["rot_f"] = diag_f["rot_deg"]
             if not torch.isfinite(loss):
                 agg["skip"] = agg.get("skip", 0.0) + 1.0
                 agg["_cskip"] = agg.get("_cskip", 0) + 1
@@ -277,7 +338,7 @@ def main():
                 sched.step()
             for k, v in diag.items():
                 agg[k] = agg.get(k, 0.0) + v
-        m = evaluate(enc, matcher, bank, va)
+        m = evaluate(enc, matcher, bank, va, fine=fine, fine_tok=a.fine_tok)
         hist.append(dict(ep=ep + 1, min=round((time.time() - t0) / 60, 1), **m,
                          **{k: v / steps for k, v in agg.items()}))
         ok = max(1, steps - int(agg.get("skip", 0)))
@@ -288,10 +349,15 @@ def main():
               f"bg={agg.get('bg_rate', float('nan'))/ok:.2f} "
               f"g*≠I={agg.get('g_nonid', float('nan'))/ok:.2f} "
               f"skip={int(agg.get('skip', 0))} "
-              f"({(time.time()-t0)/60:.0f}m)", flush=True)
+              + (f"| fine p50={m['rot_p50_fine']:.1f}° ≤5°={m['le5_fine']:.3f} "
+                 f"ce_f={agg.get('ce_f', float('nan'))/ok:.2f} "
+                 if 'rot_p50_fine' in m else "")
+              + f"({(time.time()-t0)/60:.0f}m)", flush=True)
         json.dump(hist, open(out / f"hist_{tag}.json", "w"), indent=1)
-        torch.save(dict(enc=enc.state_dict(), matcher=matcher.state_dict()),
-                   out / f"ckpt_{tag}.pt")
+        ck = dict(enc=enc.state_dict(), matcher=matcher.state_dict())
+        if fine is not None:
+            ck["fine"] = fine.state_dict()
+        torch.save(ck, out / f"ckpt_{tag}.pt")
     print(f"[{tag}] 완료 {(time.time()-t0)/60:.1f}분", flush=True)
     # 결과 리포트 자동 생성 (규약 2026-07-31) — 실패해도 학습 결과는 보존
     try:
