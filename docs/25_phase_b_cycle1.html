@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase B 1차 사이클 정산 — 869종·36만 샘플, top-1 60%·다중 가설 70.7%</title>
+<style>
+  :root { --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb; --accent:#0b5fff;
+          --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e3;
+          --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; } }
+  :root[data-theme="dark"] {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+         color:var(--ink); background:var(--bg); line-height:1.7; font-size:15px; }
+  .wrap { max-width:1130px; margin:0 auto; padding:44px 28px 110px; }
+  h1 { font-size:24px; margin:0 0 6px; letter-spacing:-0.5px; line-height:1.35; text-wrap:balance; }
+  h2 { font-size:19px; margin:46px 0 12px; padding-top:16px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  p { margin:9px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.6px; }
+  th { background:var(--ink); color:var(--bg); text-align:left; padding:7px 9px; font-weight:600; }
+  th.c, td.c { text-align:center; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.g td { background:var(--good-soft); } tr.g td:first-child { border-left:3px solid var(--good); }
+  tr.me td { background:var(--shape-soft); } tr.me td:first-child { border-left:3px solid var(--shape); font-weight:700; }
+  .cap { font-size:12.3px; color:var(--sub); margin:4px 0 18px; }
+  code { font-family:"JetBrains Mono",Consolas,monospace; font-size:12.3px;
+         background:var(--panel); padding:1px 5px; border-radius:4px; }
+  .abs { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:15px 19px; margin:16px 0 24px; font-size:14px; }
+  .abs b.t { display:block; font-size:15px; margin-bottom:5px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; }
+  ul { margin:8px 0; padding-left:22px; } li { margin:4px 0; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0 6px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:10px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:19px; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good b { color:var(--good); }
+  .tiny { font-size:11.8px; color:var(--sub); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Phase B 1차 사이클 정산 — 데이터 6.5배의 효과와 다음 병목</h1>
+<p class="meta">Shape6D 보고서 #25 · 2026-08-04 · 선행: <a href="24_data_integrity_rebaseline.html">24(무결성 재기준선)</a> ·
+<a href="23_phase_a_settlement_multihyp.html">23(다중 가설)</a> · 데이터: <code>phase_b_*</code> (869종·36만, v2 규약+uv/K) · 모델: <code>a1_cosine_ext3_b_s0</code> (누적 120ep)</p>
+
+<div class="abs"><b class="t">요약 — 데이터가 약속을 지켰고, 병목이 이동했다</b>
+아키텍처 불변(3.3M 미니 매처) 조건에서 데이터만 149종·4.4만 → <b>869종·28.7만</b>으로 확장했다.
+미학습 top-1 47.9 → <b>60.1%</b>(p50 32.5°→<b>18.2°</b>), 다중 가설 k=16 최종 66.5 → <b>70.7%</b>(p50 12.9°),
+<b>비대칭 플립 11.1 → 33.9%</b>(3.1배 — 선택 트릭 3종이 실패했던 문제를 형상 다양성이 직접 학습).
+병진 0.16D→0.092D. 사다리는 ext3에서 런당 +0.9%p로 C-11 종료 규칙 발동 — 1차 사이클 마감.
+관찰된 다음 병목: top-1은 오르는데 다중 가설 최종이 ~71%에서 정체 — <b>선택기(ICP 잔차)의 판별 한계</b>.
+처방은 fine 매칭 단계(대응 해상도 ↑ = 정밀도와 판별력 동시 개선, "1° 직행" 노선의 본체)다.</div>
+
+<div class="hero">
+  <div class="stat good"><b>60.1%</b><span>top-1 (구 47.9) · p50 18.2°</span></div>
+  <div class="stat good"><b>70.7%</b><span>다중 가설 k=16 · p50 12.9°</span></div>
+  <div class="stat good"><b>33.9%</b><span>비대칭 (구 11.1) — 3.1배</span></div>
+  <div class="stat"><b>0.092D</b><span>병진 p50 (구 0.16D)</span></div>
+</div>
+
+<h2><span class="no">1</span>사다리 궤적 (phase_b val 미학습 178종)</h2>
+<table>
+<tr><th>단계</th><th class="c">누적 ep</th><th class="c">top-1 ≤30°</th><th class="c">rot p50</th><th class="c">trans</th><th class="c">train CE</th></tr>
+<tr><td>30ep (onecycle)</td><td class="c">30</td><td class="c n">47.0%</td><td class="c n">32.9°</td><td class="c n">0.105D</td><td class="c n">2.08</td></tr>
+<tr><td>+ ext</td><td class="c">60</td><td class="c n">53.9%</td><td class="c n">26.3°</td><td class="c n">0.099D</td><td class="c n">1.82</td></tr>
+<tr><td>+ ext2</td><td class="c">90</td><td class="c n">59.2%</td><td class="c n">20.0°</td><td class="c n">0.094D</td><td class="c n">1.67</td></tr>
+<tr class="g"><td><b>+ ext3 (수렴판)</b></td><td class="c">120</td><td class="c n"><b>60.1%</b></td><td class="c n"><b>18.6°</b></td><td class="c n">0.092D</td><td class="c n">1.59</td></tr>
+</table>
+<div class="cap"><b>Table 1.</b> ext2→ext3 런 Δ +0.9%p &lt; 1%p → C-11 종료. 참고: phase_a2 30ep가 27.0%였으므로 동일 30ep 비교 시 데이터 효과 +20.0%p.
+비교 주의: val 모집단 상이(27→178종) — phase_b 수치가 더 넓은 일반화의 측정.</div>
+
+<h2><span class="no">2</span>최종 대표 수치 (n=2880, k=16)</h2>
+<table>
+<tr><th>경로</th><th class="c">≤30°</th><th class="c">≤5°</th><th class="c">p50</th><th class="c">비대칭 ≤30°</th></tr>
+<tr><td>top-1 (ICP 없음)</td><td class="c n">61.6%</td><td class="c n">10.1%</td><td class="c n">18.2°</td><td class="c n">20.9%</td></tr>
+<tr><td>top-1 + ICP</td><td class="c n">64.7%</td><td class="c n">11.6%</td><td class="c n">15.6°</td><td class="c n">25.2%</td></tr>
+<tr class="me"><td><b>다중 가설 k=16 + ICP 선택 (대표)</b></td><td class="c n"><b>70.7%</b></td><td class="c n">16.3%</td><td class="c n"><b>12.9°</b></td><td class="c n"><b>33.9%</b></td></tr>
+</table>
+<div class="cap"><b>Table 2.</b> 추가 비용 ~7ms/샘플. 대표 수치 연혁: 43%(23) → 62.2%(23, 다중 가설) → 66.5%(24, 클린) → <b>70.7%(25, 데이터 6.5×)</b>.</div>
+
+<div class="fair"><div class="h">관찰 — 병목의 이동: 회수에서 선택으로</div>
+ext(60ep)와 ext3(120ep)의 다중 가설 최종이 70.9 vs 70.7%로 동일한 반면 top-1은 53.9→60.1%로 계속 상승 —
+가설 집합 안에 정답이 있는 비율은 이미 높고, <b>ICP 점거리 잔차로 정답 가설을 고르는 능력이 상한</b>이 됐다.
+비대칭 33.9% vs 오라클 여지(23 §4: 71.7%)의 간극도 같은 원인. fine 매칭(196→1024+점, 대응 간격 15cm→~2cm)은
+잔차의 판별력과 포즈 정밀도(≤5°)를 동시에 올리는 정공법 — "네트워크가 1° 부근까지, ICP는 보험"(사용자 방향)의 본체.</div>
+
+<h2><span class="no">3</span>결정·다음 단계</h2>
+<ul>
+<li><b>Phase B 1차 마감</b>: 수렴판 = <code>a1_cosine_ext3_b_s0</code>(120ep) · 대표 70.7% · 사다리 종료(C-11)</li>
+<li><b>차기 1순위 = fine 매칭 단계 구현</b> (docs/20 매칭 디코더 명세의 fine 2blk·1024pt·bg 승계) — 목표: top-1 p50 18°→수 °, ≤5° 10→30%+, 선택 판별력 회복으로 다중 가설 75%+</li>
+<li>병행 후보: 실표면 free-space 검증(uv/K 데이터 확보됨) · UAM 재평가(신 모델·다중 인스턴스 정의) · M0-2 Orin</li>
+<li>학습 랭커·경량 free-space는 기각 기록 유지(23 §7·본 사이클) — fine 이후 특징이 바뀌면 재방문 조건부</li>
+</ul>
+
+<p class="tiny">재현 — 학습: <code>--data-prefix phase_b --suffix b</code> (+ext 사다리) · 평가: <code>python3 train/eval_multihyp_icp.py --tag a1_cosine_ext3_b_s0 --k 16</code> · 리포트: <code>reports/a1_cosine_ext3_b_s0/</code></p>
+
+</div>
+</body>
+</html>
