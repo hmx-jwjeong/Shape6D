@@ -187,6 +187,8 @@ def main():
     ap.add_argument("--gstar", choices=["view", "master"], default="view",
                     help="g* 기준점 — R1 실측: master 18.8%% vs view 27.0%% (기각), 기본 view")
     ap.add_argument("--views", type=int, default=2, help="학습 CAD 뷰 수 (R2: 6)")
+    ap.add_argument("--compile", action="store_true",
+                    help="인코더 torch.compile+channels_last (실측 1.58× — 수치 비트 비교 불가 주의)")
     ap.add_argument("--fine", action="store_true", help="fine 매칭 단계(1024pt) 결합 학습")
     ap.add_argument("--fine-tok", type=int, default=1024)
     ap.add_argument("--suffix", default="", help="태그 접미사 (예: gm — 코드 변형 런 구분)")
@@ -216,15 +218,20 @@ def main():
                      np.load(DATA / f"{a.data_prefix}_{sp}.npz").items()}
     tr, va = ld("train"), ld("val")
     enc = build_encoder(a.enc).to(DEV)
+    if a.compile:
+        enc = enc.to(memory_format=torch.channels_last)
+        enc = torch.compile(enc)
+        print(f"[compile] 인코더 컴파일 활성 (channels_last)", flush=True)
     matcher = MiniMatcher().to(DEV)
     fine = FineMatcher().to(DEV) if a.fine else None
+    enc_raw = getattr(enc, "_orig_mod", enc)      # compile 래핑 시 원본
     if a.init_from:
         sd = torch.load(a.init_from, map_location=DEV)
-        enc.load_state_dict(sd["enc"]); matcher.load_state_dict(sd["matcher"])
+        enc_raw.load_state_dict(sd["enc"]); matcher.load_state_dict(sd["matcher"])
         if fine is not None and "fine" in sd:
             fine.load_state_dict(sd["fine"])
         print(f"[{tag}] init from {a.init_from}", flush=True)
-    npar = sum(p.numel() for p in enc.parameters()) / 1e6
+    npar = sum(p.numel() for p in enc_raw.parameters()) / 1e6
     npm = sum(p.numel() for p in matcher.parameters()) / 1e6
     print(f"[{tag}] enc {npar:.2f}M + matcher {npm:.2f}M · train {len(tr['oi'])} · "
           f"val(미학습 34종) {len(va['oi'])} · {a.opt}/{a.sched} lr {lr:g} bs {a.bs}", flush=True)
@@ -354,7 +361,7 @@ def main():
                  if 'rot_p50_fine' in m else "")
               + f"({(time.time()-t0)/60:.0f}m)", flush=True)
         json.dump(hist, open(out / f"hist_{tag}.json", "w"), indent=1)
-        ck = dict(enc=enc.state_dict(), matcher=matcher.state_dict())
+        ck = dict(enc=enc_raw.state_dict(), matcher=matcher.state_dict())
         if fine is not None:
             ck["fine"] = fine.state_dict()
         torch.save(ck, out / f"ckpt_{tag}.pt")
