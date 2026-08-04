@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>구현·학습 현황 총정리와 잔여 로드맵 — 대표 70.7%, 다음은 fine 단계</title>
+<style>
+  :root { --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb; --accent:#0b5fff;
+          --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e3;
+          --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; } }
+  :root[data-theme="dark"] {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+         color:var(--ink); background:var(--bg); line-height:1.7; font-size:15px; }
+  .wrap { max-width:1130px; margin:0 auto; padding:44px 28px 110px; }
+  h1 { font-size:24px; margin:0 0 6px; letter-spacing:-0.5px; line-height:1.35; text-wrap:balance; }
+  h2 { font-size:19px; margin:48px 0 12px; padding-top:16px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  h3 { font-size:15.5px; margin:24px 0 8px; }
+  p { margin:9px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.5px; }
+  th { background:var(--ink); color:var(--bg); text-align:left; padding:7px 9px; font-weight:600; }
+  th.c, td.c { text-align:center; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.g td { background:var(--good-soft); } tr.g td:first-child { border-left:3px solid var(--good); }
+  tr.y td { background:var(--warn-soft); } tr.y td:first-child { border-left:3px solid var(--warn); }
+  tr.r td { background:var(--bad-soft); } tr.r td:first-child { border-left:3px solid var(--bad); }
+  tr.me td { background:var(--shape-soft); } tr.me td:first-child { border-left:3px solid var(--shape); font-weight:700; }
+  .cap { font-size:12.3px; color:var(--sub); margin:4px 0 18px; }
+  code { font-family:"JetBrains Mono",Consolas,monospace; font-size:12.3px;
+         background:var(--panel); padding:1px 5px; border-radius:4px; }
+  .abs { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:15px 19px; margin:16px 0 24px; font-size:14px; }
+  .abs b.t { display:block; font-size:15px; margin-bottom:5px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; }
+  ul, ol { margin:8px 0; padding-left:22px; } li { margin:4px 0; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:13px 19px;
+         margin:16px 0 6px; font-size:13.2px; column-count:2; column-gap:28px; }
+  .toc a { display:block; padding:2px 0; break-inside:avoid; }
+  .tiny { font-size:11.8px; color:var(--sub); }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0 6px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:10px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:19px; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good b { color:var(--good); } .stat.warn b { color:var(--warn); }
+  .badge { display:inline-block; font-size:11px; font-weight:800; padding:1px 8px; border-radius:10px; margin-right:4px; white-space:nowrap; }
+  .b-ok { background:var(--good-soft); color:var(--good); border:1px solid var(--good); }
+  .b-part { background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn); }
+  .b-no { background:var(--bad-soft); color:var(--bad); border:1px solid var(--bad); }
+  pre { background:#12151b; color:#e6e9ef; padding:12px 15px; border-radius:9px; overflow-x:auto;
+        font-size:12.2px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>구현·학습 현황 총정리와 잔여 로드맵</h1>
+<p class="meta">Shape6D 보고서 #26 · 2026-08-04 · 정본 <a href="20_final_design_plan.html">20 v1.2</a> 대비 진척 감사 ·
+연혁: <a href="23_phase_a_settlement_multihyp.html">23</a>·<a href="24_data_integrity_rebaseline.html">24</a>·<a href="25_phase_b_cycle1.html">25</a> ·
+실시간: <code>:8035</code> 대시보드 · <code>reports/summary.html</code></p>
+
+<div class="abs"><b class="t">현재 위치 한 줄 요약</b>
+5단계 파이프라인 중 <b>S0·S3(coarse)·S4(코어)와 다중 가설 선택이 구현·실측 검증</b>됐고, 869종·36만 샘플
+체제에서 미학습 물체 대표 수치 <b>70.7% ≤30° (p50 12.9°)</b>에 도달했다. 영구 폴백 v0-geo(1.60mm/0.254°)는
+상시 배포 가능. 잔여 필수 작업은 <b>fine 매칭 단계(차기 1순위)</b>, S2 디스크립터, S1 v2 정식 통합,
+실표면 free-space, RGB 보조, UAM 재평가·Orin 실측·Phase C(증류·보정·TRT)다.</div>
+
+<div class="hero">
+  <div class="stat good"><b>70.7%</b><span>대표 수치 (다중 가설 k=16, 미학습 178종)</span></div>
+  <div class="stat good"><b>869종·36만</b><span>학습 데이터 (v2 규약·uv/K)</span></div>
+  <div class="stat"><b>26편</b><span>보고서 체계 · 결정 C-11/D-11 대장</span></div>
+  <div class="stat warn"><b>fine 단계</b><span>차기 1순위 — 정밀도·선택 판별력 동시</span></div>
+</div>
+
+<div class="toc">
+<a href="#s1">1. 파이프라인 구현 현황 (S0~S4)</a>
+<a href="#s2">2. 학습 인프라·도구 현황</a>
+<a href="#s3">3. 성능 연혁 — 43 → 70.7%</a>
+<a href="#s4">4. 판정·기각 기록 (과학 자산)</a>
+<a href="#s5">5. 데이터 자산 현황</a>
+<a href="#s6">6. 잔여 작업 로드맵</a>
+<a href="#s7">7. 리스크·미해결 질문</a>
+</div>
+
+<h2 id="s1"><span class="no">1</span>파이프라인 구현 현황 (정본 20 슬롯표 대비)</h2>
+<table>
+<tr><th style="width:6%">단계</th><th style="width:22%">슬롯</th><th style="width:12%" class="c">상태</th><th>내용·근거</th></tr>
+<tr class="g"><td><b>S0</b></td><td>온보딩·캐시</td><td class="c"><span class="badge b-ok">완료</span></td><td>표면 20만 샘플·icosphere 42뷰 depth·TDF·sym_rots(G≤16 자동)·특징 캐시. 869종 팩 빌드 7분 파이프라인</td></tr>
+<tr class="y"><td rowspan="2"><b>S1</b></td><td>ROI v2 (C-9, 마스크 선택식)</td><td class="c"><span class="badge b-part">하네스 검증</span></td><td>mask_roi.py 구현, UAM 60프레임 실측: 마스크 97.9%·구경로 붕괴 10/60 실증(23 §5). <b>잔여</b>: 합성 GT 정확도 A/B → 파이프라인 정식 통합, EViT-SAM 교체(현 하네스는 HF SAM)</td></tr>
+<tr class="g"><td>분할기 동결 정책 (C-10)</td><td class="c"><span class="badge b-ok">확정</span></td><td>SAM 계열 로컬 학습 전면 배제 — 문헌 4편 검증(22)</td></tr>
+<tr class="y"><td rowspan="2"><b>S2</b></td><td>크기 게이트·TDF+coverage</td><td class="c"><span class="badge b-ok">완료</span></td><td>Phase 0 위생 완료분(A-4), UAM 하네스에서 가동 중</td></tr>
+<tr><td>기하 디스크립터 0.35M·DINOv2-S 보조</td><td class="c"><span class="badge b-no">미구현</span></td><td>자체 InfoNCE 학습 예정(Phase C ②) — GSO GT 대응 데이터는 확보됨</td></tr>
+<tr class="g"><td rowspan="3"><b>S3</b></td><td>기하 인코더 (a1 확정)</td><td class="c"><span class="badge b-ok">완료</span></td><td>절단 ConvNeXt-T 1.33M (timm Apache) — C-11 정산으로 확정, 시드 3종 검증(a2 체제 26.9±0.7)</td></tr>
+<tr class="y"><td>매칭 디코더 — coarse 2blk</td><td class="c"><span class="badge b-part">coarse만</span></td><td>클린룸 196tok·H192·RPE·bg — 구현·수렴(120ep). <b>fine 2blk(1024pt) 미구현 = 차기 1순위</b> ("1° 직행" 노선 본체, 25 §2 관찰)</td></tr>
+<tr><td>RGB 보조 (MBConv 0.4M·dropout)</td><td class="c"><span class="badge b-no">미구현</span></td><td>A1 전제(RGB 보조·결측 정규 상태) 구현 잔여 — fine 후 순번</td></tr>
+<tr class="g"><td rowspan="3"><b>S4</b></td><td>ICP·잔차·free-space·보정기</td><td class="c"><span class="badge b-ok">완료</span></td><td>projective p2pl 계층·10-d 로지스틱 — v0-geo 골든 <b>1.60mm/0.254°</b> 회귀 감시 중</td></tr>
+<tr class="me"><td><b>다중 가설 선택 (D-11)</b></td><td class="c"><span class="badge b-ok">완료</span></td><td>삼중쌍 가설 T=256→k=16 + ICP 잔차 선택 — +9~15%p, ~7ms/샘플. λ_fs=0 확정</td></tr>
+<tr class="r"><td>실표면 free-space · D-9</td><td class="c"><span class="badge b-no">미해결</span></td><td>경량판은 D-9 동근원으로 기각(23 §7) — uv/K 데이터 확보 완료, 실표면 구현 잔여 (플립 선택·D-9 해소 공용 경로)</td></tr>
+</table>
+
+<h2 id="s2"><span class="no">2</span>학습 인프라·도구 현황</h2>
+<table>
+<tr><th style="width:26%">도구</th><th>상태·내용</th></tr>
+<tr class="g"><td>학습 대시보드 (:8035)</td><td>60s 갱신·파라미터 전량·수렴 곡선·ETA — 학습 기동 시 자동 브라우저 오픈 규약</td></tr>
+<tr class="g"><td>런별 자동 리포트</td><td><code>reports/{tag}/</code> 곡선·오차분포(대칭 분해)·케이스 패널·PCA + summary 교차 추적 — 학습 종료 훅 자동</td></tr>
+<tr class="g"><td>ext 사다리 (웜리스타트)</td><td><code>--init-from/--ext-name</code> — 수렴 예산 관리 표준, restart 딥 패턴 문서화</td></tr>
+<tr class="g"><td>데이터 빌더 v2</td><td>다중 메시 루트·보정 병합·양방향 필터·uv/K 저장·<code>--prefix</code> 버저닝</td></tr>
+<tr class="g"><td>스케일 복원 v2</td><td>다중 시작 + 양방향 잔차 (<code>tools/recover_gso_scale_b.py</code>) — 오염 재발 차단</td></tr>
+<tr class="g"><td>fps CUDA graph</td><td>비트 동일 벡터화 (런치 오버헤드 365~650×↓) — 스텝 병목은 인코더로 재진단(23 §7)</td></tr>
+<tr class="y"><td>UAM 하네스</td><td>모드 A/B/C 가동 — <b>다중 인스턴스 평가 재정의 잔여</b>(타겟 모호성, 23 §5)</td></tr>
+</table>
+
+<h2 id="s3"><span class="no">3</span>성능 연혁 — 나흘간 대표 수치 +27.7%p</h2>
+<table>
+<tr><th>시점·문서</th><th style="width:34%">변화</th><th class="c">대표 ≤30°</th><th class="c">rot p50</th><th class="c">비대칭</th></tr>
+<tr><td>23 (08-01)</td><td>Phase A 수렴판 top-1 (오염 데이터)</td><td class="c n">43.0%</td><td class="c n">37.5°</td><td class="c n">~14%</td></tr>
+<tr><td>23 §7</td><td>+ 다중 가설 k=16 + ICP 선택 (D-11)</td><td class="c n">62.2%</td><td class="c n">16.4°</td><td class="c n">17.6%</td></tr>
+<tr><td>24 (08-02)</td><td>+ 데이터 오염 수정 (61/168 → phase_a2)</td><td class="c n">66.5%</td><td class="c n">14.1°</td><td class="c n">11.1%</td></tr>
+<tr class="me"><td><b>25 (08-04)</b></td><td><b>+ 데이터 6.5× (869종, Phase B 120ep)</b></td><td class="c n"><b>70.7%</b></td><td class="c n"><b>12.9°</b></td><td class="c n"><b>33.9%</b></td></tr>
+</table>
+<div class="cap"><b>Table 3.</b> top-1 단독 연혁: 27.0(30ep) → 47.9(a2 수렴) → 60.1%(b 수렴, p50 18.2°). 이론 상한(대응 내 정답 존재율) 94.9%(23 §4).
+val 모집단이 단계마다 넓어짐(34→27→178종) — 최신 수치가 가장 넓은 일반화의 측정.</div>
+
+<h2 id="s4"><span class="no">4</span>판정·기각 기록 — 다시 시도하지 말 것들 (과학 자산)</h2>
+<table>
+<tr><th style="width:24%">가설</th><th class="c" style="width:10%">판정</th><th>근거·재방문 조건</th></tr>
+<tr class="r"><td>g* 마스터 기반 선택 (R1)</td><td class="c">기각</td><td>−8.2%p — 기준점 불일치(bg 14→26%), 03 §9.3 반증. 재방문: 후보 b(마스터 직접 소비)에서만</td></tr>
+<tr class="r"><td>학습 CAD 뷰 2→6 (R2)</td><td class="c">기각</td><td>−2.2%p·시간 1.9× — 커버리지 비병목. 시드 밴드 밖 확인</td></tr>
+<tr class="r"><td>a2 절단 인코더 (R3)</td><td class="c">기각</td><td>20.6% &lt; a1 27.0% — 경량화는 Phase C 증류로</td></tr>
+<tr class="r"><td>경량 free-space 선택</td><td class="c">기각</td><td>정답 포즈 벌점(틈 관통 오판) — D-9 동근원 실증. 실표면 구현으로 대체</td></tr>
+<tr class="r"><td>학습형 가설 랭커 v1</td><td class="c">기각</td><td>train +1.2 / 미학습 −5.6%p — 제로샷 전이 실패, 특징에 플립 신호 부재. fine 후 특징 갱신 시 재방문</td></tr>
+<tr class="y"><td>Muon 옵티마이저</td><td class="c">보류</td><td>에폭 효율↑·스텝 2.3× — 병목이 인코더로 재진단돼 이득 구조 변화 없음. Phase C 규모에서 재검</td></tr>
+<tr class="y"><td>배치 확대</td><td class="c">보류</td><td>처리량 평탄(470~500/s, GPU 연산 지배) — 인코더 최적화 후 재검</td></tr>
+<tr class="g"><td>다중 가설 + ICP 선택</td><td class="c">채택</td><td>+9~15%p·7ms — D-11 종결. 문헌 관례 정합(가설 수백 개)</td></tr>
+<tr class="g"><td>데이터 스케일 (869종)</td><td class="c">채택</td><td>top-1 +12%p·비대칭 3.1× — 문헌 포화점 규모 도달</td></tr>
+</table>
+
+<h2 id="s5"><span class="no">5</span>데이터 자산 현황 (전부 삼성 SSD)</h2>
+<table>
+<tr><th style="width:26%">자산</th><th>내용</th></tr>
+<tr class="g"><td><code>phase_b_*</code> <b>(정본)</b></td><td>869종 · train 286,574 / val 73,426 · v2 보정+양방향 필터 · <b>uv/K 저장</b> — 물체 교집합 0</td></tr>
+<tr><td><code>phase_a2_*</code></td><td>149종 클린 재구축본 — 소규모 실험용 유지</td></tr>
+<tr class="y"><td><code>phase_a_*</code></td><td>오염 참조본 (61/168 스케일 결함) — 학습 사용 금지, 대조용만</td></tr>
+<tr class="g"><td>GSO 메시 1,033종</td><td>원본 zip+언팩 (CC-BY 4.0 전수 확인) · frame_correction_a_v2/b (양방향 잔차 포함)</td></tr>
+<tr><td>UAM 로그 70+샘플</td><td>평가 전용 (C-4) — 신 모델 재평가 잔여</td></tr>
+<tr class="y"><td>BOP 코어</td><td><b>미다운로드</b> — 동일 희소화 SOTA 대조(C-8)의 전제</td></tr>
+</table>
+
+<h2 id="s6"><span class="no">6</span>잔여 작업 로드맵 (우선순위순)</h2>
+<table>
+<tr><th style="width:5%" class="c">#</th><th style="width:30%">작업</th><th style="width:12%" class="c">규모</th><th>기대·근거</th></tr>
+<tr class="me"><td class="c">1</td><td><b>fine 매칭 단계 구현+학습</b> (fine 2blk·1024pt·bg, 20 명세)</td><td class="c">구현 1~2일<br>학습 ~1일</td><td>p50 18°→수 °·≤5° 10→30%+·선택 판별력 회복(25 §2 병목) — "1° 직행, ICP=보험" 노선 본체</td></tr>
+<tr><td class="c">2</td><td>실표면 free-space 검증 (uv/K)</td><td class="c">구현 1일</td><td>플립 선택 잔여분 + D-9 해소 공용 경로 — 비대칭 33.9%→오라클 여지</td></tr>
+<tr><td class="c">3</td><td>UAM 재평가 — 신 모델 + 다중 인스턴스 정의</td><td class="c">0.5일</td><td>필드 갭 실측 갱신 (현 하네스는 v0-geo/구 모델 기준)</td></tr>
+<tr><td class="c">4</td><td>S1 v2 정식 통합 (합성 GT A/B → C-9 종결, EViT-SAM 교체)</td><td class="c">1일</td><td>파이프라인 일관화 — 하네스 검증분의 승격</td></tr>
+<tr><td class="c">5</td><td>S2 기하 디스크립터 자체 학습 (InfoNCE 0.35M)</td><td class="c">1~2일</td><td>다중 인스턴스 식별력 — UAM 타겟 모호성의 정공 해법</td></tr>
+<tr><td class="c">6</td><td>RGB 보조 경로 (MBConv+dropout+e_norgb)</td><td class="c">1~2일</td><td>A1 전제 완성 — 텍스처 단서로 플립 추가 회수 기대</td></tr>
+<tr><td class="c">7</td><td>BOP 다운로드 → <b>동일 희소화 SOTA 대조</b> (FreeZe·SAM-6D)</td><td class="c">다운로드+1일</td><td>"우리 링" 정면 비교 첫 수치 (C-8)</td></tr>
+<tr class="y"><td class="c">8</td><td>M0-2 Orin 실측 · TRT 3분할 · Phase C (증류 H192→128·보정기 적합·E2E &lt;1s)</td><td class="c">HW 대기<br>+2~3주</td><td>G-C 게이트 — 배포 트랙</td></tr>
+<tr><td class="c">9</td><td>운영 잔여: phase_b 시드 3종 · D 대장(D-1/4·2·3·6·7·8) · 21 벤치 결론 정정 반영</td><td class="c">수시</td><td>규약 완결성</td></tr>
+</table>
+
+<h2 id="s7"><span class="no">7</span>리스크·미해결 질문</h2>
+<ul>
+<li><b>UAM 필드 갭</b> — 합성 70.7%가 필드에서 얼마인지 미갱신. 타겟 모호성(다중 팔레트) 때문에 평가 정의부터 재작업 필요 (#3)</li>
+<li><b>fine의 희소 적합성</b> — fine 1024pt는 CAD측 해상도 개선이 본질(장면은 ~500점 그대로). 장면측 희소가 fine 이득을 얼마나 제한하는지가 구현 후 첫 질문</li>
+<li><b>Orin 예산 전부 추정</b> — 다중 가설 +7ms는 PC 기준. M0-2 실측 전까지 &lt;1s는 미검증 주장</li>
+<li><b>비대칭 잔여 결손</b> — 33.9% vs 오라클 여지. fine+실표면+RGB 세 경로의 합산 기대는 근거 있으나 미실측</li>
+<li>진행 중 프로세스 없음 — GPU 유휴, fine 구현 착수 대기 상태</li>
+</ul>
+
+<p class="tiny">본 문서는 정본 20 v1.2의 진척 감사이며, 충돌 시 20이 우선한다. 수치 재현: <code>reports/summary.html</code> · 각 문서의 재현 각주 참조.</p>
+
+</div>
+</body>
+</html>
