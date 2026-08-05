@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fine 매칭 사이클 정산 — 두 실패의 해부가 만든 정제 단계, 대표 70.7→72.7%</title>
+<style>
+  :root { --ink:#1a1d23; --sub:#5a6270; --line:#dde2ea; --bg:#fff; --panel:#f6f8fb; --accent:#0b5fff;
+          --good:#0a7d43; --good-soft:#e6f5ec; --warn:#a05a00; --warn-soft:#fdf3e3;
+          --bad:#b4232a; --bad-soft:#fdecec; --shape:#6d28d9; --shape-soft:#f1eafd; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; } }
+  :root[data-theme="dark"] {
+    --ink:#e8eaf0; --sub:#9aa3b2; --line:#2c3240; --bg:#14161b; --panel:#1c2028;
+    --accent:#5b96ff; --good:#4cc38a; --good-soft:#15291f; --warn:#e0a24a; --warn-soft:#2b2214;
+    --bad:#ef6b74; --bad-soft:#301b1e; --shape:#b39ff2; --shape-soft:#241b38; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+         color:var(--ink); background:var(--bg); line-height:1.7; font-size:15px; }
+  .wrap { max-width:1130px; margin:0 auto; padding:44px 28px 110px; }
+  h1 { font-size:24px; margin:0 0 6px; letter-spacing:-0.5px; line-height:1.35; text-wrap:balance; }
+  h2 { font-size:19px; margin:46px 0 12px; padding-top:16px; border-top:2px solid var(--ink); }
+  h2 .no { color:var(--accent); font-weight:800; margin-right:8px; }
+  p { margin:9px 0; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:12.6px; }
+  th { background:var(--ink); color:var(--bg); text-align:left; padding:7px 9px; font-weight:600; }
+  th.c, td.c { text-align:center; }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.g td { background:var(--good-soft); } tr.g td:first-child { border-left:3px solid var(--good); }
+  tr.b td { background:var(--bad-soft); } tr.b td:first-child { border-left:3px solid var(--bad); }
+  tr.me td { background:var(--shape-soft); } tr.me td:first-child { border-left:3px solid var(--shape); font-weight:700; }
+  .cap { font-size:12.3px; color:var(--sub); margin:4px 0 18px; }
+  code { font-family:"JetBrains Mono",Consolas,monospace; font-size:12.3px;
+         background:var(--panel); padding:1px 5px; border-radius:4px; }
+  .abs { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+         border-radius:8px; padding:15px 19px; margin:16px 0 24px; font-size:14px; }
+  .abs b.t { display:block; font-size:15px; margin-bottom:5px; }
+  .fair { border:1px solid var(--line); border-left:4px solid var(--good); background:var(--good-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; }
+  .fair .h { font-weight:800; color:var(--good); margin-bottom:4px; }
+  .warnbox { border:1px solid var(--line); border-left:4px solid var(--warn); background:var(--warn-soft);
+          border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; }
+  .warnbox .h { font-weight:800; color:var(--warn); margin-bottom:4px; }
+  ul { margin:8px 0; padding-left:22px; } li { margin:4px 0; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0 6px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:10px 13px; background:var(--panel); }
+  .stat b { display:block; font-size:19px; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
+  .stat span { font-size:11.5px; color:var(--sub); }
+  .stat.good b { color:var(--good); }
+  .tiny { font-size:11.8px; color:var(--sub); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>fine 매칭 사이클 정산 — 두 실패의 해부가 만든 정제 단계</h1>
+<p class="meta">Shape6D 보고서 #27 · 2026-08-06 · 선행: <a href="25_phase_b_cycle1.html">25(Phase B 1차)</a> ·
+<a href="26_status_and_remaining.html">26(현황·로드맵)</a> · 데이터: <code>phase_b</code> val 미학습 178종 ·
+수렴판: <code>a1_cosine_finev3_b_s0</code> (fine 30ep, 커밋 <code>ca149c6</code>→<code>c31ea09</code>)</p>
+
+<div class="abs"><b class="t">요약 — 실패 두 번을 해부해서 세 번째에 성공했다</b>
+"1° 직행" 노선의 본체인 fine 매칭(1024pt)은 v1(생좌표 concat)에서 정제 불능(GT 초기화로도 p50 14.7°),
+v2(Fourier PE)에서도 대응 불변이었다. 두 실험이 기제를 확정했다:
+① eval 게이트 주입 스윕 — 유사도에 거리 페널티만 넣어도 GT-init 14.7→6.2° (<b>원거리 앨리어싱이 병목</b>)
+② <b>g* 비정합</b> — 조건화 좌표(R_gt)와 CE 라벨(R_gt·g*)이 <b>샘플 85%에서 대칭회전만큼 어긋나</b>
+헤드가 좌표 무시를 학습 (PE 무효의 원인). v3 = 학습형 좌표 게이트 + g*정합 초기화 + CE 전용 손실로
+정제가 전면 작동: 1에폭 만에 v2 최종 재현, 30ep에 <b>대표 70.7→72.7%, p50 12.9→11.2°, ≤5° 16.3→21.7%,
+병진 0.092→0.043D</b>. 부수 확인: ICP '보험'은 fine 이후 유해(지위 역전), fine 확신 선택은 기각,
+정제 후 오라클 83.8%/≤5° 48.2% — <b>선택 갭 ~11%p가 남은 최대 수확처</b>.</div>
+
+<div class="hero">
+  <div class="stat good"><b>72.7%</b><span>대표 ≤30° (구 70.7)</span></div>
+  <div class="stat good"><b>11.2°</b><span>대표 p50 (구 12.9)</span></div>
+  <div class="stat good"><b>21.7%</b><span>≤5° (구 16.3)</span></div>
+  <div class="stat good"><b>0.043D</b><span>병진 p50 (구 0.092)</span></div>
+</div>
+
+<h2><span class="no">1</span>세대별 궤적 — 무엇이 실패했고 무엇이 고쳤나</h2>
+<table>
+<tr><th>세대 (fine ep)</th><th>설계</th><th class="c">GT-init p50 / ≤5°</th><th class="c">coarse-init p50 / ≤5°</th><th class="c">병진</th><th>판정</th></tr>
+<tr class="b"><td>v1 (누적 90ep)</td><td>생 xyz 3ch concat</td><td class="c n">14.7° / 10.2%</td><td class="c n">20.5° / 5.8% (악화)</td><td class="c n">0.202D</td><td>정제 불능 — coarse보다 나쁨</td></tr>
+<tr class="b"><td>v2 (30ep)</td><td>+ Fourier PE 8밴드 · hard solve</td><td class="c n">13.6° / 14.8%</td><td class="c n">18.6° / 9.8% (악화)</td><td class="c n">0.191D</td><td>대응 불변(≤0.05D 35.0→35.6%) — PE 미사용</td></tr>
+<tr class="g"><td><b>v3 (30ep)</b></td><td>+ 학습형 게이트 · g*정합 · CE 전용</td><td class="c n"><b>7.0° / 39.0%</b></td><td class="c n"><b>11.9° / 19.8%</b> (개선)</td><td class="c n"><b>0.043D</b></td><td><b>정제 작동 · 반복 적용 수렴(fine² 21.8%)</b></td></tr>
+</table>
+<div class="cap"><b>Table 1.</b> phase_b val, n=2880 (coarse 기준선: p50 17.0°·≤5° 11.5%·0.091D). v3는 ep1에 v2의 30ep 최종을 재현(ce_f 2.18 vs 3.81) —
+병목이 용량·데이터가 아니라 <b>구조(귀납 편향)</b>였다는 방증. 진단 도구: <code>train/eval_fine_pipeline.py</code>.</div>
+
+<h2><span class="no">2</span>기제 확정 — 두 개의 결정적 실험</h2>
+<p><b>① eval 게이트 주입 스윕</b> (재학습 없이 v2 유사도에 <code>−λ·(|R₀ᵀ(p−t₀)−P_o|/D)²</code> 주입):</p>
+<table>
+<tr><th>GT-init</th><th class="c">λ=0</th><th class="c">λ=10</th><th class="c">λ=30</th><th class="c">λ=100</th><th class="c">λ=300</th></tr>
+<tr><td>rot p50</td><td class="c n">14.7°</td><td class="c n">14.2°</td><td class="c n">11.2°</td><td class="c n">8.1°</td><td class="c n"><b>6.2°</b></td></tr>
+<tr><td>≤5°</td><td class="c n">9.1%</td><td class="c n">11.8%</td><td class="c n">16.8%</td><td class="c n">29.8%</td><td class="c n"><b>43.1%</b></td></tr>
+</table>
+<div class="cap"><b>Table 2.</b> λ 단조 개선 — <b>원거리 앨리어싱(top-1 대응의 65%가 참대응 0.05D 밖)</b>이 병목임을 확정.
+단 coarse-init은 eval 주입만으론 회수 불가(17.3°) → 게이트와 <b>공동 학습</b> 필요.</div>
+
+<p><b>② g* 비정합 발견</b>: 학습에서 fine 조건화 좌표는 R_gt 기준, CE 라벨은 대칭 정준화된
+R_eff=R_gt·g* 기준인데 <b>g*≠I 비율 85%</b> — 샘플 대다수에서 좌표 프라이어가 라벨과 대칭회전만큼 어긋남.
+헤드가 "좌표는 못 믿는다"를 정확히 학습했고, 이것이 PE 무효(v2)의 근본 원인.
+v3는 fine점 기준 <code>select_g_star</code>로 초기 포즈를 R_gt·g* 프레임에서 생성해 정합.</p>
+
+<div class="warnbox"><div class="h">발산 사고 기록 (재발 방지)</div>
+v3 1차 기동은 1스텝 발산(연속 skip 300): λ30 게이트가 원거리 행 전경 로짓을 −수백까지 눌러
+soft solve 대응 가중이 0으로 붕괴 → 공분산 H≈0 퇴화 → <b>SVD backward NaN</b> → 파라미터 오염.
+forward 가드(가중합 1e-8 클램프)로는 backward 경로를 못 막는다. 수정: 게이트 페널티 상한 30 클램프 +
+fine 손실에서 soft solve 포즈 항 제거(<b>CE 전용</b> — eval이 hard solve라 목적 정합, NaN 경로 동시 제거).</div>
+
+<h2><span class="no">3</span>v3 정제 특성 — 구간별 효과와 반복 수렴</h2>
+<table>
+<tr><th>coarse 오차 구간</th><th class="c">n</th><th class="c">coarse p50 → fine p50</th><th class="c">개선율</th><th class="c">fine ≤5°</th></tr>
+<tr><td>[0–5°) 보존 구간</td><td class="c n">331</td><td class="c n">3.4° → 4.2°</td><td class="c n">29.9%</td><td class="c n">62.8%</td></tr>
+<tr class="g"><td>[5–15°)</td><td class="c n">984</td><td class="c n">9.5° → <b>7.9°</b></td><td class="c n">65.9%</td><td class="c n">26.4%</td></tr>
+<tr class="g"><td>[15–30°)</td><td class="c n">493</td><td class="c n">19.5° → <b>12.8°</b></td><td class="c n">83.4%</td><td class="c n">15.4%</td></tr>
+<tr><td>[30–180°) 오유역</td><td class="c n">1072</td><td class="c n">78.5° → 76.4°</td><td class="c n">59.9%</td><td class="c n">2.5%</td></tr>
+</table>
+<div class="cap"><b>Table 3.</b> 수렴 유역(5–30°)에서 강한 정제, 오유역은 불변(예상대로 — 다중 가설의 몫), 보존 구간 경미 손실(v2는 3.5→10.1° 파괴였음).
+반복 적용 수렴: fine² p50 11.5°·≤5° 21.8% (v1·v2는 반복 시 발산). GT-init 바닥 7.0° = 게이트 반경 내 특징 판별의 현재 한계 — 다음 사이클의 표적.</div>
+
+<h2><span class="no">4</span>결합 평가 — 새 대표 경로와 ICP의 지위 역전</h2>
+<table>
+<tr><th>경로</th><th class="c">≤30°</th><th class="c">≤5°</th><th class="c">≤1°</th><th class="c">p50</th><th class="c">병진</th><th class="c">비대칭 ≤30°</th></tr>
+<tr><td>top-1 (기준)</td><td class="c n">62.5%</td><td class="c n">11.8%</td><td class="c n">0.4%</td><td class="c n">17.4°</td><td class="c n">0.090D</td><td class="c n">21.5%</td></tr>
+<tr><td>top-1 + fine (경량 경로)</td><td class="c n">70.0%</td><td class="c n">19.2%</td><td class="c n">0.8%</td><td class="c n">11.8°</td><td class="c n">0.043D</td><td class="c n">27.3%</td></tr>
+<tr><td>다중가설 k=16 + ICP선택 (구 대표)</td><td class="c n">71.3%</td><td class="c n">16.7%</td><td class="c n">1.0%</td><td class="c n">13.1°</td><td class="c n">0.114D</td><td class="c n">35.2%</td></tr>
+<tr class="me"><td><b>→ + fine² (신 대표)</b></td><td class="c n"><b>72.7%</b></td><td class="c n"><b>21.7%</b></td><td class="c n">1.1%</td><td class="c n"><b>11.2°</b></td><td class="c n"><b>0.043D</b></td><td class="c n">36.7%</td></tr>
+<tr class="b"><td>→ + fine² + ICP('보험')</td><td class="c n">72.7%</td><td class="c n">19.1%</td><td class="c n">0.9%</td><td class="c n">12.2°</td><td class="c n">0.096D</td><td class="c n">37.9%</td></tr>
+</table>
+<div class="cap"><b>Table 4.</b> n=2880. 대표 수치 연혁: 43%(23) → 62.2%(23) → 66.5%(24) → 70.7%(25) → <b>72.7%(27)</b>.
+<b>ICP 후처리는 fine 이후 유해</b>(≤5° 21.7→19.1%·병진 2배 악화) — p2p 잔차의 정밀도 바닥이 fine보다 얕다.
+"네트워크가 1° 부근까지, ICP는 보험" 노선에서 <b>ICP 보험 항을 기각</b>하는 실측. 경량 경로(top-1+fine, 단일 정제)가 구 대표(71.3%)에 근접 — 엣지 예산용 대안.</div>
+
+<h2><span class="no">5</span>선택 실험 — fine 확신 기각, 선택 갭 정량화</h2>
+<table>
+<tr><th>선택 방식 (k=16 전 가설 정제 후)</th><th class="c">≤30°</th><th class="c">≤5°</th><th class="c">p50</th><th class="c">비대칭 ≤30°</th></tr>
+<tr><td>ICP 잔차 (기존)</td><td class="c n">72.6%</td><td class="c n">20.7%</td><td class="c n">11.6°</td><td class="c n">32.3%</td></tr>
+<tr class="b"><td>fine 매칭 확신도</td><td class="c n">69.0%</td><td class="c n">18.6%</td><td class="c n">12.3°</td><td class="c n">22.6%</td></tr>
+<tr><td>잔차 top-4 → 확신</td><td class="c n">72.6%</td><td class="c n">21.3%</td><td class="c n">11.3°</td><td class="c n">32.9%</td></tr>
+<tr class="g"><td><b>오라클 (정제 후 최적)</b></td><td class="c n"><b>83.8%</b></td><td class="c n"><b>48.2%</b></td><td class="c n"><b>5.3°</b></td><td class="c n"><b>44.5%</b></td></tr>
+</table>
+<div class="cap"><b>Table 5.</b> n=1440. fine 확신 선택 기각 — v3는 주어진 초기 포즈의 대칭 브랜치로 정합하게 정제하므로
+<b>틀린 브랜치에서도 확신이 높다</b>(정제에 좋은 성질이 선택엔 독). 학습 랭커(25)·경량 free-space(23)에 이어 선택 트릭 3연속 기각.
+남은 갭: ≤30° ~11%p·≤5° ~27%p — <b>물리 검증(실표면 free-space, 26 로드맵 #2)의 기대 가치가 가장 큰 지점</b>.</div>
+
+<h2><span class="no">6</span>결정·다음 단계</h2>
+<ul>
+<li><b>fine v3 = 정제 단계 정본</b>: 게이트+g*정합+CE전용 (커밋 <code>c31ea09</code>) · 대표 경로 = 다중가설 k=16 + ICP선택 + <b>fine²</b> (ICP 최종 폴리시 제거) · 평가 도구 <code>train/eval_fine_pipeline.py</code></li>
+<li><b>진행 중</b>: <code>finev3e</code> 연장(+30ep, C-11 사다리 — ce_f 1.44 하강 중) — 완주 후 Δ&lt;1%p면 학습 축 마감</li>
+<li><b>차기 1순위 후보</b>: ① fine2 캐스케이드(τ0.02D·게이트 조임·U(0–10°) — GT-init 바닥 7°→1°대 표적) ② 실표면 free-space 선택기(선택 갭 11%p 수확, uv/K 데이터 확보됨) — finev3e 결과 보고 순서 결정</li>
+<li><b>스케줄 부칙</b>: fine60 실측 1×60 ≈ 2×30 등속(+1.7%p/60ep vs +0.9%p/30ep) — 긴 단일 스케줄 이점 없음, 사다리 유지</li>
+<li>기각 기록: ICP 최종 폴리시(fine 이후) · fine 확신 선택 · (기존) 학습 랭커·경량 free-space — 재방문은 특징 변경 시 조건부</li>
+</ul>
+
+<p class="tiny">재현 — 학습: <code>--fine --compile --init-from ckpt_a1_cosine_finev2_b_s0.pt --ext-name finev3</code> ·
+결합 평가: <code>python3 train/eval_fine_pipeline.py --tag a1_cosine_finev3_b_s0 --k 16</code> ·
+선택 실험: <code>--select-exp</code> · 리포트: <code>reports/a1_cosine_finev3_b_s0/</code></p>
+
+</div>
+</body>
+</html>
