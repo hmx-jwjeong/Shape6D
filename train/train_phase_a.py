@@ -23,7 +23,7 @@ from shape6d.onboarding.templates import TPL_FX, TPL_RES               # noqa: E
 from train.encoders import build_encoder                               # noqa: E402
 from train.pem_mini import (                                           # noqa: E402
     FineMatcher, MiniMatcher, fps_torch, make_geo_maps, perturb_pose,
-    phase_a_loss, sample_point_features, sym_aware_rot_err_deg,
+    phase_a_loss, sample_point_features, select_g_star, sym_aware_rot_err_deg,
 )
 
 DATA = Path("/mnt/samsung2tb/datasets/megapose/phase_a")
@@ -256,8 +256,9 @@ def main():
         "obj_train": int(len(torch.unique(tr["oi"]))),
         "obj_val_unseen": int(len(torch.unique(va["oi"]))),
         "sparsify": "ML-X 격자 σ3mm · npt U[256,4096] · frame_correction 적용",
-        "fine": (f"v2 2blk linear-attn {a.fine_tok}pt τ0.05D · PE8밴드 · "
-                 f"초기=GT+U(5–30°/0.02–0.10D) · eval hard-solve"
+        "fine": (f"v3 2blk linear-attn {a.fine_tok}pt τ0.05D · PE8밴드 · "
+                 f"좌표게이트(λ학습,init30) · g*정합 초기=R_gt·g*+U(0–30°/0–0.10D) · "
+                 f"eval hard-solve"
                  if a.fine else None),
         "init_from": a.init_from,
     }, open(out / f"cfg_{tag}.json", "w"), indent=1, ensure_ascii=False)
@@ -315,8 +316,13 @@ def main():
                 sim = matcher(F_s.float(), P_s.float(), F_o.float(), P_o.float(),
                               bank.diam[oi])
                 if fine is not None:
-                    R0, t0_ = perturb_pose(R_gt, t_eff, bank.diam[oi],
-                                           rot_deg=(5.0, 30.0), trans_rel=(0.02, 0.10))
+                    # g*-정합 조건화: CE 라벨(R_eff=R_gt·g*)과 좌표 프라이어 일치.
+                    # v1/v2는 R_gt 기준 — g*≠I 85%에서 좌표가 라벨과 대칭회전만큼
+                    # 어긋나 헤드가 좌표를 무시하도록 학습됨 (finev2 진단).
+                    gs_f = select_g_star(P_sf.float(), val_sf.float(), R_gt, t_eff,
+                                         bank.G[oi], bank.gn[oi], P_of.float())
+                    R0, t0_ = perturb_pose(R_gt @ gs_f, t_eff, bank.diam[oi],
+                                           rot_deg=(0.0, 30.0), trans_rel=(0.0, 0.10))
                     sim_f = fine(F_sf.float(), P_sf.float(), F_of.float(),
                                  P_of.float(), R0, t0_, bank.diam[oi])
             loss, diag = phase_a_loss(sim.float(), P_s.float(), val_s, P_o.float(),

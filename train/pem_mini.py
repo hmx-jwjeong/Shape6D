@@ -435,7 +435,11 @@ class FineMatcher(nn.Module):
     모델계 정렬 후 좌표 결합 → 국소 대응만 학습. 출력 유사도 [B,Nf,Nf+1](+bg).
 
     v2: 조건화 좌표를 Fourier PE(8밴드)로 주입 — 좌표 프라이어를 유사도 공간에서
-    사용 가능하게 함 (v1은 생 3채널 concat, 국소화 실패로 회전 ~15° 플로어)."""
+    사용 가능하게 함 (v1은 생 3채널 concat, 국소화 실패로 회전 ~15° 플로어).
+
+    v3: 학습형 좌표 게이트 sim −= exp(log_lam)·(|Ps_m−P_o|/D)² — v2 실측:
+    PE만으론 대응 불변(≤0.05D 35.6%), eval 게이트 주입 λ300에서 GT-init
+    p50 14.7→6.2°. 게이트와 공동 학습해야 특징이 국소 판별에 특화됨."""
 
     def __init__(self, c_in: int = 256, h: int = 192, sim_dim: int = 256,
                  temp: float = 0.1, n_blocks: int = 2, pe_bands: int = 8):
@@ -449,6 +453,7 @@ class FineMatcher(nn.Module):
         self.out_s = nn.Linear(h, sim_dim)
         self.out_o = nn.Linear(h, sim_dim)
         self.bg = nn.Parameter(torch.zeros(1, 1, sim_dim))
+        self.log_lam = nn.Parameter(torch.tensor(3.4))   # 게이트 λ=exp(·)≈30
         self.temp = temp
 
     def forward(self, F_s, P_s, F_o, P_o, R0, t0, diam):
@@ -462,7 +467,11 @@ class FineMatcher(nn.Module):
         eo = torch.cat([self.out_o(xo).float(),
                         self.bg.expand(len(es), 1, -1).float()], 1)
         eo = F.normalize(eo, dim=-1)
-        return torch.einsum("bkc,bmc->bkm", es, eo) / self.temp
+        sim = torch.einsum("bkc,bmc->bkm", es, eo) / self.temp
+        with torch.no_grad():
+            d2 = (torch.cdist(Ps_m.float(), P_o.float()) / d) ** 2
+        return torch.cat([sim[..., :-1] - self.log_lam.exp() * d2,
+                          sim[..., -1:]], -1)
 
 
 @torch.no_grad()
