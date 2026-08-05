@@ -151,7 +151,8 @@ def evaluate(enc, matcher, bank, va, bs=96, cap=4000, fine=None, fine_tok=1024):
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 sim_f = fine(F_sf.float(), P_sf.float(), F_of.float(),
                              P_of.float(), R_pr, t_pr, bank.diam[oi])
-            R2, t2, _ = MiniMatcher.solve(sim_f.float(), P_sf.float(), P_of.float())
+            R2, t2, _ = MiniMatcher.solve(sim_f.float(), P_sf.float(), P_of.float(),
+                                          hard=True)
             ef = sym_aware_rot_err_deg(R2, R_gt, bank.G[oi], bank.gn[oi])
             rot_f.append(ef); five_f.append((ef <= 5).float())
     rot = torch.cat(rot); tr = torch.cat(tr); th = torch.cat(thirty)
@@ -229,7 +230,11 @@ def main():
         sd = torch.load(a.init_from, map_location=DEV)
         enc_raw.load_state_dict(sd["enc"]); matcher.load_state_dict(sd["matcher"])
         if fine is not None and "fine" in sd:
-            fine.load_state_dict(sd["fine"])
+            try:
+                fine.load_state_dict(sd["fine"])
+            except RuntimeError:
+                print(f"[{tag}] fine 헤드 구조 변경(v2 PE) — 재초기화, enc/matcher만 승계",
+                      flush=True)
         print(f"[{tag}] init from {a.init_from}", flush=True)
     npar = sum(p.numel() for p in enc_raw.parameters()) / 1e6
     npm = sum(p.numel() for p in matcher.parameters()) / 1e6
@@ -251,7 +256,8 @@ def main():
         "obj_train": int(len(torch.unique(tr["oi"]))),
         "obj_val_unseen": int(len(torch.unique(va["oi"]))),
         "sparsify": "ML-X 격자 σ3mm · npt U[256,4096] · frame_correction 적용",
-        "fine": (f"2blk linear-attn {a.fine_tok}pt τ0.05D · 초기=GT+노이즈(15°/0.05D)"
+        "fine": (f"v2 2blk linear-attn {a.fine_tok}pt τ0.05D · PE8밴드 · "
+                 f"초기=GT+U(5–30°/0.02–0.10D) · eval hard-solve"
                  if a.fine else None),
         "init_from": a.init_from,
     }, open(out / f"cfg_{tag}.json", "w"), indent=1, ensure_ascii=False)
@@ -309,7 +315,8 @@ def main():
                 sim = matcher(F_s.float(), P_s.float(), F_o.float(), P_o.float(),
                               bank.diam[oi])
                 if fine is not None:
-                    R0, t0_ = perturb_pose(R_gt, t_eff, bank.diam[oi])
+                    R0, t0_ = perturb_pose(R_gt, t_eff, bank.diam[oi],
+                                           rot_deg=(5.0, 30.0), trans_rel=(0.02, 0.10))
                     sim_f = fine(F_sf.float(), P_sf.float(), F_of.float(),
                                  P_of.float(), R0, t0_, bank.diam[oi])
             loss, diag = phase_a_loss(sim.float(), P_s.float(), val_s, P_o.float(),

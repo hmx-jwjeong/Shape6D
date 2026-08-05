@@ -283,9 +283,16 @@ class MiniMatcher(nn.Module):
         return sim                                                            # (B,196,197)
 
     @staticmethod
-    def solve(sim: torch.Tensor, P_s: torch.Tensor, P_o: torch.Tensor):
+    def solve(sim: torch.Tensor, P_s: torch.Tensor, P_o: torch.Tensor,
+              hard: bool = False):
         A = sim.softmax(-1)                          # fp32 softmax (03 §6.7)
         w = 1.0 - A[..., -1]
+        if hard:
+            # fine 전용: argmax 대응 + 확신 가중 — 소프트 기대의 원거리 스미어 회피
+            # (fine60 실측 GT-init ≤5° 9.5→17.0%·trans 0.071→0.043D)
+            mp, mi = A[..., :-1].max(-1)
+            P_hat = P_o.float().gather(1, mi.unsqueeze(-1).expand(-1, -1, 3))
+            return weighted_kabsch(P_s, P_hat, w * mp) + (A,)
         # 전경 조건부 분포로 재정규화 → P_hat은 P_o의 볼록결합(항상 유계).
         # (1−bg 나눗셈은 bg→1에서 폭주 — 파일럿 1차 붕괴 원인 ②)
         A_fg = A[..., :-1]
@@ -412,15 +419,31 @@ class _FineBlock(nn.Module):
         return x + self.ff(self.n3(x))
 
 
+def fourier_pe(x, n_bands: int = 8):
+    """[...,3] → [...,3+6L] NeRF식 sin/cos 임베딩 — 최고 주파수 주기 ≈ 2/2^(L-1).
+
+    v2 근거: 생 xyz Linear 임베딩은 코사인 유사도 공간에서 0.05D 스케일 분리 불가
+    (fine60 실측 — GT 초기화에도 top-1 오대응 65%·P_hat 오차 0.166D, 참 NN 0.02D).
+    """
+    freqs = (2.0 ** torch.arange(n_bands, device=x.device, dtype=x.dtype)) * torch.pi
+    ang = x.unsqueeze(-1) * freqs
+    return torch.cat([x, torch.sin(ang).flatten(-2), torch.cos(ang).flatten(-2)], -1)
+
+
 class FineMatcher(nn.Module):
     """포즈 조건화 fine 대응 (1024점) — coarse 초기 포즈(R0,t0)로 장면점을
-    모델계 정렬 후 좌표 결합 → 국소 대응만 학습. 출력 유사도 [B,Nf,Nf+1](+bg)."""
+    모델계 정렬 후 좌표 결합 → 국소 대응만 학습. 출력 유사도 [B,Nf,Nf+1](+bg).
+
+    v2: 조건화 좌표를 Fourier PE(8밴드)로 주입 — 좌표 프라이어를 유사도 공간에서
+    사용 가능하게 함 (v1은 생 3채널 concat, 국소화 실패로 회전 ~15° 플로어)."""
 
     def __init__(self, c_in: int = 256, h: int = 192, sim_dim: int = 256,
-                 temp: float = 0.1, n_blocks: int = 2):
+                 temp: float = 0.1, n_blocks: int = 2, pe_bands: int = 8):
         super().__init__()
-        self.in_s = nn.Linear(c_in + 3, h)
-        self.in_o = nn.Linear(c_in + 3, h)
+        self.pe_bands = pe_bands
+        pdim = 3 + 6 * pe_bands
+        self.in_s = nn.Linear(c_in + pdim, h)
+        self.in_o = nn.Linear(c_in + pdim, h)
         self.blk_s = nn.ModuleList([_FineBlock(h) for _ in range(n_blocks)])
         self.blk_o = nn.ModuleList([_FineBlock(h) for _ in range(n_blocks)])
         self.out_s = nn.Linear(h, sim_dim)
@@ -431,8 +454,8 @@ class FineMatcher(nn.Module):
     def forward(self, F_s, P_s, F_o, P_o, R0, t0, diam):
         d = diam.view(-1, 1, 1).clamp(min=1e-3)
         Ps_m = torch.einsum("bji,bkj->bki", R0, P_s - t0.unsqueeze(1))  # 모델계 정렬
-        xs = self.in_s(torch.cat([F_s, Ps_m / d], -1))
-        xo = self.in_o(torch.cat([F_o, P_o / d], -1))
+        xs = self.in_s(torch.cat([F_s, fourier_pe(Ps_m / d, self.pe_bands)], -1))
+        xo = self.in_o(torch.cat([F_o, fourier_pe(P_o / d, self.pe_bands)], -1))
         for bs_, bo_ in zip(self.blk_s, self.blk_o):
             xs, xo = bs_(xs, xo), bo_(xo, xs)
         es = F.normalize(self.out_s(xs).float(), dim=-1)
@@ -443,19 +466,29 @@ class FineMatcher(nn.Module):
 
 
 @torch.no_grad()
-def perturb_pose(R, t, diam, rot_deg: float = 15.0, trans_rel: float = 0.05,
+def perturb_pose(R, t, diam, rot_deg=15.0, trans_rel=0.05,
                  gen: torch.Generator | None = None):
-    """fine 학습용 초기 포즈 = GT + 노이즈 (rot σ15°·trans σ0.05D — 22 [3][4] 관례)."""
+    """fine 학습용 초기 포즈 = GT + 노이즈 (rot σ15°·trans σ0.05D — 22 [3][4] 관례).
+
+    v2: (lo, hi) 튜플이면 샘플별 σ ~ U(lo, hi) — 다중 가설 초기화(15~30° 유역)까지
+    커버하는 혼합 분포 (고정 σ15는 평가 초기 분포 꼬리 미학습)."""
     B = R.shape[0]
     dev = R.device
+
+    def _sig(v, scale):
+        if isinstance(v, (tuple, list)):
+            lo, hi = v
+            return (lo + (hi - lo) * torch.rand(B, 1, device=dev, generator=gen)) * scale
+        return v * scale
+
     ax = torch.randn(B, 3, device=dev, generator=gen)
     ax = ax / ax.norm(dim=-1, keepdim=True).clamp(min=1e-6)
-    ang = torch.randn(B, 1, device=dev, generator=gen) * (rot_deg * torch.pi / 180)
+    ang = torch.randn(B, 1, device=dev, generator=gen) * _sig(rot_deg, torch.pi / 180)
     K = torch.zeros(B, 3, 3, device=dev)
     K[:, 0, 1], K[:, 0, 2] = -ax[:, 2], ax[:, 1]
     K[:, 1, 0], K[:, 1, 2] = ax[:, 2], -ax[:, 0]
     K[:, 2, 0], K[:, 2, 1] = -ax[:, 1], ax[:, 0]
     s, c = torch.sin(ang).view(B, 1, 1), torch.cos(ang).view(B, 1, 1)
     dR = torch.eye(3, device=dev).expand(B, 3, 3) + s * K + (1 - c) * (K @ K)
-    dt = torch.randn(B, 3, device=dev, generator=gen) * (trans_rel * diam.view(B, 1))
+    dt = torch.randn(B, 3, device=dev, generator=gen) * (_sig(trans_rel, 1.0) * diam.view(B, 1))
     return dR @ R, t + dt
