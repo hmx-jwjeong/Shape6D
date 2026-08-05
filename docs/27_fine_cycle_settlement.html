@@ -61,7 +61,7 @@
 <h1>fine 매칭 사이클 정산 — 두 실패의 해부가 만든 정제 단계</h1>
 <p class="meta">Shape6D 보고서 #27 · 2026-08-06 · 선행: <a href="25_phase_b_cycle1.html">25(Phase B 1차)</a> ·
 <a href="26_status_and_remaining.html">26(현황·로드맵)</a> · 데이터: <code>phase_b</code> val 미학습 178종 ·
-수렴판: <code>a1_cosine_finev3_b_s0</code> (fine 30ep, 커밋 <code>ca149c6</code>→<code>c31ea09</code>)</p>
+수렴판: <code>a1_cosine_finev3_b_s0</code> (fine 30ep, 커밋 <code>ca149c6</code>→<code>3f22e70</code>)</p>
 
 <div class="abs"><b class="t">요약 — 실패 두 번을 해부해서 세 번째에 성공했다</b>
 "1° 직행" 노선의 본체인 fine 매칭(1024pt)은 v1(생좌표 concat)에서 정제 불능(GT 초기화로도 p50 14.7°),
@@ -149,7 +149,7 @@ fine 손실에서 soft solve 포즈 항 제거(<b>CE 전용</b> — eval이 hard
 
 <h2><span class="no">6</span>결정·다음 단계</h2>
 <ul>
-<li><b>fine v3 = 정제 단계 정본</b>: 게이트+g*정합+CE전용 (커밋 <code>c31ea09</code>) · 대표 경로 = 다중가설 k=16 + ICP선택 + <b>fine²</b> (ICP 최종 폴리시 제거) · 평가 도구 <code>train/eval_fine_pipeline.py</code></li>
+<li><b>fine v3 = 정제 단계 정본</b>: 게이트+g*정합+CE전용 (커밋 <code>c31ea09</code>·<code>3f22e70</code>) · 대표 경로 = 다중가설 k=16 + ICP선택 + <b>fine²</b> (ICP 최종 폴리시 제거) · 평가 도구 <code>train/eval_fine_pipeline.py</code></li>
 <li><b>진행 중</b>: <code>finev3e</code> 연장(+30ep, C-11 사다리 — ce_f 1.44 하강 중) — 완주 후 Δ&lt;1%p면 학습 축 마감</li>
 <li><b>차기 1순위 후보</b>: ① fine2 캐스케이드(τ0.02D·게이트 조임·U(0–10°) — GT-init 바닥 7°→1°대 표적) ② 실표면 free-space 선택기(선택 갭 11%p 수확, uv/K 데이터 확보됨) — finev3e 결과 보고 순서 결정</li>
 <li><b>스케줄 부칙</b>: fine60 실측 1×60 ≈ 2×30 등속(+1.7%p/60ep vs +0.9%p/30ep) — 긴 단일 스케줄 이점 없음, 사다리 유지</li>
