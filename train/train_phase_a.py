@@ -334,7 +334,7 @@ def main():
                 loss_f, diag_f = phase_a_loss(
                     sim_f.float(), P_sf.float(), val_sf, P_of.float(),
                     R_gt, t_eff, bank.G[oi], bank.gn[oi], bank.diam[oi],
-                    tau_rel=0.05)
+                    tau_rel=0.05, w_pose=0.0)
                 loss = loss + loss_f
                 diag["ce_f"] = diag_f["ce"]
                 diag["rot_f"] = diag_f["rot_deg"]

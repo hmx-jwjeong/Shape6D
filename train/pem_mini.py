@@ -349,10 +349,18 @@ def phase_a_loss(sim, P_s, valid_s, P_o, R_gt, t_gt, G, gn, diam,
                              torch.full_like(target, -100))               # 패딩 무시
     ce = F.cross_entropy(sim.reshape(B * K, -1), target.reshape(B * K),
                          ignore_index=-100)
-    R_pr, t_pr, A = MiniMatcher.solve(sim, P_s, P_o)
-    rot = torch.deg2rad(geodesic_deg(R_pr, R_eff)).mean()
-    trans = ((t_pr - t_gt).norm(dim=-1) / diam.clamp(min=1e-3)).mean()
-    loss = ce + w_pose * (rot + 2.0 * trans)
+    if w_pose > 0:
+        R_pr, t_pr, A = MiniMatcher.solve(sim, P_s, P_o)
+        rot = torch.deg2rad(geodesic_deg(R_pr, R_eff)).mean()
+        trans = ((t_pr - t_gt).norm(dim=-1) / diam.clamp(min=1e-3)).mean()
+        loss = ce + w_pose * (rot + 2.0 * trans)
+    else:
+        # fine(v3~): CE 전용 — 게이트 유사도의 soft solve는 퇴화 행에서 SVD
+        # backward NaN, eval도 hard solve라 soft 포즈 항은 목적 비정합.
+        A = sim.softmax(-1)
+        rot = torch.zeros((), device=sim.device)
+        trans = torch.zeros((), device=sim.device)
+        loss = ce
     with torch.no_grad():
         diag = dict(ce=float(ce), rot_deg=float(torch.rad2deg(rot)),
                     trans_rel=float(trans),
@@ -470,8 +478,10 @@ class FineMatcher(nn.Module):
         sim = torch.einsum("bkc,bmc->bkm", es, eo) / self.temp
         with torch.no_grad():
             d2 = (torch.cdist(Ps_m.float(), P_o.float()) / d) ** 2
-        return torch.cat([sim[..., :-1] - self.log_lam.exp() * d2,
-                          sim[..., -1:]], -1)
+        # 페널티 상한 30: 원거리 행 로짓 −수백 → soft solve 가중 0 붕괴 →
+        # SVD backward NaN (finev3 1차 발산 원인). λ 상한은 inf·0=NaN 방지.
+        pen = (self.log_lam.exp().clamp(max=1e4) * d2).clamp(max=30.0)
+        return torch.cat([sim[..., :-1] - pen, sim[..., -1:]], -1)
 
 
 @torch.no_grad()
