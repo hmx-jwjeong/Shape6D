@@ -206,10 +206,11 @@ def _scene_shard(args):
 
 
 def build_scenes(out: Path, order: dict[int, int], obj_ids: np.ndarray,
-                 shards: int, cap: int, workers: int = 8):
+                 shards: int, cap: int, workers: int = 8, offset: int = 0):
     t0 = time.time()
     with Pool(workers) as p:
-        parts = p.map(_scene_shard, [(s, order, cap) for s in range(shards)])
+        parts = p.map(_scene_shard,
+                      [(s, order, cap) for s in range(offset, offset + shards)])
     cat = {k: np.concatenate([q[k] for q in parts if len(q[k])]) for k in parts[0]}
     is_val = (obj_ids[cat["oi"]] % 5 == 0)
     for split, sel in (("train", ~is_val), ("val", is_val)):
@@ -228,11 +229,25 @@ if __name__ == "__main__":
                     help="콤마 구분 메시 루트 목록 (Phase B: +unpacked)")
     ap.add_argument("--shards", type=int, default=60)
     ap.add_argument("--cap", type=int, default=1200)
+    ap.add_argument("--shard-offset", type=int, default=0,
+                    help="시작 샤드 인덱스 — 청크 빌드 (전량 1,040 중 구간 지정)")
+    ap.add_argument("--scenes-only", action="store_true",
+                    help="물체 뱅크 재구축 생략 — --objs-prefix 뱅크의 order 재사용")
+    ap.add_argument("--objs-prefix", default=None,
+                    help="scenes-only 시 뱅크 접두 (기본: --prefix). 분할은 obj_id%%5라 "
+                         "샤드 구간과 무관하게 train/val 물체 분리 유지")
+    ap.add_argument("--workers", type=int, default=8)
     a = ap.parse_args()
     MESH_ROOTS[:] = a.mesh_roots.split(",")
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    _load_corr(out)
-    order = build_objects(out)
-    obj_ids = np.load(out / f"{a.prefix}_objs.npz")["obj_id"]
-    build_scenes(out, order, obj_ids, a.shards, a.cap)
+    if a.scenes_only:
+        op = a.objs_prefix or a.prefix
+        obj_ids = np.load(out / f"{op}_objs.npz")["obj_id"]
+        order = {int(o): i for i, o in enumerate(obj_ids)}
+    else:
+        _load_corr(out)
+        order = build_objects(out)
+        obj_ids = np.load(out / f"{a.prefix}_objs.npz")["obj_id"]
+    build_scenes(out, order, obj_ids, a.shards, a.cap,
+                 workers=a.workers, offset=a.shard_offset)

@@ -206,6 +206,9 @@ def main():
                     help="이어학습 태그 접미사 (2차 연장은 ext2 등으로 충돌 방지)")
     ap.add_argument("--data-prefix", default="phase_a",
                     help="데이터 파일 접두 (phase_a2 = v2 보정 재구축본)")
+    ap.add_argument("--data-chunks", default=None,
+                    help="콤마 구분 train 청크 접두 목록 — 에폭마다 교대 로딩(RAM 상수). "
+                         "val은 항상 --data-prefix 것 사용. 예: phase_b,phase_b_c01,…")
     ap.add_argument("--gstar", choices=["view", "master"], default="view",
                     help="g* 기준점 — R1 실측: master 18.8%% vs view 27.0%% (기각), 기본 view")
     ap.add_argument("--views", type=int, default=2, help="학습 CAD 뷰 수 (R2: 6)")
@@ -238,9 +241,11 @@ def main():
     tag = "_".join(parts) + f"_s{a.seed}"
 
     bank = ObjBank(a.data_prefix)
-    ld = lambda sp: {k: torch.from_numpy(v) for k, v in
-                     np.load(DATA / f"{a.data_prefix}_{sp}.npz").items()}
-    tr, va = ld("train"), ld("val")
+    ld = lambda sp, pfx=None: {k: torch.from_numpy(v) for k, v in
+                               np.load(DATA / f"{pfx or a.data_prefix}_{sp}.npz").items()}
+    chunks = a.data_chunks.split(",") if a.data_chunks else None
+    cur_chunk = chunks[0] if chunks else a.data_prefix
+    tr, va = ld("train", cur_chunk), ld("val")
     enc = build_encoder(a.enc).to(DEV)
     if a.compile:
         enc = enc.to(memory_format=torch.channels_last)
@@ -274,7 +279,7 @@ def main():
     # 대시보드용 설정 덤프 — 학습에 실제 사용되는 파라미터 전량
     json.dump({
         "encoder": a.enc, "epochs": a.epochs, "batch_size": a.bs, "seed": a.seed,
-        "data_prefix": a.data_prefix,
+        "data_prefix": a.data_prefix, "data_chunks": a.data_chunks,
         "lr": lr, "optimizer": ("Muon(0.02·√s)+AdamW" if a.opt == "muon" else "AdamW") + "(wd=0.05)",
         "scheduler": ("const" if a.opt == "muon" else a.sched), "grad_clip": 5.0,
         "precision": "bf16 autocast + fp32(softmax/CE/SVD)",
@@ -331,9 +336,14 @@ def main():
     hist.append(dict(ep=0, **m0))
     t0 = time.time()
     for ep in range(a.epochs):
+        if chunks and chunks[ep % len(chunks)] != cur_chunk:
+            cur_chunk = chunks[ep % len(chunks)]
+            tr = ld("train", cur_chunk)
+            print(f"[{tag}] 청크 교대 → {cur_chunk} ({len(tr['oi'])})", flush=True)
+        ep_steps = min(steps, len(tr["oi"]) // a.bs)
         perm = torch.randperm(len(tr["oi"]))
         agg = {}
-        for s in range(steps):
+        for s in range(ep_steps):
             i = perm[s * a.bs:(s + 1) * a.bs]
             pts = tr["pts"][i].to(DEV, non_blocking=True).float()
             npt = tr["npt"][i].to(DEV)
@@ -411,8 +421,8 @@ def main():
         m = evaluate(enc, matcher, bank, va, fine=fine, fine_tok=a.fine_tok,
                      fine2=fine2)
         hist.append(dict(ep=ep + 1, min=round((time.time() - t0) / 60, 1), **m,
-                         **{k: v / steps for k, v in agg.items()}))
-        ok = max(1, steps - int(agg.get("skip", 0)))
+                         **{k: v / ep_steps for k, v in agg.items()}))
+        ok = max(1, ep_steps - int(agg.get("skip", 0)))
         print(f"[{tag}] ep{ep+1}/{a.epochs} 미학습 rot_p50={m['rot_p50']:.1f}° "
               f"≤30°={m['le30']:.3f} trans={m['trans_rel_p50']:.3f}D | "
               f"train ce={agg.get('ce', float('nan'))/ok:.2f} "
