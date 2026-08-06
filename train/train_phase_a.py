@@ -116,12 +116,16 @@ def encode_cad(enc, bank: ObjBank, oi, rng, n_views: int = 2, fine_tok: int | No
 
 
 @torch.no_grad()
-def evaluate(enc, matcher, bank, va, bs=96, cap=4000, fine=None, fine_tok=1024):
+def evaluate(enc, matcher, bank, va, bs=96, cap=4000, fine=None, fine_tok=1024,
+             fine2=None):
     enc.eval(); matcher.eval()
     if fine is not None:
         fine.eval()
+    if fine2 is not None:
+        fine2.eval()
     n = min(len(va["oi"]), cap)
     rot, tr, thirty, rot_f, five_f = [], [], [], [], []
+    rot_f2, five_f2, one_f2 = [], [], []
     g = torch.Generator(device=DEV); g.manual_seed(0)
     for s in range(0, n, bs):
         pts = va["pts"][s:s + bs].to(DEV).float()
@@ -155,10 +159,22 @@ def evaluate(enc, matcher, bank, va, bs=96, cap=4000, fine=None, fine_tok=1024):
                                           hard=True)
             ef = sym_aware_rot_err_deg(R2, R_gt, bank.G[oi], bank.gn[oi])
             rot_f.append(ef); five_f.append((ef <= 5).float())
+            if fine2 is not None:
+                with torch.autocast("cuda", dtype=torch.bfloat16):
+                    sim_f2 = fine2(F_sf.float(), P_sf.float(), F_of.float(),
+                                   P_of.float(), R2, t2, bank.diam[oi])
+                R3, t3, _ = MiniMatcher.solve(sim_f2.float(), P_sf.float(),
+                                              P_of.float(), hard=True)
+                ef2 = sym_aware_rot_err_deg(R3, R_gt, bank.G[oi], bank.gn[oi])
+                rot_f2.append(ef2)
+                five_f2.append((ef2 <= 5).float())
+                one_f2.append((ef2 <= 1).float())
     rot = torch.cat(rot); tr = torch.cat(tr); th = torch.cat(thirty)
     enc.train(); matcher.train()
     if fine is not None:
         fine.train()
+    if fine2 is not None:
+        fine2.train()
     m = dict(rot_p50=float(rot.median()), rot_mean=float(rot.mean()),
              le30=float(th.mean()), trans_rel_p50=float(tr.median()), n=int(n))
     if rot_f:
@@ -166,6 +182,11 @@ def evaluate(enc, matcher, bank, va, bs=96, cap=4000, fine=None, fine_tok=1024):
         m.update(rot_p50_fine=float(rf.median()),
                  le30_fine=float((rf <= 30).float().mean()),
                  le5_fine=float(torch.cat(five_f).mean()))
+    if rot_f2:
+        rf2 = torch.cat(rot_f2)
+        m.update(rot_p50_fine2=float(rf2.median()),
+                 le5_fine2=float(torch.cat(five_f2).mean()),
+                 le1_fine2=float(torch.cat(one_f2).mean()))
     return m
 
 
@@ -192,6 +213,8 @@ def main():
                     help="인코더 torch.compile+channels_last (실측 1.58× — 수치 비트 비교 불가 주의)")
     ap.add_argument("--fine", action="store_true", help="fine 매칭 단계(1024pt) 결합 학습")
     ap.add_argument("--fine-tok", type=int, default=1024)
+    ap.add_argument("--fine2", action="store_true",
+                    help="fine2 캐스케이드(τ0.02D·U(0–15°)) — --fine 필요, 토큰 공유")
     ap.add_argument("--suffix", default="", help="태그 접미사 (예: gm — 코드 변형 런 구분)")
     ap.add_argument("--no-dash", action="store_true", help="대시보드 자동 기동 끄기")
     a = ap.parse_args()
@@ -224,7 +247,10 @@ def main():
         enc = torch.compile(enc)
         print(f"[compile] 인코더 컴파일 활성 (channels_last)", flush=True)
     matcher = MiniMatcher().to(DEV)
+    if a.fine2 and not a.fine:
+        ap.error("--fine2는 --fine 필요")
     fine = FineMatcher().to(DEV) if a.fine else None
+    fine2 = FineMatcher().to(DEV) if a.fine2 else None
     enc_raw = getattr(enc, "_orig_mod", enc)      # compile 래핑 시 원본
     if a.init_from:
         sd = torch.load(a.init_from, map_location=DEV)
@@ -233,8 +259,13 @@ def main():
             try:
                 fine.load_state_dict(sd["fine"])
             except RuntimeError:
-                print(f"[{tag}] fine 헤드 구조 변경(v2 PE) — 재초기화, enc/matcher만 승계",
+                print(f"[{tag}] fine 헤드 구조 변경 — 재초기화, enc/matcher만 승계",
                       flush=True)
+        if fine2 is not None and "fine2" in sd:
+            try:
+                fine2.load_state_dict(sd["fine2"])
+            except RuntimeError:
+                print(f"[{tag}] fine2 헤드 구조 변경 — 재초기화", flush=True)
         print(f"[{tag}] init from {a.init_from}", flush=True)
     npar = sum(p.numel() for p in enc_raw.parameters()) / 1e6
     npm = sum(p.numel() for p in matcher.parameters()) / 1e6
@@ -260,6 +291,9 @@ def main():
                  f"좌표게이트(λ학습,init30) · g*정합 초기=R_gt·g*+U(0–30°/0–0.10D) · "
                  f"eval hard-solve"
                  if a.fine else None),
+        "fine2": ("캐스케이드 2단 τ0.02D · g*정합 초기=U(0–15°/0–0.05D) · "
+                  "토큰 공유 · eval 체인 coarse→fine→fine2"
+                  if a.fine2 else None),
         "init_from": a.init_from,
     }, open(out / f"cfg_{tag}.json", "w"), indent=1, ensure_ascii=False)
 
@@ -267,6 +301,8 @@ def main():
     net = nn.ModuleDict({"enc": enc, "matcher": matcher})
     if fine is not None:
         net["fine"] = fine
+    if fine2 is not None:
+        net["fine2"] = fine2
     steps = len(tr["oi"]) // a.bs
     if a.opt == "muon":
         from train.muon import HybridMuon
@@ -288,7 +324,8 @@ def main():
     g = torch.Generator(device=DEV); g.manual_seed(a.seed)
 
     hist = []
-    m0 = evaluate(enc, matcher, bank, va, fine=fine, fine_tok=a.fine_tok)
+    m0 = evaluate(enc, matcher, bank, va, fine=fine, fine_tok=a.fine_tok,
+                  fine2=fine2)
     print(f"[{tag}] ep0(초기) rot_p50={m0['rot_p50']:.1f}° ≤30°={m0['le30']:.3f}",
           flush=True)
     hist.append(dict(ep=0, **m0))
@@ -325,6 +362,12 @@ def main():
                                            rot_deg=(0.0, 30.0), trans_rel=(0.0, 0.10))
                     sim_f = fine(F_sf.float(), P_sf.float(), F_of.float(),
                                  P_of.float(), R0, t0_, bank.diam[oi])
+                    if fine2 is not None:
+                        R02, t02 = perturb_pose(R_gt @ gs_f, t_eff, bank.diam[oi],
+                                                rot_deg=(0.0, 15.0),
+                                                trans_rel=(0.0, 0.05))
+                        sim_f2 = fine2(F_sf.float(), P_sf.float(), F_of.float(),
+                                       P_of.float(), R02, t02, bank.diam[oi])
             loss, diag = phase_a_loss(sim.float(), P_s.float(), val_s, P_o.float(),
                                       R_gt, t_eff, bank.G[oi], bank.gn[oi],
                                       bank.diam[oi],
@@ -338,6 +381,13 @@ def main():
                 loss = loss + loss_f
                 diag["ce_f"] = diag_f["ce"]
                 diag["rot_f"] = diag_f["rot_deg"]
+                if fine2 is not None:
+                    loss_f2, diag_f2 = phase_a_loss(
+                        sim_f2.float(), P_sf.float(), val_sf, P_of.float(),
+                        R_gt, t_eff, bank.G[oi], bank.gn[oi], bank.diam[oi],
+                        tau_rel=0.02, w_pose=0.0)
+                    loss = loss + loss_f2
+                    diag["ce_f2"] = diag_f2["ce"]
             if not torch.isfinite(loss):
                 agg["skip"] = agg.get("skip", 0.0) + 1.0
                 agg["_cskip"] = agg.get("_cskip", 0) + 1
@@ -358,7 +408,8 @@ def main():
                 sched.step()
             for k, v in diag.items():
                 agg[k] = agg.get(k, 0.0) + v
-        m = evaluate(enc, matcher, bank, va, fine=fine, fine_tok=a.fine_tok)
+        m = evaluate(enc, matcher, bank, va, fine=fine, fine_tok=a.fine_tok,
+                     fine2=fine2)
         hist.append(dict(ep=ep + 1, min=round((time.time() - t0) / 60, 1), **m,
                          **{k: v / steps for k, v in agg.items()}))
         ok = max(1, steps - int(agg.get("skip", 0)))
@@ -372,11 +423,17 @@ def main():
               + (f"| fine p50={m['rot_p50_fine']:.1f}° ≤5°={m['le5_fine']:.3f} "
                  f"ce_f={agg.get('ce_f', float('nan'))/ok:.2f} "
                  if 'rot_p50_fine' in m else "")
+              + (f"| f2 p50={m['rot_p50_fine2']:.1f}° ≤5°={m['le5_fine2']:.3f} "
+                 f"≤1°={m['le1_fine2']:.3f} "
+                 f"ce_f2={agg.get('ce_f2', float('nan'))/ok:.2f} "
+                 if 'rot_p50_fine2' in m else "")
               + f"({(time.time()-t0)/60:.0f}m)", flush=True)
         json.dump(hist, open(out / f"hist_{tag}.json", "w"), indent=1)
         ck = dict(enc=enc_raw.state_dict(), matcher=matcher.state_dict())
         if fine is not None:
             ck["fine"] = fine.state_dict()
+        if fine2 is not None:
+            ck["fine2"] = fine2.state_dict()
         torch.save(ck, out / f"ckpt_{tag}.pt")
     print(f"[{tag}] 완료 {(time.time()-t0)/60:.1f}분", flush=True)
     # 결과 리포트 자동 생성 (규약 2026-07-31) — 실패해도 학습 결과는 보존
