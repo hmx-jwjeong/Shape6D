@@ -29,7 +29,12 @@ SAM-6D의 2단 포인트 매칭 구조를 승계하되, 특징을 RGB 주도 →
 | [docs/18_module_networks_and_pretraining_plan.html](docs/18_module_networks_and_pretraining_plan.html) | **슬롯별 네트워크·사전학습 결정** — 13개 슬롯 조달표, 학습 5슬롯, 데이터셋 인벤토리·라이선스 매트릭스, Phase별 데이터 흐름 (UAM 비사용) |
 | [docs/19_license_assessment.html](docs/19_license_assessment.html) | **라이선스 실사** — 18 조달안 상업 판정. 빨강 5건 교체(FB가중치 NC→timm Apache, SAM-6D·GeDi 무라이선스→클린룸·자체학습, CroCo·EdgeSAM NC 제외), 교체 후 기본 경로 전부 초록 |
 | [docs/21_phase_a_retry_and_optimization.html](docs/21_phase_a_retry_and_optimization.html) | **Phase A 재시도 보고** — 5회 안정화 이력(MegaPose 스케일 발견 포함), 첫 제로샷 신호(≤30° 10→25.9%), 배치/Muon 최적화 체인, 0.1°/1mm 타당성 [D-10] |
+| [docs/07_loaded_wrapped_pallet_survey.html](docs/07_loaded_wrapped_pallet_survey.html) | 적재·랩핑 팔레트 인식 방법 서베이 (딥리서치, 검증 24건) + 하부 밴드 모드 설계 시사점 |
+| [docs/08_mr6d_eval_report.html](docs/08_mr6d_eval_report.html) | MR6D 실측 유로팔레트 평가 (150프레임 — 이전성 확인, 적재 장면 붕괴 정량화) |
+| [docs/09_industrial_robustness_plan.html](docs/09_industrial_robustness_plan.html) | 산업 강인화 개선 계획 — 34제안 적대 검증 종합, 4단계(정식 채택·밴드 모드·레이턴시·데이터) 로드맵 |
 | docs/design_archive/ | 영역별 설계 원문 5건 + 교차 검증 리포트 2건 |
+
+※ 번호 07–09는 두 작업 라인(학습 라인 / 팔레트 실측 라인)에서 중복 사용됨 — 파일명이 달라 충돌은 없으나 재번호 논의 필요.
 
 ## 확정 전제 (2026-07-18)
 
