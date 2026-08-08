@@ -309,6 +309,15 @@ def main():
     if fine2 is not None:
         net["fine2"] = fine2
     steps = len(tr["oi"]) // a.bs
+    if chunks:
+        # 청크 교대 시 스케줄 총량 = 청크별 실제 스텝 합 (dfull 1차 사고:
+        # 첫 청크 기준 총량 → 실행 42%에서 감쇠 미완 종료, 폴리시 소실)
+        _sz = [int(np.load(DATA / f"{c}_train.npz")["oi"].shape[0]) for c in chunks]
+        total_steps = sum(_sz[e % len(chunks)] // a.bs for e in range(a.epochs))
+        print(f"[{tag}] 청크 {len(chunks)}개 · 스케줄 총 {total_steps} 스텝 "
+              f"(고유 {sum(_sz)})", flush=True)
+    else:
+        total_steps = a.epochs * steps
     if a.opt == "muon":
         from train.muon import HybridMuon
         # lr_muon 0.004: 표준 0.02는 소형망(수백 채널)에서 스텝 폭주 실측 (skip 37% → ep2 전멸)
@@ -319,13 +328,13 @@ def main():
         opt = torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=0.05)
         if a.sched == "onecycle":
             sched = torch.optim.lr_scheduler.OneCycleLR(
-                opt, lr, total_steps=a.epochs * steps, pct_start=0.15)
+                opt, lr, total_steps=total_steps, pct_start=0.15)
         else:                                          # cosine + 3% warmup
-            warm = max(1, int(0.03 * a.epochs * steps))
+            warm = max(1, int(0.03 * total_steps))
             sched = torch.optim.lr_scheduler.SequentialLR(
                 opt, [torch.optim.lr_scheduler.LinearLR(opt, 0.05, 1.0, warm),
                       torch.optim.lr_scheduler.CosineAnnealingLR(
-                          opt, a.epochs * steps - warm, eta_min=lr * 0.05)], [warm])
+                          opt, total_steps - warm, eta_min=lr * 0.05)], [warm])
     g = torch.Generator(device=DEV); g.manual_seed(a.seed)
 
     hist = []
@@ -340,7 +349,7 @@ def main():
             cur_chunk = chunks[ep % len(chunks)]
             tr = ld("train", cur_chunk)
             print(f"[{tag}] 청크 교대 → {cur_chunk} ({len(tr['oi'])})", flush=True)
-        ep_steps = min(steps, len(tr["oi"]) // a.bs)
+        ep_steps = len(tr["oi"]) // a.bs
         perm = torch.randperm(len(tr["oi"]))
         agg = {}
         for s in range(ep_steps):
