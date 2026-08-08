@@ -74,7 +74,7 @@ def gen_hypotheses(sim, P_s, P_o, val_s, T: int = 256, k: int = 8,
 
 @torch.no_grad()
 def icp_select(R_h, t_h, P_s, val_s, master, diam, iters: int = 15,
-               trim: float = 0.7, chunk: int = 512):
+               trim: float = 0.7, chunk: int = 512, return_all: bool = False):
     """가설별 trimmed point-to-point ICP(장면→마스터) 후 잔차 최소 가설 선택.
 
     반환: R_sel [B,3,3], t_sel [B,3], res_sel [B] (÷직경 정규화 trimmed RMS).
@@ -121,7 +121,75 @@ def icp_select(R_h, t_h, P_s, val_s, master, diam, iters: int = 15,
         Rf[e], tf[e] = Rc, tc
 
     res = res.view(B, k)
+    if return_all:
+        return Rf.view(B, k, 3, 3), tf.view(B, k, 3), res
     best = res.argmin(-1)
     bi = torch.arange(B, device=dev)
     return (Rf.view(B, k, 3, 3)[bi, best], tf.view(B, k, 3)[bi, best],
             res[bi, best])
+
+
+@torch.no_grad()
+def freespace_viol(R_h, t_h, P_s, val_s, master, diam,
+                   grid: int = 32, margin_rel: float = 0.02, chunk: int = 256,
+                   P_full=None, val_full=None):
+    """가설별 free-space 위반율 [B,k] — 카메라계 각도 격자 z-버퍼 비교.
+
+    위반: 같은 시선 bin에서 모델 표면이 관측점보다 margin 이상 앞(작은 z) —
+    "센서가 모델을 뚫고 뒤를 봤다"는 물리 모순. 플립 가설은 포켓/오목부가
+    관측 앞으로 나와 위반율이 높다 (S4 free-space의 합성 경량판, D-11 후반부).
+    """
+    B, k = R_h.shape[:2]
+    dev = R_h.device
+    M = master[:, ::4]                                    # 512점이면 충분 (coarse)
+    n_m = M.shape[1]
+    viol = torch.zeros(B * k, device=dev)
+    Rf = R_h.reshape(B * k, 3, 3)
+    tf = t_h.reshape(B * k, 3)
+    Psc = P_s if P_full is None else P_full        # 장면 z-버퍼는 전체 점군으로
+    Vsc = val_s if val_full is None else val_full
+    Pi = Psc.unsqueeze(1).expand(B, k, -1, -1).reshape(B * k, -1, 3)
+    Vi = Vsc.unsqueeze(1).expand(B, k, -1).reshape(B * k, -1).bool()
+    Mi = M.unsqueeze(1).expand(B, k, -1, -1).reshape(B * k, n_m, 3)
+    Di = diam.unsqueeze(1).expand(B, k).reshape(B * k)
+    for s in range(0, B * k, chunk):
+        e = slice(s, min(s + chunk, B * k))
+        P, V = Pi[e], Vi[e]
+        mc = torch.einsum("nij,nkj->nki", Rf[e], Mi[e]) + tf[e].unsqueeze(1)
+        zs = P[..., 2].clamp(min=1e-6)
+        zm = mc[..., 2].clamp(min=1e-6)
+        # 장면 각도 bbox 기준 공용 격자
+        axs, ays = P[..., 0] / zs, P[..., 1] / zs
+        axm_, aym_ = mc[..., 0] / zm, mc[..., 1] / zm
+        big = torch.finfo(axs.dtype).max
+        lo_x = torch.where(V, axs, torch.full_like(axs, big)).amin(1, keepdim=True)
+        hi_x = torch.where(V, axs, torch.full_like(axs, -big)).amax(1, keepdim=True)
+        lo_y = torch.where(V, ays, torch.full_like(ays, big)).amin(1, keepdim=True)
+        hi_y = torch.where(V, ays, torch.full_like(ays, -big)).amax(1, keepdim=True)
+        sx = (hi_x - lo_x).clamp(min=1e-4); sy = (hi_y - lo_y).clamp(min=1e-4)
+        n = e.stop - e.start
+        G2 = grid * grid
+
+        def zbuf(ax, ay, z, ok):
+            u = ((ax - lo_x) / sx * (grid - 1)).round().long().clamp(0, grid - 1)
+            v = ((ay - lo_y) / sy * (grid - 1)).round().long().clamp(0, grid - 1)
+            lin = v * grid + u
+            buf = torch.full((n, G2), 1e4, device=dev, dtype=z.dtype)
+            zz = torch.where(ok, z, torch.full_like(z, 1e4))
+            buf.scatter_reduce_(1, lin, zz, "amin", include_self=True)
+            return buf
+
+        bs_ = zbuf(axs, ays, zs, V)
+        in_g = ((axm_ >= lo_x) & (axm_ <= hi_x) & (aym_ >= lo_y) & (aym_ <= hi_y))
+        # 모델 점은 3×3 풋프린트로 스플랫 (희소점 단일 bin 노이즈 완화)
+        bm = torch.full_like(bs_, 1e4)
+        dx = sx / (grid - 1); dy = sy / (grid - 1)
+        for ox in (-1.0, 0.0, 1.0):
+            for oy in (-1.0, 0.0, 1.0):
+                bm = torch.minimum(bm, zbuf(axm_ + ox * dx, aym_ + oy * dy,
+                                            zm, in_g))
+        both = (bs_ < 1e4 - 1) & (bm < 1e4 - 1)
+        margin = (margin_rel * Di[e]).view(-1, 1)
+        v_ = (bm < bs_ - margin) & both
+        viol[e] = v_.sum(-1).float() / both.sum(-1).clamp(min=1).float()
+    return viol.view(B, k)

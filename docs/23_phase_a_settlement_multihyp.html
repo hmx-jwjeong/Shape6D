@@ -91,6 +91,7 @@ C-11 규칙에 따라 Phase A 재학습 큐를 정산한다. <b>R1(g* 마스터 
 <a href="#s4">4. 다중 가설 오라클 — 핵심 발견</a>
 <a href="#s5">5. S1 v2 A/B — 마스크 ROI 1차 판정</a>
 <a href="#s6">6. 결정·다음 단계</a>
+<a href="#s7">7. 후기 (08-02) — 병행 트랙 결과</a>
 </div>
 
 <h2 id="s1"><span class="no">1</span>정산 표 — 전체 런 최종 비교 (미학습 34종, sym-aware ≤30°)</h2>
@@ -171,6 +172,15 @@ FoundationPose 504 — 22 §4)에 비해 우리만 1개를 추출해 왔다. 경
 <li><b>학습 측 후속 처방</b>(법의학 근거): 비대칭 물체 플립 판별 강화 — 대칭 브랜치 간 마진 손실 후보. 다중 가설 통합 후 잔여 결손으로 재평가</li>
 <li><b>평가 정의 갱신</b>: 리포트 시스템에 any-of-k 지표 추가(G-A 게이트의 시스템 정합화) · UAM 다중 인스턴스 평가 재정의</li>
 </ul>
+
+<h2 id="s7"><span class="no">7</span>후기 (08-02) — 병행 트랙 결과 반영</h2>
+<table>
+<tr><th style="width:22%">트랙</th><th>결과</th></tr>
+<tr class="g"><td>a1 시드 3종 (C-7)</td><td>26.0 / 27.0 / 27.7% — <b>평균 26.9 ± 0.7%p</b>. R2(24.8%)는 밴드 밖(기각 강화), a2·a0는 밴드 대비 −6%p 이상(인코더 순위 견고)</td></tr>
+<tr class="g"><td>D-11 전수 (n=1440)</td><td>top-1 44.2% → <b>k=8+ICP 선택 59.1%</b>(+52.5ms) → <b>k=16 62.2%</b>(+89.8ms), p50 35→16°. 비대칭 플립은 잔차 선택 미회수 — 잔여분은 S4 free-space 배선</td></tr>
+<tr class="y"><td>fps 벡터화 재벤치 (유휴)</td><td>CUDA graph 비트 동일 · bs48 103→97ms(+6%)뿐, 처리량 여전히 평탄 470~500/s → <b>21의 "Python 스텝 오버헤드" 진단 정정: 병목은 인코더 GPU 연산</b>. Phase B 1M샘플 ≈ 35분/ep로 수용 가능 — Muon 보류 유지(스텝 비용 원인이 fps가 아니었음)</td></tr>
+<tr class="g"><td>GSO 확보</td><td><b>865/865 완주, 실패 0</b> — CC-BY 4.0 전수 확인, 총 6.7GB, build 규약 호환. Phase B 물체 축(1,033종) 준비 완료</td></tr>
+</table>
 
 <p class="tiny">재현 경로 — 정산 수치: <code>reports/*/metrics.json</code> · 오라클: <code>python3 train/multihyp_oracle.py --tag a1_cosine_ext2_s0</code> ·
 S1 A/B: <code>eval/external_test/out_s1v2_ab/uam_results.json</code> · 법의학 절차는 본 문서 §3(스크립트는 make_run_report의 run_eval 재사용 인라인).</p>

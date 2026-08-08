@@ -69,13 +69,15 @@ def iter_samples(shard_idx: int, visib_min: float = 0.5, npt_range=(300, 12000),
                     val = not val
                 mask = arr.reshape(rle['size'], order='F')
                 sel = mask[v, u]
-                obj = pts[sel]
-                if len(obj) < 100:
+                idx = np.nonzero(sel)[0]
+                if len(idx) < 100:
                     continue
                 n_tgt = int(np.exp(rng.uniform(*np.log(npt_range))))
-                if len(obj) > n_tgt:
-                    obj = obj[rng.choice(len(obj), n_tgt, replace=False)]
-                yield dict(pts=obj,
+                if len(idx) > n_tgt:
+                    idx = rng.choice(idx, n_tgt, replace=False)
+                yield dict(pts=pts[idx],
+                           uv=np.stack([u[idx], v[idx]], 1).astype(np.int16),
+                           K=np.array([K.fx, K.fy, K.cx, K.cy], np.float32),
                            R=np.array(g['cam_R_m2c']).reshape(3, 3),
                            t=np.array(g['cam_t_m2c']) / 1000.0,
                            obj_id=g['obj_id'], key=key, n_raw=int(sel.sum()))

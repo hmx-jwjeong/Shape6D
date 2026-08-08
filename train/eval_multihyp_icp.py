@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import time
 from pathlib import Path
@@ -18,7 +19,7 @@ import torch
 sys.path.insert(0, str(Path(__file__).parents[1]))
 import train.train_phase_a as T                                        # noqa: E402
 from train.encoders import build_encoder                               # noqa: E402
-from train.multihyp import gen_hypotheses, icp_select                  # noqa: E402
+from train.multihyp import gen_hypotheses, icp_select, freespace_viol  # noqa: E402
 from train.pem_mini import MiniMatcher, sym_aware_rot_err_deg          # noqa: E402
 
 
@@ -37,12 +38,17 @@ def main():
     enc.load_state_dict(ck["enc"]); enc.eval()
     mat = MiniMatcher().to(T.DEV)
     mat.load_state_dict(ck["matcher"]); mat.eval()
-    bank = T.ObjBank()
-    z = np.load(T.DATA / "phase_a_val.npz")
+    _cfgf = T.DATA / "runs" / f"cfg_{a.tag}.json"
+    _pref = (json.load(open(_cfgf)).get("data_prefix", "phase_a")
+             if _cfgf.exists() else "phase_a")
+    bank = T.ObjBank(_pref)
+    z = np.load(T.DATA / f"{_pref}_val.npz")
     va = {k: torch.from_numpy(z[k]) for k in z.files}
     g = torch.Generator(device=T.DEV); g.manual_seed(0)
 
-    E1, E1i, EK, GN, ms = [], [], [], [], []
+    LAMS = (0.0, 0.3, 1.0, 3.0)
+    E1, E1i, GN, ms = [], [], [], []
+    EK = {lam: [] for lam in LAMS}
     bs = 48
     for s in range(0, min(a.n, len(va["oi"])), bs):
         pts = va["pts"][s:s + bs].to(T.DEV).float()
@@ -66,18 +72,25 @@ def main():
                                  M_, D_, iters=a.icp_iters)
         E1i.append(sym_aware_rot_err_deg(R1i, Rg, G_, gn_).cpu())
 
-        # ── 다중 가설 k → ICP → 잔차 선택
+        # ── 다중 가설 k → ICP → 잔차 선택 (+free-space 결합 선택 λ 스윕)
         t0 = time.time()
         Rh, th, _ = gen_hypotheses(sim, P_s, P_o, val_s, T=a.T, k=a.k)
-        Rk, tk, res = icp_select(Rh, th, P_s, val_s, M_, D_, iters=a.icp_iters)
+        Ra, ta, res = icp_select(Rh, th, P_s, val_s, M_, D_, iters=a.icp_iters,
+                                 return_all=True)
+        viol = freespace_viol(Ra, ta, P_s, val_s, M_, D_,
+                              P_full=pts, val_full=valid.float())
         ms.append((time.time() - t0) * 1e3 / len(oi))
-        EK.append(sym_aware_rot_err_deg(Rk, Rg, G_, gn_).cpu())
+        bi = torch.arange(len(oi), device=res.device)
+        for lam in LAMS:
+            best = (res + lam * viol).argmin(-1)
+            EK[lam].append(sym_aware_rot_err_deg(
+                Ra[bi, best], Rg, G_, gn_).cpu())
         GN.append(gn_.cpu())
         if (s // bs) % 10 == 0:
             print(f"  {s + len(oi)}/{a.n}", flush=True)
 
     e1 = torch.cat(E1).numpy(); e1i = torch.cat(E1i).numpy()
-    ek = torch.cat(EK).numpy(); gn = torch.cat(GN).numpy()
+    gn = torch.cat(GN).numpy()
     asym = gn == 1
 
     def row(name, e):
@@ -89,7 +102,8 @@ def main():
           f"ICP {a.icp_iters}회) ===")
     row("top-1 (ICP 없음)", e1)
     row("top-1 + ICP", e1i)
-    row(f"다중 가설 k={a.k} + ICP 선택", ek)
+    for lam in LAMS:
+        row(f"k={a.k} 선택 λ_fs={lam}", torch.cat(EK[lam]).numpy())
     print(f"다중 가설 경로 추가 비용: {np.mean(ms):.1f} ms/샘플 (RTX PRO, 학습 병행 중)")
 
 

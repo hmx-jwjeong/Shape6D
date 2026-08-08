@@ -38,12 +38,17 @@ PTS_CAP = 4096         # 장면 샘플 포인트 상한
 SYM_MAX = 16           # g* 군 상한 (03 §9.3 — 연속축 12분할)
 
 
+MESH_ROOTS = [GSO_RAW]      # --mesh-roots로 확장 (Phase B: +gso_meshes_raw/unpacked)
+
+
 def _mesh_index() -> dict[int, str]:
     idx = {}
     for e in json.load(open(GSO_JSON)):
-        p = f"{GSO_RAW}/{e['gso_id']}/meshes/model.obj"
-        if os.path.exists(p):
-            idx[int(e["obj_id"])] = p
+        for root in MESH_ROOTS:
+            p = f"{root}/{e['gso_id']}/meshes/model.obj"
+            if os.path.exists(p):
+                idx[int(e["obj_id"])] = p
+                break
     return idx
 
 
@@ -71,12 +76,21 @@ _CORR = None
 
 def _load_corr(out_dir: Path):
     global _CORR
-    p = out_dir / "frame_correction.npz"
-    if p.exists():
+    # v2 우선 (다중 시작 + 양방향 잔차 — 구판은 붕괴 국소해로 61/168 오염 실증)
+    _CORR = {}
+    for name in ("frame_correction_a_v2.npz", "frame_correction_b.npz"):
+        p = out_dir / name
+        if not p.exists():
+            continue
         z = np.load(p)
-        _CORR = {int(o): (float(s), R, t, float(r)) for o, s, R, t, r in
-                 zip(z["obj_id"], z["s"], z["R"], z["t"], z["res_rel"])}
-        print(f"[corr] 물체별 렌더 프레임 보정 로드: {len(_CORR)}종", flush=True)
+        bwd = z["res_bwd_rel"] if "res_bwd_rel" in z.files else np.zeros(len(z["s"]))
+        for o, s_, R, t, r, b in zip(z["obj_id"], z["s"], z["R"], z["t"],
+                                     z["res_rel"], bwd):
+            _CORR.setdefault(int(o), (float(s_), R, t, float(r), float(b)))
+    if not _CORR:
+        _CORR = None
+        return
+    print(f"[corr] 렌더 프레임 보정 병합 로드: {len(_CORR)}종", flush=True)
 
 
 def _pack_object(args):
@@ -89,9 +103,10 @@ def _pack_object(args):
     # X_render = ((X_rawC − t_o) / s_o) @ R_o  — 미회수/고잔차 물체는 None 반환(제외)
     if _CORR is not None:
         e = _CORR.get(int(obj_id))
-        if e is None or not np.isfinite(e[0]) or not np.isfinite(e[3]) or e[3] > 0.05:
+        if (e is None or not np.isfinite(e[0]) or not np.isfinite(e[3])
+                or e[3] > 0.05 or e[4] > 0.05):     # 양방향 잔차 필터 (붕괴 검출)
             return None
-        s_o, R_o, t_o, _ = e
+        s_o, R_o, t_o, _, _ = e
         surf = ((surf - surf.mean(0) - t_o) / s_o) @ R_o
     c = surf.mean(0)
     r_b = float(np.linalg.norm(surf - c, axis=1).max())
@@ -136,7 +151,7 @@ def build_objects(out: Path, workers: int = 8) -> dict[int, int]:
     G[:, :] = np.eye(3)
     for i, q in enumerate(packs):
         G[i, :q["gn"]] = q["g"]
-    np.savez(out / "phase_a_objs.npz",
+    np.savez(out / f"{a.prefix}_objs.npz",
              obj_id=np.array([q["obj_id"] for q in packs], np.int32),
              master=np.stack([q["master"] for q in packs]),   # centroid 센터링된 모델계
              c=np.stack([q["c"] for q in packs]),             # 원 모델계 centroid (GT 병진 보정용)
@@ -157,6 +172,8 @@ def _scene_shard(args):
     shard, order, cap = args
     rng = np.random.default_rng(shard)
     P = np.zeros((cap, PTS_CAP, 3), np.float16)
+    UV = np.zeros((cap, PTS_CAP, 2), np.int16)
+    KV = np.zeros((cap, 4), np.float32)
     N = np.zeros(cap, np.int32)
     R = np.zeros((cap, 9), np.float32)
     T = np.zeros((cap, 3), np.float32)
@@ -169,10 +186,15 @@ def _scene_shard(args):
             oi = order.get(int(s["obj_id"]))
             if oi is None or len(s["pts"]) < 256:
                 continue
-            pts = s["pts"]
+            pts = s["pts"]; uv = s.get("uv")
             if len(pts) > PTS_CAP:
-                pts = pts[rng.choice(len(pts), PTS_CAP, replace=False)]
+                sel2 = rng.choice(len(pts), PTS_CAP, replace=False)
+                pts = pts[sel2]
+                uv = uv[sel2] if uv is not None else None
             P[n, :len(pts)] = pts.astype(np.float16)
+            if uv is not None:
+                UV[n, :len(pts)] = uv
+                KV[n] = s["K"]
             N[n] = len(pts)
             R[n] = s["R"].astype(np.float32).ravel()
             T[n] = s["t"].astype(np.float32)
@@ -180,18 +202,19 @@ def _scene_shard(args):
             n += 1
     except Exception as e:  # 샤드 단위 격리
         print(f"shard {shard}: {type(e).__name__} {e}", flush=True)
-    return dict(pts=P[:n], npt=N[:n], R=R[:n], t=T[:n], oi=O[:n])
+    return dict(pts=P[:n], uv=UV[:n], Kv=KV[:n], npt=N[:n], R=R[:n], t=T[:n], oi=O[:n])
 
 
 def build_scenes(out: Path, order: dict[int, int], obj_ids: np.ndarray,
-                 shards: int, cap: int, workers: int = 8):
+                 shards: int, cap: int, workers: int = 8, offset: int = 0):
     t0 = time.time()
     with Pool(workers) as p:
-        parts = p.map(_scene_shard, [(s, order, cap) for s in range(shards)])
+        parts = p.map(_scene_shard,
+                      [(s, order, cap) for s in range(offset, offset + shards)])
     cat = {k: np.concatenate([q[k] for q in parts if len(q[k])]) for k in parts[0]}
     is_val = (obj_ids[cat["oi"]] % 5 == 0)
     for split, sel in (("train", ~is_val), ("val", is_val)):
-        np.savez(out / f"phase_a_{split}.npz", **{k: v[sel] for k, v in cat.items()})
+        np.savez(out / f"{a.prefix}_{split}.npz", **{k: v[sel] for k, v in cat.items()})
         no = len(np.unique(cat["oi"][sel]))
         print(f"[{split}] {int(sel.sum())}샘플 · 물체 {no}종 · 포인트 p50 "
               f"{int(np.median(cat['npt'][sel]))}", flush=True)
@@ -201,12 +224,30 @@ def build_scenes(out: Path, order: dict[int, int], obj_ids: np.ndarray,
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="/mnt/samsung2tb/datasets/megapose/phase_a")
+    ap.add_argument("--prefix", default="phase_a", help="출력 파일 접두 (재구축 시 phase_a2 등 — 구판 보존)")
+    ap.add_argument("--mesh-roots", default=GSO_RAW,
+                    help="콤마 구분 메시 루트 목록 (Phase B: +unpacked)")
     ap.add_argument("--shards", type=int, default=60)
     ap.add_argument("--cap", type=int, default=1200)
+    ap.add_argument("--shard-offset", type=int, default=0,
+                    help="시작 샤드 인덱스 — 청크 빌드 (전량 1,040 중 구간 지정)")
+    ap.add_argument("--scenes-only", action="store_true",
+                    help="물체 뱅크 재구축 생략 — --objs-prefix 뱅크의 order 재사용")
+    ap.add_argument("--objs-prefix", default=None,
+                    help="scenes-only 시 뱅크 접두 (기본: --prefix). 분할은 obj_id%%5라 "
+                         "샤드 구간과 무관하게 train/val 물체 분리 유지")
+    ap.add_argument("--workers", type=int, default=8)
     a = ap.parse_args()
+    MESH_ROOTS[:] = a.mesh_roots.split(",")
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    _load_corr(out)
-    order = build_objects(out)
-    obj_ids = np.load(out / "phase_a_objs.npz")["obj_id"]
-    build_scenes(out, order, obj_ids, a.shards, a.cap)
+    if a.scenes_only:
+        op = a.objs_prefix or a.prefix
+        obj_ids = np.load(out / f"{op}_objs.npz")["obj_id"]
+        order = {int(o): i for i, o in enumerate(obj_ids)}
+    else:
+        _load_corr(out)
+        order = build_objects(out)
+        obj_ids = np.load(out / f"{a.prefix}_objs.npz")["obj_id"]
+    build_scenes(out, order, obj_ids, a.shards, a.cap,
+                 workers=a.workers, offset=a.shard_offset)

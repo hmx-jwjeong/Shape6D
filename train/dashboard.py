@@ -26,13 +26,6 @@ HDR_RE = re.compile(r"\[(\w+)\] enc ([\d.]+)M \+ matcher ([\d.]+)M · train (\d+
 # dataviz 검증 팔레트 (CVD ΔE 통과) — 후보 태그별 고정 배정
 COLORS = {"a0": "#2a78d6", "a1": "#eb6834", "a1d": "#1baf7a", "a2": "#eda100"}
 
-
-def _shade(hex_color: str, t: float) -> str:
-    """base 색을 흰색 쪽으로 t(0~1)만큼 블렌드 — 같은 그룹 내 TRY 시간순 그라데이션."""
-    r, g, b = (int(hex_color[i:i + 2], 16) for i in (1, 3, 5))
-    mix = lambda c: round(c + (255 - c) * t)
-    return f"#{mix(r):02x}{mix(g):02x}{mix(b):02x}"
-
 # 구 런(cfg 덤프 이전)용 정적 상수 — train_phase_a.py/pem_mini.py 현행 값과 동기
 STATIC_CFG = {
     "batch_size": 48, "optimizer": "AdamW(wd=0.05)",
@@ -102,7 +95,12 @@ def collect(log_path: Path | None) -> dict:
         if tot and ep and el and ep < tot:
             eta = round(el / ep * (tot - ep))
         r["elapsed_m"] = el
-        live = alive and (now - r["mtime"] < 300)
+        # LIVE 판정: hist는 에폭 종료 시에만 갱신되므로 고정 5분 창이면
+        # 에폭이 긴 런은 에폭 사이마다 죽은 것처럼 보임 → 에폭 소요시간 비례 창
+        per_ep_s = el / ep * 60 if (el and ep) else None
+        win = max(300.0, 2.0 * per_ep_s + 180) if per_ep_s else 300.0
+        unfinished = tot is None or ep < tot
+        live = alive and unfinished and (now - r["mtime"] < win)
         # 설정: cfg_{tag}.json(신규 런) > 로그 헤더 파싱(구 런) > 정적 상수
         cfg = dict(cfg0)
         for k, v in (hdrs.get(tag) or {}).items():
@@ -122,18 +120,10 @@ def collect(log_path: Path | None) -> dict:
         out.append({"tag": tag, "hist": h, "ep": ep, "total_ep": tot,
                     "elapsed_m": r["elapsed_m"], "eta_m": eta, "live": live,
                     "cfg": cfg, "conv": conv, "start_ts": start_ts})
-    # 색상: 그룹(a0/a1/…) 기본색은 유지, 같은 그룹 내 TRY는 시간순 그라데이션
-    # (오래된 런일수록 연하게, 최신 런이 원색)
-    groups: dict[str, list] = {}
+    # 색상: 그룹(a0/a1/…) 기본색만 내려주고, 시간순 그라데이션은 클라이언트가
+    # '표시 중인 런' 기준으로 계산 (런이 수십 개면 전체 기준 그라데이션은 구분 불가)
     for r in out:
-        groups.setdefault(r["tag"].split("_")[0], []).append(r)
-    for base_tag, members in groups.items():
-        base = COLORS.get(base_tag, "#e87ba4")
-        members.sort(key=lambda x: x["start_ts"])
-        n = len(members)
-        for i, m in enumerate(members):
-            t = 0.55 * (n - 1 - i) / (n - 1) if n > 1 else 0.0
-            m["color"] = _shade(base, t)
+        r["base"] = COLORS.get(r["tag"].split("_")[0], "#e87ba4")
     out.sort(key=lambda x: -x["start_ts"])  # 최신 런이 위
     return {"runs": out, "proc_alive": alive, "ts": now}
 
@@ -159,9 +149,12 @@ h1{font-size:19px;margin:0}
 .pill{font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px}
 .pill.live{background:var(--good-soft);color:var(--good)}
 .pill.done{background:var(--panel);color:var(--sub);border:1px solid var(--line)}
-.runs{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.runs{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 12px}
 .runcard{border:1px solid var(--line);border-radius:10px;background:var(--panel);
-         padding:9px 13px;min-width:230px}
+         padding:9px 13px;min-width:230px;cursor:pointer;user-select:none}
+.runcard.off{opacity:.38;filter:saturate(.25)}
+.hint{font-size:11px;color:var(--sub);margin-top:10px}
+.hint a{cursor:pointer;text-decoration:underline}
 .runcard b{font-size:15px}
 .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px}
 .ptry{margin:4px 0;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
@@ -180,8 +173,16 @@ h1{font-size:19px;margin:0}
 .pt span{color:var(--sub)} .pt b{font-variant-numeric:tabular-nums;text-align:right}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
 @media(max-width:900px){.grid{grid-template-columns:1fr}}
-.card{border:1px solid var(--line);border-radius:10px;padding:10px 12px 6px;background:var(--bg)}
-.card h3{margin:0 0 2px;font-size:13px}
+.card{border:1px solid var(--line);border-radius:10px;padding:10px 12px 6px;background:var(--bg);
+      position:relative}
+.card h3{margin:0 0 2px;font-size:13px;cursor:help;display:inline-block}
+.qi{color:var(--sub);font-size:11px;font-weight:400}
+.desc{position:absolute;inset:44px 10px 10px;background:var(--panel);
+      border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+      font-size:12px;line-height:1.7;color:var(--ink);
+      opacity:0;pointer-events:none;transition:opacity .25s;z-index:5}
+.desc b{display:block;margin-bottom:4px}
+.card.showdesc .desc{opacity:.97}
 .card .sub{font-size:11px;color:var(--sub);margin-bottom:4px}
 svg{width:100%;height:220px;display:block}
 .axis{stroke:var(--line);stroke-width:1}
@@ -196,6 +197,7 @@ td{padding:5px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
 <header><h1>Phase A 학습 모니터</h1>
 <span id="proc" class="pill done">확인 중</span>
 <span id="meta"></span></header>
+<div class="hint" id="selhint"></div>
 <div class="runs" id="runs"></div>
 <div style="font-weight:700;margin:6px 0">학습 파라미터 (TRY별 토글 · 시간순)</div>
 <div id="params"></div>
@@ -204,12 +206,28 @@ td{padding:5px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabu
 <div class="tt" id="tt"></div>
 <script>
 const CHARTS=[
- {key:"rot_p50",  title:"미학습 34종 · 회전 오차 p50 (deg) ↓", ref:{v:30,label:"ICP 수렴반경 30°"}},
- {key:"le30",    title:"미학습 34종 · ≤30° 진입률 ↑", pct:true},
- {key:"trans_rel_p50", title:"미학습 · 병진 오차 p50 (×D) ↓"},
- {key:"ce",      title:"train 대응 CE (수렴곡선) ↓", ref:{v:4.53,label:"전경 균등 바닥"}},
- {key:"rot_deg", title:"train 회전 오차 (deg) ↓"},
- {key:"bg_rate", title:"train bg 예측률 (라벨 ~14%)", pct:true},
+ {key:"rot_p50",  title:"미학습 34종 · 회전 오차 p50 (deg) ↓", ref:{v:30,label:"ICP 수렴반경 30°"},
+  desc:"학습에 쓰지 않은 물체 종(검증셋)에서 예측 회전과 정답 회전의 각도 차이 중앙값. "+
+   "일반화 성능의 핵심 지표로, 낮을수록 좋음. 점선(30°)은 ICP 정밀 정렬이 수렴할 수 있는 "+
+   "대략적 반경 — 이 아래로 들어와야 후단 refinement로 회복 가능."},
+ {key:"le30",    title:"미학습 34종 · ≤30° 진입률 ↑", pct:true,
+  desc:"검증 샘플 중 회전 오차가 30° 이하인 비율. \\\"ICP로 마무리 가능한 샘플이 몇 %인가\\\"로 "+
+   "해석하는 실전 지표. p50과 달리 분포 꼬리에 둔감해서, 어려운 샘플을 포기하고도 "+
+   "쉬운 샘플을 확실히 맞추는 개선을 잘 드러냄. 높을수록 좋음."},
+ {key:"trans_rel_p50", title:"미학습 · 병진 오차 p50 (×D) ↓",
+  desc:"예측 위치와 정답 위치의 거리 중앙값을 물체 지름 D로 나눈 상대값 (검증셋). "+
+   "0.10D = 지름의 10%만큼 어긋남. 물체 크기와 무관하게 비교할 수 있도록 정규화. 낮을수록 좋음."},
+ {key:"ce",      title:"train 대응 CE (수렴곡선) ↓", ref:{v:4.53,label:"전경 균등 바닥"},
+  desc:"학습 배치에서 쿼리 토큰↔CAD 토큰 대응 분류의 cross-entropy. 순수 수렴 곡선. "+
+   "점선(전경 균등 바닥)은 전경 토큰들을 균등 확률로 찍었을 때의 값 — 이 밑으로 내려가야 "+
+   "대응 관계를 실제로 학습하고 있다는 뜻. 기울기가 0에 가까워지면 포화."},
+ {key:"rot_deg", title:"train 회전 오차 (deg) ↓",
+  desc:"학습 배치(이미 본 물체)에서의 회전 오차. 모델 용량·수렴 상태 참고용. "+
+   "미학습 rot_p50과의 격차가 크게 벌어지면 과적합 신호 — 격차가 곧 일반화 갭."},
+ {key:"bg_rate", title:"train bg 예측률 (라벨 ~14%)", pct:true,
+  desc:"쿼리 토큰을 배경(bg)으로 예측한 비율. 정답 라벨 분포는 약 14%이므로 그 근처면 정상. "+
+   "이 값이 치솟으면 모델이 대응을 포기하고 전부 배경으로 덤핑하는 붕괴 징후이고, "+
+   "0에 붙으면 배경을 전경에 억지로 매칭하고 있다는 뜻."},
 ];
 const tt=document.getElementById('tt');
 function lerp(a,b,t){return a+(b-a)*t}
@@ -252,26 +270,51 @@ const PKEYS=[["encoder","인코더"],["lr","learning rate"],["batch_size","batch
  ["loss","손실"],["n_tok","코어스 토큰"],["cad_views_train","CAD 뷰(학습)"],
  ["cad_views_eval","CAD 뷰(평가)"],["view_px","뷰당 픽셀"],["data_train","학습 샘플"],
  ["data_val","검증 샘플"],["obj_val_unseen","미학습 물체 종"],["sparsify","희소화"]];
+// 런 표시 선택: 기본은 최신 5개, 카드 클릭으로 개별 전환 (localStorage에 오버라이드 저장)
+const SHOW_N=5;
+let LAST=null, OVR=JSON.parse(localStorage.getItem('runOvr')||'{}');
+const visOf=(tag,i)=>OVR[tag]!==undefined?OVR[tag]:i<SHOW_N;
+function toggleRun(tag){
+ const i=LAST.runs.findIndex(r=>r.tag===tag);
+ const next=!visOf(tag,i);
+ if(next===(i<SHOW_N))delete OVR[tag];else OVR[tag]=next;
+ localStorage.setItem('runOvr',JSON.stringify(OVR));render();}
+function resetSel(){OVR={};localStorage.setItem('runOvr','{}');render();}
 async function refresh(){
- const d=await (await fetch('/api/runs')).json();
+ LAST=await (await fetch('/api/runs')).json();render();}
+// 그룹 내 시간순 그라데이션: base 색을 흰색 쪽으로 t만큼 블렌드 (최신=원색)
+const shade=(hex,t)=>{const c=parseInt(hex.slice(1),16),m=v=>Math.round(v+(255-v)*t);
+ return '#'+[(c>>16)&255,(c>>8)&255,c&255].map(v=>m(v).toString(16).padStart(2,'0')).join('')};
+function grad(list){
+ const g={};list.forEach(r=>{(g[r.tag.split('_')[0]]??=[]).push(r)});
+ Object.values(g).forEach(m=>{m.sort((a,b)=>a.start_ts-b.start_ts);
+  const n=m.length;m.forEach((r,i)=>r.color=shade(r.base,n>1?0.55*(n-1-i)/(n-1):0))});}
+function render(){
+ const d=LAST;if(!d)return;
+ const vis=d.runs.filter((r,i)=>visOf(r.tag,i));
+ grad(d.runs);grad(vis); // 전체 기준으로 깔고, 표시 중 런끼리는 최대 대비로 재배정
+ document.getElementById('selhint').innerHTML=
+  `기본 최신 ${SHOW_N}개 표시 · 카드 클릭으로 표시/숨김 전환 (${vis.length}/${d.runs.length} 표시 중)`+
+  (Object.keys(OVR).length?` · <a onclick="resetSel()">기본값 복원</a>`:'');
  document.getElementById('proc').className='pill '+(d.proc_alive?'live':'done');
  document.getElementById('proc').textContent=d.proc_alive?'● 학습 프로세스 실행 중':'프로세스 없음';
  document.getElementById('meta').textContent='갱신 '+new Date(d.ts*1000).toLocaleTimeString()+' · 60s 자동';
  const stamp=ts=>{const d=new Date(ts*1000);
   return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`};
- document.getElementById('runs').innerHTML=d.runs.map(r=>{
+ document.getElementById('runs').innerHTML=d.runs.map((r,i)=>{
   const last=r.hist[r.hist.length-1]||{};
-  return `<div class="runcard"><span class="dot" style="background:${r.color}"></span>`+
+  return `<div class="runcard${visOf(r.tag,i)?'':' off'}" onclick="toggleRun('${r.tag}')">`+
+   `<span class="dot" style="background:${r.color}"></span>`+
    `<b>${r.tag}</b> <span class="pill ${r.live?'live':'done'}">${r.live?'LIVE':'완료/대기'}</span>`+
    `<div class="kv">시작 ${stamp(r.start_ts)} · ep ${r.ep}${r.total_ep?'/'+r.total_ep:''}`+
    (r.eta_m?` · ETA ~${r.eta_m}분`:'')+(r.elapsed_m?` · 경과 ${r.elapsed_m}분`:'')+`</div>`+
-   `<div class="kv"><a href="/reports/${r.tag}/index.html" target="_blank">리포트 →</a></div>`+
+   `<div class="kv"><a href="/reports/${r.tag}/index.html" target="_blank" onclick="event.stopPropagation()">리포트 →</a></div>`+
    `<div class="kv">rot_p50 <b>${(last.rot_p50??0).toFixed(1)}°</b> · ≤30° <b>${((last.le30??0)*100).toFixed(1)}%</b> · CE ${(last.ce??0).toFixed(2)}</div>`+
    `<div class="conv">수렴(최근5ep/ep): CE <b>${fmt(r.conv.ce)}</b> · rot <b>${fmt(r.conv.rot_p50)}°</b> · ≤30° <b>${fmt(r.conv.le30,true)}</b>`+
    ` ${(r.conv.ce!==null&&Math.abs(r.conv.ce)<0.01)?'<span class="pill done">포화 근접</span>':''}</div></div>`;
  }).join('');
  const open=new Set([...document.querySelectorAll('.ptry[open]')].map(e=>e.dataset.tag));
- document.getElementById('params').innerHTML=d.runs.map(r=>
+ document.getElementById('params').innerHTML=vis.map(r=>
   `<details class="ptry" data-tag="${r.tag}"${open.has(r.tag)?' open':''}>`+
   `<summary><span class="dot" style="background:${r.color}"></span>${r.tag}`+
   `<span class="psub">시작 ${stamp(r.start_ts)} · ep ${r.ep}${r.total_ep?'/'+r.total_ep:''}`+
@@ -279,8 +322,16 @@ async function refresh(){
   `<div class="pt">`+PKEYS.filter(([k])=>r.cfg[k]!==undefined).map(([k,l])=>
     `<div><span>${l}</span><b>${r.cfg[k]}</b></div>`).join('')+`</div></details>`).join('');
  document.getElementById('charts').innerHTML=CHARTS.map((c,i)=>
-  `<div class="card"><h3>${c.title}</h3><div class="sub">x = epoch</div>${chart(i,d.runs,c)}</div>`).join('');
- const rows=d.runs.map(r=>{const l=r.hist[r.hist.length-1]||{};
+  `<div class="card"><h3 title="">${c.title} <span class="qi">ⓘ</span></h3>`+
+  `<div class="sub">x = epoch</div>${chart(i,vis,c)}`+
+  `<div class="desc"><b>${c.title}</b>${c.desc}</div></div>`).join('');
+ // 제목에 호버할 때만 설명 오버레이 표시 (차트 영역 호버는 데이터 툴팁 전용)
+ document.querySelectorAll('#charts .card h3').forEach(el=>{
+  let t=null;
+  el.onmouseenter=()=>{t=setTimeout(()=>el.parentElement.classList.add('showdesc'),250)};
+  el.onmouseleave=()=>{clearTimeout(t);el.parentElement.classList.remove('showdesc')};
+ });
+ const rows=vis.map(r=>{const l=r.hist[r.hist.length-1]||{};
   return `<tr><td><span class="dot" style="background:${r.color}"></span>${r.tag}</td>`+
   `<td>${r.ep}${r.total_ep?'/'+r.total_ep:''}</td><td>${(l.rot_p50??0).toFixed(1)}°</td>`+
   `<td>${((l.le30??0)*100).toFixed(1)}%</td><td>${(l.trans_rel_p50??0).toFixed(3)}D</td>`+
